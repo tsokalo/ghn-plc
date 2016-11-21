@@ -13,7 +13,10 @@
 
 	-> Result is isplc2017/Debug/data.txt
 
-4. Copy isplc2017/Debug/data.txt in the current directory and run:
+4. Copy isplc2017/Debug/data.txt in the current directory
+	cp isplc2017/Debug/data.txt /home/tsokalo/Dokumente/Forschung/Diss/projects/simresults/csma/new/	
+
+   and run:
 	gnuplot plot_macefficiency.p
 	gnuplot plot_datarate.p
 

@@ -1,0 +1,17 @@
+1. Uncomment all functions calc_a() in isplc2017/main.cpp (and comment all others), build and run:
+   Run isplc2017/Debug/isplc2017 /your full path/EvalSimGhn/Debug/Results/stats.txt
+
+	-> Result is the output in the terminal
+
+  Save the result to the data.txt in calc folder
+
+2. Uncomment the function calc_b() in isplc2017/main.cpp (and comment all others), build and run:
+   Run isplc2017/Debug/isplc2017 /your full path/EvalSimGhn/Debug/Results/stats.txt
+
+	-> Result is the output in the terminal
+
+  Save the result to the data_opt.txt in calc folder
+
+3. Build plots:
+   gnuplot plot.p
+   gnuplot plot_opt.p
