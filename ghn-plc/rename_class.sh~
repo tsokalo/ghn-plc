@@ -1,0 +1,101 @@
+#!/bin/bash
+
+
+find . -type f -name "*.cc" -exec sed -i 's/CustomOnOffApp/GhnPlcOnOffApp/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/CustomOnOffApp/GhnPlcOnOffApp/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/CustomPacketSink/GhnPlcPacketSink/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/CustomPacketSink/GhnPlcPacketSink/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/CustomUdpClient/GhnPlcUdpClient/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/CustomUdpClient/GhnPlcUdpClient/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/NcHelper/GhnPlcHelper/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/NcHelper/GhnPlcHelper/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/CustomOnOffHelper/GhnPlcOnOffHelper/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/CustomOnOffHelper/GhnPlcOnOffHelper/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/CustomPacketSinkHelper/GhnPlcPacketSinkHelper/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/CustomPacketSinkHelper/GhnPlcPacketSinkHelper/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/CustomUdpClientHelper/GhnPlcUdpClientHelper/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/CustomUdpClientHelper/GhnPlcUdpClientHelper/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/AppLogProbe/GhnPlcAppLogProbe/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/AppLogProbe/GhnPlcAppLogProbe/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/NcCutLog/GhnPlcCutLog/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/NcCutLog/GhnPlcCutLog/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/NcLogger/GhnPlcLogger/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/NcLogger/GhnPlcLogger/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/NcStats/GhnPlcStats/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/NcStats/GhnPlcStats/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/GhnAckInfo/GhnPlcAckInfo/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/GhnAckInfo/GhnPlcAckInfo/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/GhnTxAckInfo/GhnPlcTxAckInfo/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/GhnTxAckInfo/GhnPlcTxAckInfo/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/GhnRxAckInfo/GhnPlcRxAckInfo/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/GhnRxAckInfo/GhnPlcRxAckInfo/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/NcBitLoading/GhnPlcBitLoading/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/NcBitLoading/GhnPlcBitLoading/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/GhnCrcTrailer/GhnPlcCrcTrailer/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/GhnCrcTrailer/GhnPlcCrcTrailer/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/NcDllApc/GhnPlcDllApc/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/NcDllApc/GhnPlcDllApc/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/NcDllLlc/GhnPlcDllLlc/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/NcDllLlc/GhnPlcDllLlc/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/NcDllMac/GhnPlcDllMac/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/NcDllMac/GhnPlcDllMac/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/NcDllManagement/GhnPlcDllManagement/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/NcDllManagement/GhnPlcDllManagement/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/NcLlcCodedFlow/GhnPlcLlcCodedFlow/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/NcLlcCodedFlow/GhnPlcLlcCodedFlow/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/NcLlcFlow/GhnPlcLlcFlow/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/NcLlcFlow/GhnPlcLlcFlow/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/GhnLlcFrameHeader/GhnPlcLlcFrameHeader/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/GhnLlcFrameHeader/GhnPlcLlcFrameHeader/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/GhnLpduHeader/GhnPlcLpduHeader/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/GhnLpduHeader/GhnPlcLpduHeader/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/Ghn_Interpacket_Field/GhnPlcInterpacketFeild/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/Ghn_Interpacket_Field/GhnPlcInterpacketFeild/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/NcNetDevice/GhnPlcNetDevice/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/NcNetDevice/GhnPlcNetDevice/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/GdothnPhyManagement/GhnPlcPhyManagement/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/GdothnPhyManagement/GhnPlcPhyManagement/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/GdothnPhyPcs/GhnPlcPhyPcs/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/GdothnPhyPcs/GhnPlcPhyPcs/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/GdothnPhyPma/GhnPlcPhyPma/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/GdothnPhyPma/GhnPlcPhyPma/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/NcPhyPmd/GhnPlcPhyPmd/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/NcPhyPmd/GhnPlcPhyPmd/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/NcRoutingTable/GhnPlcRoutingTable/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/NcRoutingTable/GhnPlcRoutingTable/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/GhnSegmenter/GhnPlcSegmenter/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/GhnSegmenter/GhnPlcSegmenter/g' {} +
+
+find . -type f -name "*.cc" -exec sed -i 's/WaterFiller/GhnPlcWaterFiller/g' {} +
+find . -type f -name "*.h" -exec sed -i 's/WaterFiller/GhnPlcWaterFiller/g' {} +

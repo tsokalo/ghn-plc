@@ -1,0 +1,38 @@
+# -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
+
+# def options(opt):
+#     pass
+
+# def configure(conf):
+#     conf.check_nonfatal(header_name='stdint.h', define_name='HAVE_STDINT_H')
+
+def build(bld):
+    module = bld.create_ns3_module('plc-fd', ['core','plc','network','csma','ghn-plc'])
+    module.source = [
+        'model/plc-fd.cc',
+        'model/plc-full-duplex-ofdm-phy.cc',
+        'model/plc-inf-rate-fd-phy.cc',        
+        'model/csma-cd-mac.cc',        
+        'helper/csma-cd-helper.cc',
+        ]
+
+    module_test = bld.create_ns3_module_test_library('plc-fd')
+    module_test.source = [
+        'test/plc-fd-test-suite.cc',
+        ]
+
+    headers = bld(features='ns3header')
+    headers.module = 'plc-fd'
+    headers.source = [
+        'model/plc-fd.h',
+        'model/plc-full-duplex-ofdm-phy.h',
+        'model/plc-inf-rate-fd-phy.h',        
+        'model/csma-cd-mac.h',     
+        'helper/csma-cd-helper.h',
+        ]
+
+    if bld.env.ENABLE_EXAMPLES:
+        bld.recurse('examples')
+
+    # bld.ns3_python_bindings()
+

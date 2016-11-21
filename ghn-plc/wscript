@@ -1,0 +1,105 @@
+# -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
+
+# def options(opt):
+#     pass
+
+# def configure(conf):
+#     conf.check_nonfatal(header_name='stdint.h', define_name='HAVE_STDINT_H')
+
+def build(bld):
+    module = bld.create_ns3_module('ghn-plc', ['core','plc','stats','network','applications','internet'])
+    module.source = [
+        'model/ghn-plc.cc',        
+        'model/ghn-plc-dll-apc.cc',
+        'model/ghn-plc-dll-llc.cc',
+        'model/ghn-plc-utilities.cc',
+        'model/ghn-plc-dll-management.cc',
+        'model/ghn-plc-routing-table.cc',
+        'model/ghn-plc-dll-mac.cc',
+        'model/ghn-plc-net-device.cc',
+        'model/ghn-plc-llc-flow.cc',
+        'model/ghn-plc-llc-coded-flow.cc',
+        'model/ghn-plc-bit-loading.cc',
+        'model/ghn-plc-bit-loading-data.cc',          
+        'model/ghn-plc-phy-pma.cc',        
+        'model/ghn-plc-link-performance-model.cc',
+        'model/ghn-plc-fulld-phy-pmd.cc',
+        'model/ghn-plc-halfd-phy-pmd.cc',
+        'model/ghn-plc-phy-pcs.cc',
+        'model/ghn-plc-phy-management.cc',          
+        'model/ghn-plc-water-filling.cc',
+        'model/ghn-plc-ack-info.cc',
+        'model/ghn-plc-segmenter.cc', 
+        'model/ghn-plc-crc-trailer.cc',
+        'model/ghn-plc-lpdu-header.cc',
+        'model/ghn-plc-llc-frame-header.cc',  
+        'model/ghn-plc-phy-header.cc',
+        'model/ghn-plc-dll-mac-backoff.cc',                
+        'helper/ghn-plc-helper.cc',
+        'helper/ghn-plc-onoff-helper.cc',
+        'helper/ghn-plc-packet-sink-helper.cc',
+        'helper/ghn-plc-udp-client-helper.cc',        
+        'logging/ghn-plc-cut-log.cc',
+        'logging/ghn-plc-logger.cc',   
+        'logging/ghn-plc-stats.cc',
+        'application/ghn-plc-onoff-app.cc',
+        'application/ghn-plc-packet-sink.cc',
+        'application/ghn-plc-udp-client.cc'        
+        ]
+
+    module_test = bld.create_ns3_module_test_library('ghn-plc')
+    module_test.source = [
+        'test/ghn-plc-test-suite.cc',
+        ]
+
+    headers = bld(features=['ns3header'])
+    headers.module = 'ghn-plc'
+    headers.source = [
+        'model/ghn-plc.h',
+        'model/ghn-plc-defs.h',
+        'model/ghn-plc-dll-apc.h',
+        'model/ghn-plc-dll-llc.h',
+        'model/ghn-plc-utilities.h',
+        'model/ghn-plc-dll-management.h',
+        'model/ghn-plc-routing-table.h',
+        'model/ghn-plc-dll-mac.h',
+        'model/ghn-plc-net-device.h',
+        'model/ghn-plc-llc-flow.h',
+        'model/ghn-plc-llc-coded-flow.h',
+        'model/ghn-plc-bit-loading.h',
+        'model/ghn-plc-bit-loading-data.h',        
+        'model/ghn-plc-statistics.h',        
+        'model/ghn-plc-phy-pma.h',
+        'model/ghn-plc-link-performance-model.h',
+        'model/ghn-plc-fulld-phy-pmd.h',
+        'model/ghn-plc-halfd-phy-pmd.h',
+        'model/ghn-plc-phy-pcs.h',
+        'model/ghn-plc-phy-management.h',
+        'model/ghn-plc-water-filling.h',
+        'model/ghn-plc-header.h',   
+        'model/ghn-plc-ack-info.h',    
+        'model/ghn-plc-segmenter.h',
+        'model/ghn-plc-crc-trailer.h',
+        'model/ghn-plc-lpdu-header.h',
+        'model/ghn-plc-llc-frame-header.h',
+        'model/ghn-plc-phy-header.h',      
+        'model/ghn-plc-dll-mac-backoff.h',  
+        'helper/ghn-plc-helper.h',
+        'helper/ghn-plc-onoff-helper.h',
+        'helper/ghn-plc-packet-sink-helper.h',
+        'helper/ghn-plc-udp-client-helper.h',
+        'logging/ghn-plc-cut-log.h',
+        'logging/ghn-plc-logger.h',
+        'logging/ghn-plc-event-descriptor.h',
+        'logging/ghn-plc-stats.h',
+        'logging/ghn-plc-read-log.h',
+        'application/ghn-plc-onoff-app.h',
+        'application/ghn-plc-packet-sink.h',
+        'application/ghn-plc-udp-client.h'
+        ]
+
+    if bld.env.ENABLE_EXAMPLES:
+        bld.recurse('examples')
+
+    # bld.ns3_python_bindings()
+
