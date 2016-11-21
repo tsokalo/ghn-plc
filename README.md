@@ -1,7 +1,7 @@
 # ghn-plc
 This repository contains the ns-3 based simulation model of G.hn protocol with PLC physical layer. In also includes the modified plc ns-3 module and also plc-fd module, which enable full-duplex for CSMA/CD in PLC. In addition there are evaluation programs and scripts as described below.
 
-Download the used ns-3.13 version and make waf configure with the command line:
+Download ns-3.13 and make waf configure with the command line:
 	CXXFLAGS="-std=c++0x" ./waf configure --disable-python
 The build:
 	./waf build
