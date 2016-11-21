@@ -1,0 +1,36 @@
+set terminal svg enhanced size 1000 800 fname "Times New Roman" fsize 26 solid
+set encoding iso_8859_1
+
+set border 4095 front linetype -1 linewidth 1.000
+set ticslevel 0
+
+set ylabel "Data rate / Mbps"  offset 0
+set yrange [0:*]
+set format y '%0.2f'
+
+
+set xlabel "Maximum CW size / slots"
+set xrange [0:200]
+
+set grid xtics ytics back lw 1 lc rgb "#AFAFAF"
+set key below
+
+
+set output 'csma_performance_n2_datarate.svg'
+plot "data.txt" using 3:(($2==2&&$1==0)?$6:1/0) with linespoints ls 1 lw 1 linecolor 2 pt 7 ps 0.6 title "CSMA/CA, n=2",\
+	"data.txt" using 3:(($2==2&&$1==0)?$6:1/0):($7) with errorbars ls 1 lw 1 linecolor 2 notitle,\
+"data.txt" using 3:(($2==2&&$1==4)?$6:1/0) with linespoints ls 1 lw 1 linecolor 7 pt 5 ps 0.6 title "CSMA/CD, n=2",\
+	"data.txt" using 3:(($2==2&&$1==4)?$6:1/0):($7) with errorbars ls 1 lw 1 linecolor 7 notitle
+
+set output 'csma_performance_n4_datarate.svg'
+plot "data.txt" using 3:(($2==4&&$1==0)?$6:1/0) with linespoints ls 1 lw 1 linecolor 2 pt 7 ps 0.6 title "CSMA/CA, n=4",\
+	"data.txt" using 3:(($2==4&&$1==0)?$6:1/0):($7) with errorbars ls 1 lw 1 linecolor 2 notitle,\
+"data.txt" using 3:(($2==4&&$1==4)?$6:1/0) with linespoints ls 1 lw 1 linecolor 7 pt 5 ps 0.6 title "CSMA/CD, n=4",\
+	"data.txt" using 3:(($2==4&&$1==4)?$6:1/0):($7) with errorbars ls 1 lw 1 linecolor 7 notitle
+
+set output 'csma_performance_n6_datarate.svg'
+plot "data.txt" using 3:(($2==6&&$1==0)?$6:1/0) with linespoints ls 1 lw 1 linecolor 2 pt 7 ps 0.6 title "CSMA/CA, n=6",\
+	"data.txt" using 3:(($2==6&&$1==0)?$6:1/0):($7) with errorbars ls 1 lw 1 linecolor 2 notitle,\
+"data.txt" using 3:(($2==6&&$1==4)?$6:1/0) with linespoints ls 1 lw 1 linecolor 7 pt 5 ps 0.6 title "CSMA/CD, n=6",\
+	"data.txt" using 3:(($2==6&&$1==4)?$6:1/0):($7) with errorbars ls 1 lw 1 linecolor 7 notitle
+

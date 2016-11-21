@@ -1,0 +1,46 @@
+CSMA/CA. Example of MAC PDU transmission without collision and PHY frame loss
+
+GhnPlcDllMac::TriggerSend-		|
+			------------	| 0
+GhnPlcDllMac::StartBackoff-		|
+			------------	| backoff time
+GhnPlcDllMac::CcaRequest-		|
+			------------	| 2 * symbol duration
+GhnPlcDllMac::CcaConfirm-		|
+			------------	| 0
+GhnPlcDllMac::DoStartTx-		|
+			------------	| 0
+GhnPlcPhyPcs::StartTx-			|
+			------------	| 0
+GhnPlcPhyPma::StartTx-			|
+			------------	| 0
+GhnPlcPhyPmdHalfD::DoStartTx-		|
+			------------	| 0
+PLC_HalfDuplexOfdmPhy::SendFrame-	|
+			------------	| propagation delay
+PLC_RxInterface::StartRx-		|
+			------------	| 0
+PLC_Phy::StartRx-			|
+			------------	| 0
+PLC_InformationRatePhy::DoStartRx-	|
+			------------	| preamble duration
+PLC_InformationRatePhy::PreambleDetectionSuccessful-|
+			------------	| 0
+GhnPlcPhyPmdHalfD::StartReception-	|
+			------------	| header duration (normally 1 symbol duration)
+GhnPlcPhyPmdHalfD::EndRxHeader-		|
+			------------	| payload duration (multiple of symbols duration)
+GhnPlcPhyPmdHalfD::EndRxPayload-	|
+			------------	| 0
+GhnPlcPhyPcs::ReceiveSuccess-		|
+			------------	| 0
+GhnPlcDllMac::Receive-			|
+			------------	| TIAFG
+GhnPlcDllMac::SendAck-			|
+..
+			------------	| propagation delay + acknowledgement duration
+GhnPlcDllMac::DoReceive-		|
+			------------	| TIFG
+GhnPlcDllMac::DoNotifyReceiptionEnd-	|
+
+Then either TriggerSend or StartBackoff

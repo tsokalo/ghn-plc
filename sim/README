@@ -1,0 +1,26 @@
+1. Source location:
+	python ns3sims/ns-3-dev/run-test-csma-ca.py
+	python ns3sims/ns-3-dev/run-test-csma-cd.py
+
+	-> Results of the simulation are the Results* folders in ns3sims/ns-3-dev/build/scratch
+
+2. Run* EvalSimGhn/Debug/EvalSimGhn /home/tsokalo/workspace/ns3sims/ns-3-dev/build/scratch
+
+	-> Result is EvalSimGhn/Debug/Results/stat.txt
+
+3. Uncomment calc_d() function and comment all other functions in isplc2017/main.cpp
+   Run** isplc2017/Debug/isplc2017 /home/tsokalo/workspace/EvalSimGhn/Debug/Results/stats.txt
+
+	-> Result is isplc2017/Debug/data.txt
+
+4. Copy isplc2017/Debug/data.txt in the current directory
+	cp isplc2017/Debug/data.txt /home/tsokalo/Dokumente/Forschung/Diss/projects/simresults/csma/new/	
+
+   and run:
+	gnuplot plot_macefficiency.p
+	gnuplot plot_datarate.p
+
+* - delete all folders at which SEGV happens - these are incomplete simulation results
+** - this program adds analytical results to the simulation results
+
+
