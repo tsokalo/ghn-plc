@@ -435,7 +435,7 @@ PLC_Mac::TriggerTransmission (void)
 	}
 	else if (m_txQueue->IsEmpty() == false)
 	{
-		p = m_txQueue->Peek ();
+		p = m_txQueue->Peek ()->GetPacket();
 
 		// debug
 		NS_LOG_DEBUG ("Sending data: " << *p);
@@ -533,7 +533,7 @@ PLC_ArqMac::DoSendFrom (Ptr<Packet> p, Mac48Address src, Mac48Address dst)
 
         NS_LOG_LOGIC ("PLC_ArqMac::DoSendFrom Packet size with mac header: " << txPacket->GetSize ());
 
-	if (!m_txQueue->Enqueue (txPacket))
+	if (!m_txQueue->Enqueue (Create<QueueItem>(txPacket)))
 	{
 		PLC_MAC_LOGIC ("TX queue full, packet dropped");
 		return false;
@@ -587,7 +587,7 @@ PLC_ArqMac::DoProcess (Ptr<const Packet> p)
 					m_txQueue->IsEmpty () == false
 				 )
 		{
-			Ptr<const Packet> lastTxPacket = m_txQueue->Peek ();
+			Ptr<const Packet> lastTxPacket = m_txQueue->Peek ()->GetPacket();
 			PLC_MacHeader txMacHdr;
 			lastTxPacket->PeekHeader(txMacHdr);
 
@@ -746,7 +746,7 @@ PLC_ArqMac::NotifyTransmissionEnd (void)
 	else
 	{
 		// Data frame sent
-		Ptr<const Packet> p = m_txQueue->Peek ();
+		Ptr<const Packet> p = m_txQueue->Peek ()->GetPacket();
 		NS_ASSERT_MSG (p, "No packet in send queue, something went wrong!");
 
 		PLC_MacHeader macHdr;
@@ -790,7 +790,7 @@ PLC_ArqMac::AcknowledgementTimeout(void)
 		else
 		{
 			PLC_MAC_INFO ("Maximum replays reached, transmission failed!");
-			Ptr<const Packet> p = m_txQueue->Dequeue();
+			Ptr<const Packet> p = m_txQueue->Dequeue()->GetPacket();
 			m_replays = 0;
 
 			if (!m_transmission_failed_callback.IsNull())
@@ -864,7 +864,7 @@ PLC_HarqMac::DoSendFrom (Ptr<Packet> p, Mac48Address src, Mac48Address dst)
 	m_txHeader.SetSequenceNumber(m_sequence_number++);
 	txPacket->AddHeader(m_txHeader);
 
-	if (!m_txQueue->Enqueue(txPacket))
+	if (!m_txQueue->Enqueue(Create<QueueItem>(txPacket)))
 	{
 		PLC_MAC_LOGIC ("TX queue full, packet dropped");
 		return false;
@@ -914,7 +914,7 @@ PLC_HarqMac::DoProcess (Ptr<const Packet> p)
 					m_txQueue->IsEmpty () == false
 				 )
 		{
-			Ptr<const Packet> lastTxPacket = m_txQueue->Peek ();
+			Ptr<const Packet> lastTxPacket = m_txQueue->Peek ()->GetPacket();
 			PLC_MacHeader txMacHdr;
 			lastTxPacket->PeekHeader(txMacHdr);
 
@@ -929,7 +929,7 @@ PLC_HarqMac::DoProcess (Ptr<const Packet> p)
 					m_txQueue->IsEmpty () == false
 				 )
 		{
-			Ptr<const Packet> lastTxPacket = m_txQueue->Peek ();
+			Ptr<const Packet> lastTxPacket = m_txQueue->Peek ()->GetPacket();
 			PLC_MacHeader txMacHdr;
 			lastTxPacket->PeekHeader(txMacHdr);
 
@@ -1060,7 +1060,7 @@ PLC_HarqMac::TriggerTransmission (void)
 	}
 	else if (m_txQueue->IsEmpty() == false)
 	{
-		p = m_txQueue->Peek ();
+		p = m_txQueue->Peek ()->GetPacket();
 		m_sent_redundancy_frames = 0;
 	}
 	else
@@ -1099,7 +1099,7 @@ PLC_HarqMac::NotifyTransmissionEnd (void)
 	else
 	{
 		// Data frame sent
-		Ptr<const Packet> p = m_txQueue->Peek ();
+		Ptr<const Packet> p = m_txQueue->Peek ()->GetPacket();
 		NS_ASSERT_MSG (p, "No packet in send queue, something went wrong!");
 
 		PLC_MacHeader macHdr;
@@ -1149,7 +1149,7 @@ PLC_HarqMac::AcknowledgementTimeout(void)
 		{
 			PLC_MAC_INFO ("Maximum replays reached, transmission failed!");
 
-			Ptr<const Packet> p = m_txQueue->Dequeue ();
+			Ptr<const Packet> p = m_txQueue->Dequeue ()->GetPacket();
 			m_sent_redundancy_frames = 0;
 			m_send_redundancy = false;
 

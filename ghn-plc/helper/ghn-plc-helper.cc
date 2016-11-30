@@ -8,7 +8,7 @@
 #include <ns3/log.h>
 #include <ns3/abort.h>
 #include "ns3/plc-helper.h"
-#include "ns3/plc-defs-extension.h"
+//#include "ns3/plc-defs-extension.h"
 
 #include "ns3/ghn-plc-helper.h"
 #include "ns3/ghn-plc-module.h"
