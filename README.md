@@ -12,6 +12,7 @@ The build:
 Copy ghn-plc, plc and plc-fd folders to the src folder of your ns3 folder.
 
 In src/internet/model/arp-header.cc comment 
+
 	NS_ASSERT((m_macSource.GetLength () == 6) || (m_macSource.GetLength () == 8));
 
 Copy the file from the scratch folder to the scratch folder of your ns3 folder.
