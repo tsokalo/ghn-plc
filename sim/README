@@ -13,7 +13,7 @@
 
 	-> Result is isplc2017/Debug/data.txt
 
-4. Copy isplc2017/Debug/data.txt in the current directory
+4. Copy isplc2017/Debug/data.txt to the sim/ directory
 	cp isplc2017/Debug/data.txt /home/tsokalo/Dokumente/Forschung/Diss/projects/simresults/csma/new/	
 
    and run:
