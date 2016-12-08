@@ -164,15 +164,15 @@ int main(int argc, char *argv[]) {
 //		t.packet_duration = max_packet_duration;
 //		calc_a();
 
-//		for (uint16_t c = 1; c <= 5; c++) {
-//			t.packet_duration = max_packet_duration / 5.0 * (double) c;
-//			calc_b();
-//		}
+		for (uint16_t c = 1; c <= 5; c++) {
+			t.packet_duration = max_packet_duration / 5.0 * (double) c;
+			calc_b();
+		}
 
 	//	t.packet_duration = 3190;
 	//	calc_c();
 
-	calc_d();
+//	calc_d();
 
 	std::cout << "Finished successfully" << std::endl;
 	return 0;
