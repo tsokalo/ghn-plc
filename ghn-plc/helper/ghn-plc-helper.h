@@ -55,8 +55,6 @@ public:
   void
   DefineMacType (TypeId tid);
   void
-  DefineLlcFlowType (TypeId tid);
-  void
   DefineBitLoadingType(TypeId id);
 
   void
@@ -148,6 +146,8 @@ public:
   {
     m_maxCwSize = maxCwSize;
   }
+  void
+  AllowCooperation (bool v = true);
 
 protected:
 

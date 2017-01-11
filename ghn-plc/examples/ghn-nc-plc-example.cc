@@ -153,6 +153,7 @@ main (int argc, char *argv[])
   devHelper.DefineBitLoadingType (NcBlVarBatMap::GetTypeId ());
   devHelper.SetResDirectory (resDir);
   devHelper.SetMaxCwSize (maxCwSize);
+  devHelper.AllowCooperation();
   devHelper.Setup ();
   cout << "Created communication devices.." << endl;
 
