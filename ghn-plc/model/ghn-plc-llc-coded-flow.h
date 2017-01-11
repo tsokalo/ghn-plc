@@ -47,9 +47,9 @@ private:
 	bool HaveFeedback();
 	GhnBuffer ConvertFeedbackToBuffer(ncr::FeedbackInfo f);
 	ncr::FeedbackInfo ConvertBufferToFeedback(GhnBuffer b);
-	Ptr<Packet> ConvertStrToPacket(std::string str);
-	std::string ConvertPacketToStr(Ptr<Packet> pkt);
-	void ProcessRcvdPacket(std::string str);
+	Ptr<Packet> ConvertVecToPacket(std::vector<uint8_t> vec);
+	std::vector<uint8_t> ConvertPacketToVec(Ptr<Packet> pkt);
+	void ProcessRcvdPacket(Ptr<Packet> pkt, bool crc, ncr::UanAddress addr, std::map<ncr::GenId,ncr::TxPlanItem>::iterator item);
 
 	ncr::UanAddress m_id;
 	ncr::NodeType m_nodeType;
