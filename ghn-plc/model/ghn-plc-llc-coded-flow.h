@@ -19,6 +19,7 @@
 #include "brr-pkt-header.h"
 #include "brr-feedback.h"
 #include "brr-netdiscovery.h"
+#include "sim-parameters.h"
 
 namespace ns3 {
 namespace ghn {
@@ -26,6 +27,7 @@ class GhnPlcLlcCodedFlow: public GhnPlcLlcFlow {
 	typedef std::shared_ptr<ncr::NcRoutingRules> routing_rules_ptr;
 	typedef std::shared_ptr<ncr::encoder_queue> encoder_queue_ptr;
 	typedef std::shared_ptr<ncr::decoder_queue> decoder_queue_ptr;
+	typedef Callback<void, uint16_t> GenCallback;
 
 public:
 	static TypeId
@@ -34,7 +36,7 @@ public:
 	virtual
 	~GhnPlcLlcCodedFlow();
 
-	void Configure(ncr::NodeType type, ncr::UanAddress dst);
+	void Configure(ncr::NodeType type, ncr::UanAddress dst, ncr::SimParameters sp, GenCallback cb);
 
 	void NotifyRcvUp(ncr::GenId genId);
 
@@ -63,11 +65,14 @@ private:
 	uint32_t m_genSize;
 	uint32_t m_symbolSize;
 	ncr::Datarate m_sendRate;
+	ncr::SimParameters m_sp;
 
 	ncr::get_rank_func m_getRank;
 
 	ncr::symb_ssn_t m_ssn;
 	std::map<MessType, GhnBuffer> m_feedback;
+
+	GenCallback m_genCallback;
 };
 }
 }

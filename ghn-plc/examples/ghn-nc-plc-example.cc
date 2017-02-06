@@ -153,8 +153,8 @@ main (int argc, char *argv[])
   devHelper.DefineBitLoadingType (NcBlVarBatMap::GetTypeId ());
   devHelper.SetResDirectory (resDir);
   devHelper.SetMaxCwSize (maxCwSize);
-  devHelper.AllowCooperation();
-  devHelper.Setup ();
+  devHelper.AllowCooperation ();
+  auto addressMap = devHelper.Setup ();
   cout << "Created communication devices.." << endl;
 
   //
@@ -178,8 +178,7 @@ main (int argc, char *argv[])
   //
   // Add transport layer
   //
-  GhnPlcUdpClientHelper clientHelper (plcInterfaces.GetAddress (0), 9);
-  clientHelper.SetAttribute ("DataRate", DataRateValue (DataRate (nodeRate)));
+  GhnPlcUdpClientHelper clientHelper (plcInterfaces.GetAddress (0), 9, true);
   clientHelper.SetAttribute ("PacketSize", UintegerValue (490));
   clientHelper.SetResDirectory (resDir);
   cout << "Added Transport layer.." << endl;
@@ -187,24 +186,44 @@ main (int argc, char *argv[])
 
   //
   // Select and configure the source and destination nodes
+  // index of node_list corresponds to ncr::UanAddress
   //
+  typedef std::pair<UanAddress, UanAddress> AddressPair;
+  std::vector<AddressPair> address_pairs;
+  //
+  // add address pairs HERE
+  //
+  address_pairs.push_back (AddressPair (UanAddress (0), UadAddress (node_list.size () - 1)));
 
-  uint16_t dst_id = 0;
-  auto devMap = devHelper.GetNetdeviceMap();
-  cout << "Destination: " << node_list.at (dst_id)->GetName () << " with address "
-          << devMap[node_list.at (dst_id)->GetName ()]->GetObject<PLC_NetDevice> ()->GetAddress () << endl;
-  Ptr<Node> destinationNode = devMap[node_list.at (dst_id)->GetName ()]->GetObject<PLC_NetDevice> ()->GetNode ();
+  devHelper.SetSrcDstPairs(address_pairs);
 
-  NodeContainer c;
-  for (uint16_t id = 1; id < node_list.size (); id++)
+  std::vector<std::pair<uint32_t, uint32_t> > src_dst_pairs;
+
+  for(auto src_dst_address_pair: address_pairs)
     {
-      cout << "Source " << id << ": " << node_list.at (id)->GetName () << " with address "
-              << devMap[node_list.at (id)->GetName ()]->GetObject<PLC_NetDevice> ()->GetAddress () << endl;
+      assert(addressMap.find(src_dst_address_pair.first) != addressMap.end());
+      assert(addressMap.find(src_dst_address_pair.second) != addressMap.end());
+      src_dst_pairs.push_back (std::pair<uint32_t, uint32_t> (addressMap[src_dst_address_pair.first],
+                      addressMap[src_dst_address_pair.second]));
+    }
+  NodeContainer src_nodes, dst_nodes;
+
+  for(auto src_dst_pair : src_dst_pairs)
+    {
+      auto src_id = src_dst_pair.first;
+      auto dst_id = src_dst_pair.second;
+      cout << "Source: " << node_list.at (src_id)->GetName () << " with address "
+      << devMap[node_list.at (src_id)->GetName ()]->GetObject<PLC_NetDevice> ()->GetAddress () << endl;
+      cout << "Destination: " << node_list.at (dst_id)->GetName () << " with address "
+      << devMap[node_list.at (dst_id)->GetName ()]->GetObject<PLC_NetDevice> ()->GetAddress () << endl;
+
+      src_nodes.Add(devMap[node_list.at (src_id)->GetName ()]->GetObject<PLC_NetDevice> ()->GetNode ());
+      dst_nodes.Add(devMap[node_list.at (dst_id)->GetName ()]->GetObject<PLC_NetDevice> ()->GetNode ());
 
       //
       // Check if at least one route between the selected source and destination exits
       //
-      if (devHelper.IsCommunicationPossible (id, dst_id))
+      if (devHelper.IsCommunicationPossible (src_id, dst_id))
         {
           cout << "Ready to start! Starting.." << endl;
         }
@@ -213,21 +232,30 @@ main (int argc, char *argv[])
           cout << "There is no route between the selected source and destination. Stopping.." << endl;
           // Cleanup simulation
           simDuration = 0;
+          break;
         }
       //
       // Print communication cost table
       //
       devHelper.PrintCostTable (dst_id);
-
-      Ptr<Node> sourceNode = devMap[node_list.at (id)->GetName ()]->GetObject<PLC_NetDevice> ()->GetNode ();
-      c.Add (sourceNode);
     }
 
-  ApplicationContainer clientApp = clientHelper.Install (c);
+  ApplicationContainer clientApp = clientHelper.Install (src_nodes);
+  auto app_it = clientApp.Begin();
+  std::map<UanAddress, Application> appMap;
+  for(auto src_dst_address_pair: address_pairs)
+    {
+      assert(app_it != clientApp.End());
+      appMap[src_dst_address_pair.first] = *app_it;
+      app_it++;
+    }
+  devHelper.SetAppMap(appMap);
+
+
   GhnPlcPacketSinkHelper packetSink ("ns3::UdpSocketFactory", Address (InetSocketAddress (Ipv4Address::GetAny (), 9)));
   packetSink.SetResDirectory (resDir);
   packetSink.SetLogId (logID);
-  ApplicationContainer serverApp = packetSink.Install (destinationNode);
+  ApplicationContainer serverApp = packetSink.Install (dst_nodes);
 
   Time startTime = Seconds (0.0);
   serverApp.Start (startTime);

@@ -47,37 +47,41 @@ GhnPlcLlcCodedFlow::~GhnPlcLlcCodedFlow ()
 }
 
 void
-GhnPlcLlcCodedFlow::Configure (ncr::NodeType type, ncr::UanAddress dst)
+GhnPlcLlcCodedFlow::Configure (ncr::NodeType type, ncr::UanAddress dst, ncr::SimParameters sp, GenCallback cb)
 {
+  m_genCallback = cb;
+  m_sp = sp;
   m_nodeType = type;
-  m_numGen = 10;
-  m_numGen = (m_nodeType == SOURCE_NODE_TYPE) ? 2 * m_numGen : m_numGen;
-  m_genSize = 100;
-  m_symbolSize = m_blockSize - GHN_CRC_LENGTH - sizeof(local_msg_t);
-  m_sendRate = 100000;
-  uint16_t numGenBuffering = 2;
+  m_sp.symbolSize = m_blockSize - GHN_CRC_LENGTH - sizeof(local_msg_t);
+  m_sp.numGen = (m_nodeType == SOURCE_NODE_TYPE) ? 2 * m_sp.numGen : m_sp.numGen;
 
-  m_brr = routing_rules_ptr (new NcRoutingRules (m_id, m_nodeType, dst, m_numGen, m_sendRate, m_genSize, numGenBuffering));
+  m_brr = routing_rules_ptr (new NcRoutingRules (m_id, m_nodeType, dst, m_sp));
 
   if (m_nodeType == SOURCE_NODE_TYPE)
     {
-      m_encQueue = encoder_queue_ptr (new encoder_queue (m_numGen, m_genSize, m_symbolSize));
+      m_encQueue = encoder_queue_ptr (new encoder_queue (m_sp.numGen, m_sp.genSize, m_sp.symbolSize));
       m_encQueue->set_notify_callback (std::bind (&GhnPlcLlcCodedFlow::NotifyRcvUp, this, std::placeholders::_1));
       m_getRank = std::bind (&encoder_queue::rank, m_encQueue, std::placeholders::_1);
       m_brr->SetGetRankCallback (m_getRank);
       m_brr->SetHelpInfoCallback (std::bind (&encoder_queue::get_help_info, m_encQueue, std::placeholders::_1,
               std::placeholders::_2));
 
+      //
+      // fill the encoder buffer
+      //
+      m_genCallback (m_sp.genSize * m_sp.numGenBuffering);
+
       SIM_LOG(COMM_NODE_LOG, "Node " << m_id << " type " << m_nodeType);
     }
   else
     {
-      m_decQueue = decoder_queue_ptr (new decoder_queue (m_numGen, m_genSize, m_symbolSize));
+      m_decQueue = decoder_queue_ptr (new decoder_queue (m_sp.numGen, m_sp.genSize, m_sp.symbolSize));
       m_getRank = std::bind (&decoder_queue::rank, m_decQueue, std::placeholders::_1);
       m_brr->SetGetRankCallback (m_getRank);
       m_brr->SetGetCodingMatrixCallback (std::bind (&decoder_queue::get_coding_matrix, m_decQueue, std::placeholders::_1));
-      m_brr->SetHelpInfoCallback (std::bind (&decoder_queue::get_help_info, m_decQueue, std::placeholders::_1,
-              std::placeholders::_2));
+      m_brr->SetGetCoderInfoCallback (std::bind (&decoder_queue::get_coder_info, m_decQueue, std::placeholders::_1));
+      m_brr->SetCoderHelpInfoCallback (std::bind (&decoder_queue::get_help_info, m_decQueue, std::placeholders::_1,
+              std::placeholders::_2, std::placeholders::_3));
 
       SIM_LOG(COMM_NODE_LOG, "Node " << m_id << " type " << m_nodeType);
     }
@@ -86,7 +90,6 @@ GhnPlcLlcCodedFlow::Configure (ncr::NodeType type, ncr::UanAddress dst)
 void
 GhnPlcLlcCodedFlow::NotifyRcvUp (GenId genId)
 {
-
   m_brr->UpdateRcvd (genId, m_id, 1);
 }
 
@@ -161,8 +164,7 @@ auto  dll = m_dllMac->GetDllManagement ();
     {
       if (m_brr->NeedGen())
         {
-          // TODO make callback to create greedy traffic
-          //			m_trafGen->Start(m_genSize);
+          m_genCallback(m_sp.genSize);
         }
     }
 

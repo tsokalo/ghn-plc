@@ -28,6 +28,7 @@
 #include "ns3/ipv4-address.h"
 
 #include "ns3/ghn-plc-udp-client.h"
+#include "ns3/ghn-plc-greedy-udp-client.h"
 
 namespace ns3 {
 namespace ghn {
@@ -56,7 +57,7 @@ public:
    * \param port The port number of the remote UDP server
    */
 
-  GhnPlcUdpClientHelper (Ipv4Address ip, uint16_t port);
+  GhnPlcUdpClientHelper (Ipv4Address ip, uint16_t port, bool useGreedy = false);
   /**
    *  Create GhnPlcUdpClientHelper which will make life easier for people trying
    * to set up simulations with udp-client-server.
@@ -65,7 +66,7 @@ public:
    * \param port The port number of the remote UDP server
    */
 
-  GhnPlcUdpClientHelper (Ipv6Address ip, uint16_t port);
+  GhnPlcUdpClientHelper (Ipv6Address ip, uint16_t port, bool useGreedy = false);
   /**
    *  Create GhnPlcUdpClientHelper which will make life easier for people trying
    * to set up simulations with udp-client-server.
@@ -74,7 +75,7 @@ public:
    * \param port The port number of the remote UDP server
    */
 
-  GhnPlcUdpClientHelper (Address ip, uint16_t port);
+  GhnPlcUdpClientHelper (Address ip, uint16_t port, bool useGreedy = false);
 
   /**
    * Record an attribute to be set in each Application after it is is created.

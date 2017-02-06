@@ -97,7 +97,7 @@ public:
     m_payload_mcs = mcs;
   }
 
-  void
+  std::map<UanAddress, uint32_t>
   Setup (void);
 
   void
@@ -148,6 +148,8 @@ public:
   }
   void
   AllowCooperation (bool v = true);
+  void
+  SetAppMap(std::map<UanAddress, Application> appMap);
 
 protected:
 
@@ -198,6 +200,8 @@ protected:
   // <from ID> <to ID> <cost>
   //
   TracedCallback<double, double, double> m_costTrace;
+
+  std::map<UanAddress, Application> m_appMap;
 };
 }
 }

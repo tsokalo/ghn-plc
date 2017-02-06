@@ -25,30 +25,32 @@
 #include "ghn-plc-udp-client-helper.h"
 #include "ns3/ghn-plc-udp-client.h"
 
-namespace ns3 {
-namespace ghn {
+namespace ns3
+{
+namespace ghn
+{
 GhnPlcUdpClientHelper::GhnPlcUdpClientHelper ()
 {
 }
 
-GhnPlcUdpClientHelper::GhnPlcUdpClientHelper (Address address, uint16_t port)
+GhnPlcUdpClientHelper::GhnPlcUdpClientHelper (Address address, uint16_t port, bool useGreedy)
 {
-  m_factory.SetTypeId (GhnPlcUdpClient::GetTypeId ());
+  m_factory.SetTypeId (useGreedy ? GhnPlcGreedyUdpClient::GetTypeId () : GhnPlcUdpClient::GetTypeId ());
   SetAttribute ("RemoteAddress", AddressValue (address));
   SetAttribute ("RemotePort", UintegerValue (port));
 }
 
 GhnPlcUdpClientHelper::GhnPlcUdpClientHelper (Ipv4Address address, uint16_t port)
 {
-  m_factory.SetTypeId (GhnPlcUdpClient::GetTypeId ());
-  SetAttribute ("RemoteAddress", AddressValue (Address(address)));
+  m_factory.SetTypeId (useGreedy ? GhnPlcGreedyUdpClient::GetTypeId () : GhnPlcUdpClient::GetTypeId ());
+  SetAttribute ("RemoteAddress", AddressValue (Address (address)));
   SetAttribute ("RemotePort", UintegerValue (port));
 }
 
 GhnPlcUdpClientHelper::GhnPlcUdpClientHelper (Ipv6Address address, uint16_t port)
 {
-  m_factory.SetTypeId (GhnPlcUdpClient::GetTypeId ());
-  SetAttribute ("RemoteAddress", AddressValue (Address(address)));
+  m_factory.SetTypeId (useGreedy ? GhnPlcGreedyUdpClient::GetTypeId () : GhnPlcUdpClient::GetTypeId ());
+  SetAttribute ("RemoteAddress", AddressValue (Address (address)));
   SetAttribute ("RemotePort", UintegerValue (port));
 }
 
@@ -65,10 +67,20 @@ GhnPlcUdpClientHelper::Install (NodeContainer c)
   for (NodeContainer::Iterator i = c.Begin (); i != c.End (); ++i)
     {
       Ptr<Node> node = *i;
-      Ptr<GhnPlcUdpClient> client = m_factory.Create<GhnPlcUdpClient> ();
-      client->SetResDirectory(m_resDir);
-      node->AddApplication (client);
-      apps.Add (client);
+      if (!useGreedy)
+        {
+          Ptr<GhnPlcUdpClient> client = m_factory.Create<GhnPlcUdpClient> ();
+          client->SetResDirectory (m_resDir);
+          node->AddApplication (client);
+          apps.Add (client);
+        }
+      else
+        {
+          Ptr<GhnPlcGreedyUdpClient> client = m_factory.Create<GhnPlcGreedyUdpClient> ();
+          client->SetResDirectory (m_resDir);
+          node->AddApplication (client);
+          apps.Add (client);
+        }
     }
   return apps;
 }
