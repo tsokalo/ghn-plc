@@ -284,6 +284,7 @@ protected:
   uint16_t m_minCw;
   uint16_t m_maxCw;
   Ptr<UniformRandomVariable> m_uniformVar;
+
 };
 /*
  * CSMA with Collision Detection

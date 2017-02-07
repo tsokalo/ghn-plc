@@ -104,6 +104,7 @@ private:
   ObjectFactory m_factory; //!< Object factory.
 
   std::string m_resDir;
+  bool m_useGreedy;
 };
 }
 } // namespace ns3

@@ -23,7 +23,9 @@
 #include "ns3/string.h"
 
 #include "ghn-plc-udp-client-helper.h"
+
 #include "ns3/ghn-plc-udp-client.h"
+#include "ns3/ghn-plc-greedy-udp-client.h"
 
 namespace ns3
 {
@@ -33,21 +35,21 @@ GhnPlcUdpClientHelper::GhnPlcUdpClientHelper ()
 {
 }
 
-GhnPlcUdpClientHelper::GhnPlcUdpClientHelper (Address address, uint16_t port, bool useGreedy)
+GhnPlcUdpClientHelper::GhnPlcUdpClientHelper (Address address, uint16_t port, bool useGreedy) : m_useGreedy(useGreedy)
 {
   m_factory.SetTypeId (useGreedy ? GhnPlcGreedyUdpClient::GetTypeId () : GhnPlcUdpClient::GetTypeId ());
   SetAttribute ("RemoteAddress", AddressValue (address));
   SetAttribute ("RemotePort", UintegerValue (port));
 }
 
-GhnPlcUdpClientHelper::GhnPlcUdpClientHelper (Ipv4Address address, uint16_t port)
+GhnPlcUdpClientHelper::GhnPlcUdpClientHelper (Ipv4Address address, uint16_t port, bool useGreedy) : m_useGreedy(useGreedy)
 {
   m_factory.SetTypeId (useGreedy ? GhnPlcGreedyUdpClient::GetTypeId () : GhnPlcUdpClient::GetTypeId ());
   SetAttribute ("RemoteAddress", AddressValue (Address (address)));
   SetAttribute ("RemotePort", UintegerValue (port));
 }
 
-GhnPlcUdpClientHelper::GhnPlcUdpClientHelper (Ipv6Address address, uint16_t port)
+GhnPlcUdpClientHelper::GhnPlcUdpClientHelper (Ipv6Address address, uint16_t port, bool useGreedy) : m_useGreedy(useGreedy)
 {
   m_factory.SetTypeId (useGreedy ? GhnPlcGreedyUdpClient::GetTypeId () : GhnPlcUdpClient::GetTypeId ());
   SetAttribute ("RemoteAddress", AddressValue (Address (address)));
@@ -67,7 +69,7 @@ GhnPlcUdpClientHelper::Install (NodeContainer c)
   for (NodeContainer::Iterator i = c.Begin (); i != c.End (); ++i)
     {
       Ptr<Node> node = *i;
-      if (!useGreedy)
+      if (!m_useGreedy)
         {
           Ptr<GhnPlcUdpClient> client = m_factory.Create<GhnPlcUdpClient> ();
           client->SetResDirectory (m_resDir);

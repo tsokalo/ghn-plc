@@ -47,6 +47,7 @@ GhnPlcHelper::GhnPlcHelper (Ptr<const SpectrumModel> sm, Ptr<SpectrumValue> txPs
 
   // Create ns3::Node for this NetDevice by default
   m_create_nodes = true;
+  m_allowCooperation = false;
 }
 GhnPlcHelper::GhnPlcHelper (BandPlanType bandplan)
 {
@@ -70,6 +71,7 @@ GhnPlcHelper::GhnPlcHelper (BandPlanType bandplan)
 
   // Create ns3::Node for this NetDevice by default
   m_create_nodes = true;
+  m_allowCooperation = false;
 }
 
 std::map<UanAddress, uint32_t>
@@ -275,6 +277,8 @@ GhnPlcHelper::Setup (void)
       dllManager->GetDllMac ()->SetMinCw (0);
       dllManager->GetDllMac ()->SetMaxCw (m_maxCwSize);
       dllManager->GetDllMac ()->SetBackoffSlotDuration (NanoSeconds (GDOTHN_IST));
+      dllManager->GetDllMac ()->AllowCooperation (m_allowCooperation);
+      if (!m_sp.mutualPhyLlcCoding) assert(!m_sp.mutualPhyLlcCoding);
 
       if (m_macTid == GhnPlcDllMacCsma::GetTypeId ())
         {
@@ -321,7 +325,7 @@ GhnPlcHelper::Setup (void)
 
       if (m_txImpedance) dev->SetTxImpedance (m_txImpedance);
 
-      auto addr = UanAddress::Allocate()
+      auto addr = UanAddress::Allocate();
       addressMap[addr] = std::distance(m_node_list.begin(), nit);
       dev->SetAddress (addr);
 
@@ -402,7 +406,8 @@ GhnPlcHelper::CreateBitLoadingTable ()
     {
       for (nit = m_node_list.begin (); nit != m_node_list.end (); nit++)
         {
-          m_bitLoadingTable->GetObject<NcBlVarBatMap> ()->SetPer ((*nit)->GetVertexId (), 0.01);
+          m_bitLoadingTable->GetObject<NcBlVarBatMap> ()->SetPer ((*nit)->GetVertexId (), m_sp.mutualPhyLlcCoding ? m_sp.per
+                  : 0.01);
         }
     }
 
@@ -565,11 +570,13 @@ GhnPlcHelper::CreateFlow (ConnId connId, Ptr<GhnPlcDllMacCsma> mac, Ptr<GhnPlcDl
 
       auto app = m_appMap.find(own_addr);
       if(type == ncr::SOURCE_NODE_TYPE) assert(app != m_appMap.end());
-
+      Callback<void,uint16_t> cb;
+      cb.Nullify();
+      if(type != ncr::SOURCE_NODE_TYPE) cb = MakeCallback (&GhnPlcGreedyUdpClient::SendBatch, app->second->GetObject<GhnPlcGreedyUdpClient>());
       //
       // using default simulation parameters
       //
-      flow_o->Configure (type, connId.dst.GetAsInt(), ncr::SimParameters(), MakeCallback (&GhnPlcGreedyUdpClient::SendBatch, app));
+      flow_o->Configure (type, connId.dst.GetAsInt(), m_sp, cb);
 
       m_flowStack.push_back (flow_o);
 
@@ -612,10 +619,14 @@ GhnPlcHelper::SetResDirectory (std::string resFolder)
 void
 GhnPlcHelper::AllowCooperation (bool v)
 {
-  if(v)m_llcFlowTid = GhnPlcLlcCodedFlow::GetTypeId ();
+  if(v)
+    {
+      m_llcFlowTid = GhnPlcLlcCodedFlow::GetTypeId ();
+    }
+  m_allowCooperation = v;
 }
 void
-GhnPlcHelper::SetAppMap(std::map<UanAddress, Application> appMap)
+GhnPlcHelper::SetAppMap(std::map<UanAddress, Ptr<Application> > appMap)
 {
   m_appMap = appMap;
 }

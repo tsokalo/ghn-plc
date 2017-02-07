@@ -149,7 +149,7 @@ public:
   void
   AllowCooperation (bool v = true);
   void
-  SetAppMap(std::map<UanAddress, Application> appMap);
+  SetAppMap(std::map<UanAddress, Ptr<Application> > appMap);
 
 protected:
 
@@ -188,10 +188,12 @@ protected:
   Ptr<GhnPlcRoutingTable> m_routingTable;
   Ptr<GhnPlcBitLoading> m_bitLoadingTable;
   Ptr<GhnPlcStats> m_ncStats;
+  ncr::SimParameters m_sp;
+  bool m_allowCooperation;
 
   std::map<uint32_t, UanAddress> m_addressByIdMap;
 
-  std::vector<Ptr<GhnPlcLlcCodedFlow> > m_flowStack;
+  std::vector<Ptr<GhnPlcLlcFlow> > m_flowStack;
   std::string m_resDir;
   uint16_t m_maxCwSize;
 
@@ -201,7 +203,7 @@ protected:
   //
   TracedCallback<double, double, double> m_costTrace;
 
-  std::map<UanAddress, Application> m_appMap;
+  std::map<UanAddress, Ptr<Application> > m_appMap;
 };
 }
 }

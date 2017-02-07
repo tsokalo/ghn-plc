@@ -9,8 +9,10 @@
 #define GHN_PLC_LLCCODEDFLOW_H_
 
 #include <memory>
+#include <functional>
 
 #include "ghn-plc-llc-flow.h"
+#include "ghn-plc-utilities.h"
 
 #include "header.h"
 #include "nc-routing-rules.h"
@@ -27,7 +29,7 @@ class GhnPlcLlcCodedFlow: public GhnPlcLlcFlow {
 	typedef std::shared_ptr<ncr::NcRoutingRules> routing_rules_ptr;
 	typedef std::shared_ptr<ncr::encoder_queue> encoder_queue_ptr;
 	typedef std::shared_ptr<ncr::decoder_queue> decoder_queue_ptr;
-	typedef Callback<void, uint16_t> GenCallback;
+	typedef Callback<void,uint16_t> GenCallback;
 
 public:
 	static TypeId
@@ -37,41 +39,37 @@ public:
 	~GhnPlcLlcCodedFlow();
 
 	void Configure(ncr::NodeType type, ncr::UanAddress dst, ncr::SimParameters sp, GenCallback cb);
-
 	void NotifyRcvUp(ncr::GenId genId);
+	SendTuple SendDown ();
+	GroupEncAckInfo Receive (GhnBuffer buffer, ConnId connId);
+	void ReceiveAck (GroupEncAckInfo info, ConnId connId);
+	bool IsQueueEmpty ();
 
 private:
 
 	void PrepareForSend(uint64_t dataAmount);
-	Ptr<Packet> ConvertBrrHeaderToPkt(ncr::TxPlan txPlan);
-	ncr::HeaderInfo ConvertPktToBrrHeader(Ptr<Packet> pkt);
-	void ProcessDecoded(GhnBuffer buffer);
-	bool HaveFeedback();
-	GhnBuffer ConvertFeedbackToBuffer(ncr::FeedbackInfo f);
-	ncr::FeedbackInfo ConvertBufferToFeedback(GhnBuffer b);
-	Ptr<Packet> ConvertVecToPacket(std::vector<uint8_t> vec);
-	std::vector<uint8_t> ConvertPacketToVec(Ptr<Packet> pkt);
-	void ProcessRcvdPacket(Ptr<Packet> pkt, bool crc, ncr::UanAddress addr, std::map<ncr::GenId,ncr::TxPlanItem>::iterator item);
+	void ProcessDecoded(GhnBuffer buffer, ConnId connId);
 
-	ncr::UanAddress m_id;
-	ncr::NodeType m_nodeType;
+	Ptr<Packet> ConvertBrrHeaderToPkt(ncr::TxPlan txPlan);
+	ncr::BrrHeader ConvertPktToBrrHeader(Ptr<Packet> pkt);
+
+	void ProcessRcvdPacket(std::vector<uint8_t> pkt, bool crc, ncr::UanAddress addr, ncr::TxPlan::iterator item, ConnId connId);
+
+        void ProcessFeedback(ncr::FeedbackInfo f);
+        void ProcessNetDiscovery(ncr::FeedbackInfo f);
+        void ProcessRetransRequest(ncr::FeedbackInfo f);
 
 	routing_rules_ptr m_brr;
-
 	encoder_queue_ptr m_encQueue;
 	decoder_queue_ptr m_decQueue;
 
-	uint16_t m_numGen;
-	uint32_t m_genSize;
-	uint32_t m_symbolSize;
-	ncr::Datarate m_sendRate;
+        ncr::UanAddress m_id;
+        ncr::NodeType m_nodeType;
 	ncr::SimParameters m_sp;
+	ncr::symb_ssn_t m_ssn;
+	ncr::FeedbackInfo m_feedback;
 
 	ncr::get_rank_func m_getRank;
-
-	ncr::symb_ssn_t m_ssn;
-	std::map<MessType, GhnBuffer> m_feedback;
-
 	GenCallback m_genCallback;
 };
 }

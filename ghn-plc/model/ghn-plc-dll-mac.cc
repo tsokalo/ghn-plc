@@ -272,6 +272,7 @@ GhnPlcDllMacCsma::GhnPlcDllMacCsma ()
   m_uniformVar = CreateObject<UniformRandomVariable> ();
   m_minCw = 1;
   m_minCw = 5;
+  m_allowCooperation = false;
 }
 
 GhnPlcDllMacCsma::~GhnPlcDllMacCsma ()
@@ -331,12 +332,14 @@ GhnPlcDllMacCsma::DoNotifyTransmissionEnd (void)
 
   if (m_sentAck)
     {
+      assert(!m_allowCooperation);
       SetState (GAP);
       m_sentAck = false;
       m_lastEndTxEvent = Simulator::Schedule (MicroSeconds (GDOTHN_MIN_TIFG_DURATION), &GhnPlcDllMacCsma::EndTx, this);
     }
   else if (m_askedForAck)
     {
+      assert(!m_allowCooperation);
       SetState (WAIT_ACK);
       //      m_askedForAck = false;
       NS_LOG_DEBUG ("Wait for ACK");
@@ -358,11 +361,13 @@ GhnPlcDllMacCsma::DoNotifyTransmissionFailure (void)
   NS_LOG_DEBUG ("Flags: <sentAck> " << m_sentAck << " / <askedForAck> " << m_askedForAck << " / <isPacketZero> " << (m_transPacket == 0));
   if (m_sentAck)
     {
+      assert(!m_allowCooperation);
       NS_LOG_DEBUG ("No Ack retransmission after transmission failure");
       m_sentAck = false;
     }
   else if (m_askedForAck)
     {
+      assert(!m_allowCooperation);
       NS_LOG_DEBUG ("No Ack is waited after transmission failure");
       m_askedForAck = false;
     }
@@ -516,7 +521,7 @@ GhnPlcDllMacCsma::DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, c
               for(auto p : buffer) s += p->GetSize();
               return s;
             };;
-          m_mpduBits(Simulator::Now().GetMicroSeconds(), source.GetAsInt(), dest.GetAsInt(), flowId, get_bits(buffer));
+          m_mpduBits (Simulator::Now ().GetMicroSeconds (), source.GetAsInt (), dest.GetAsInt (), flowId, get_bits (buffer));
           //
           // the LLC layer decides if the ACK should be sent
           //
@@ -528,6 +533,7 @@ GhnPlcDllMacCsma::DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, c
             }
           else
             {
+              assert(!m_allowCooperation);
               if (info.invalid == false)
                 {
                   m_transPacket = GroupEncAckInfoToPkt (info);
@@ -546,7 +552,8 @@ GhnPlcDllMacCsma::DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, c
     }
   case PHY_FRAME_ACK:
     {
-      if (dest == m_dllMan->GetAddress () || m_allowCooperation)
+      assert(!m_allowCooperation);
+      if (dest == m_dllMan->GetAddress ())
         {
           m_transPacket = 0;
           m_askedForAck = false;
@@ -606,16 +613,26 @@ GhnPlcDllMacCsma::DoStartTx (void)
   if (m_sendTuple.get_conn_id ().dst != UanAddress::GetBroadcast ())
     {
       m_lastTxMulticastIndication = 0;
-      m_lastTxReplyRequired = 1;
-      m_askedForAck = true;
-      NS_LOG_LOGIC ("Send unicast packet");
-      NS_LOG_LOGIC ("Ask for ACK.");
+
+      if (!m_allowCooperation)
+        {
+          m_askedForAck = true;
+          m_lastTxReplyRequired = 1;
+          NS_LOG_LOGIC ("Send unicast packet");
+          NS_LOG_LOGIC ("Ask for ACK.");
+        }
+      else
+        {
+          m_askedForAck = false;
+          m_lastTxReplyRequired = 0;
+          NS_LOG_LOGIC ("Cooperation is allows. Not ACK is acquired");
+        }
     }
   else
     {
       m_lastTxMulticastIndication = 1;
-      m_lastTxReplyRequired = 0;
       m_askedForAck = false;
+      m_lastTxReplyRequired = 0;
       NS_LOG_LOGIC ("Send broadcast packet");
     }auto rt = m_dllMan->GetRoutingTable ();
   auto ba = UanAddress::GetBroadcast ();

@@ -6,7 +6,7 @@
 def configure(cfg):
       
 #    cfg.check(features='cxx cxxprogram', lib=['boost_chrono', 'boost_filesystem', 'boost_iostreams', 'boost_program_options', 'boost_system', 'boost_thread', 'boost_timer'], libpath=['/usr/lib/i386-linux-gnu'], uselib_store='BOOST')
-    cfg.check(features='cxx cxxprogram', lib=['Clp', 'ClpSolver', 'CoinUtils', 'Osi', 'OsiClp', 'OsiCommonTests'], cxxflags='-I /home/tsokalo/workspace/tmaTool/coin-Clp/include/coin',linkflags='-L /home/tsokalo/workspace/tmaTool/coin-Clp/lib', uselib_store='CLPSOLVER')        
+    cfg.check(features='cxx cxxprogram', lib=['Clp', 'ClpSolver', 'CoinUtils', 'Osi', 'OsiClp', 'OsiCommonTests'], cxxflags='-I /home/tsokalo/workspace/tmaTool/coin-Clp/include/coin',linkflags='-L /home/tsokalo/workspace/coin-Clp/lib', uselib_store='CLPSOLVER')        
     cfg.check(features='cxx cxxprogram', lib=['cpuid', 'fifi', 'fifi_no_dispatch', 'gauge', 'gtest', 'sak', 'tables'], libpath=['/home/tsokalo/workspace/new-kodo-rlnc/kodo-rlnc/kodo_build'], uselib_store='KODO')    
 #    cfg.check(features='cxx cxxprogram', lib=['rt'], libpath=['/usr/lib/i386-linux-gnu'], uselib_store='OTHER')  
     
@@ -17,7 +17,7 @@ def configure(cfg):
     cfg.check(features='cxx cxxprogram', lib=['traffic-generator'], libpath=['/home/tsokalo/workspace/SimpleNetworkSimulator/build/traffic/traffic/'], uselib_store='BRR')
   
 #   cfg.env.append_value("LINKFLAGS", ['-lboost_chrono', '-lboost_filesystem', '-lboost_iostreams', '-lboost_program_options', '-lboost_system', 'boost_thread', 'boost_timer', '-L/usr/lib/i386-linux-gnu'])
-    cfg.env.append_value("LINKFLAGS", ['-lClp', '-lClpSolver', '-lCoinUtils', '-lOsi', '-lOsiClp', '-lOsiCommonTests', '-L/home/tsokalo/workspace/tmaTool/coin-Clp/lib'])        
+    cfg.env.append_value("LINKFLAGS", ['-lClp', '-lClpSolver', '-lCoinUtils', '-lOsi', '-lOsiClp', '-lOsiCommonTests', '-L/home/tsokalo/workspace/coin-Clp/lib'])        
     cfg.env.append_value("LINKFLAGS", ['-lcpuid', '-lfifi', '-lfifi_no_dispatch', '-lgauge', '-lgtest', '-lsak', '-ltables', '-L/home/tsokalo/workspace/new-kodo-rlnc/kodo-rlnc/kodo_build'])    
 #    cfg.env.append_value("LINKFLAGS", ['-lrt', '-L/usr/lib/i386-linux-gnu'])  
     
@@ -26,6 +26,7 @@ def configure(cfg):
     cfg.env.append_value("LINKFLAGS", ['-lutils', '-L/home/tsokalo/workspace/SimpleNetworkSimulator/build/utils/utils/'])
     cfg.env.append_value("LINKFLAGS", ['-lgod-view-routing-rules','-lnc-routing-rules', '-L/home/tsokalo/workspace/SimpleNetworkSimulator/build/routing-rules/routing-rules/'])
     cfg.env.append_value("LINKFLAGS", ['-ltraffic-generator', '-L/home/tsokalo/workspace/SimpleNetworkSimulator/build/traffic/traffic/'])
+   
    
     cfg.env.append_value('INCLUDES', ['/home/tsokalo/workspace/new-kodo-rlnc/kodo-rlnc/src',
     '/home/tsokalo/workspace/new-kodo-rlnc/kodo-rlnc/bundle_dependencies/allocate-7c9f51/1.0.0/src',
@@ -91,7 +92,8 @@ def build(bld):
         'logging/ghn-plc-stats.cc',
         'application/ghn-plc-onoff-app.cc',
         'application/ghn-plc-packet-sink.cc',
-        'application/ghn-plc-udp-client.cc'        
+        'application/ghn-plc-udp-client.cc',
+        'application/ghn-plc-greedy-udp-client.cc'        
         ]
 
     module_test = bld.create_ns3_module_test_library('ghn-plc')
@@ -142,7 +144,8 @@ def build(bld):
         'logging/ghn-plc-read-log.h',
         'application/ghn-plc-onoff-app.h',
         'application/ghn-plc-packet-sink.h',
-        'application/ghn-plc-udp-client.h'
+        'application/ghn-plc-udp-client.h',
+        'application/ghn-plc-greedy-udp-client.h'
         ]
 
     if bld.env.ENABLE_EXAMPLES:

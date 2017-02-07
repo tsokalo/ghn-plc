@@ -533,5 +533,22 @@ RotateVarBck (VirtSsn toRotate, VirtSsn howFar, VirtSsn cycleSize)
     return (cycleSize + toRotate - howFar);
 }
 
+Ptr<Packet> ConvertVecToPacket(std::vector<uint8_t> vec)
+{
+  return Create<Packet>(vec.data(), vec.size());
+}
+std::vector<uint8_t> ConvertPacketToVec(Ptr<Packet> pkt)
+{
+  std::vector<uint8_t> v(pkt->GetSize());
+  pkt->CopyData(v.data(), pkt->GetSize());
+  return v;
+}
+GhnBuffer ConvertVecsToBuffer(std::vector<std::vector<uint8_t> > vecs)
+{
+  GhnBuffer buf;
+  for(auto vec : vecs)buf.push_back(ConvertVecToPacket(vec));
+  return buf;
+}
+
 }
 }

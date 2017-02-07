@@ -242,7 +242,7 @@ main (int argc, char *argv[])
 
   ApplicationContainer clientApp = clientHelper.Install (src_nodes);
   auto app_it = clientApp.Begin();
-  std::map<UanAddress, Application> appMap;
+  std::map<UanAddress, Ptr<Application> > appMap;
   for(auto src_dst_address_pair: address_pairs)
     {
       assert(app_it != clientApp.End());

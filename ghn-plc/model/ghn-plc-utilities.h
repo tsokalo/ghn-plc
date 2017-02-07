@@ -75,6 +75,10 @@ VirtSsn
 RotateVarFwrd (VirtSsn toRotate, VirtSsn howFar, VirtSsn cycleSize);
 VirtSsn
 RotateVarBck (VirtSsn toRotate, VirtSsn howFar, VirtSsn cycleSize);
+
+Ptr<Packet> ConvertVecToPacket(std::vector<uint8_t> vec);
+std::vector<uint8_t> ConvertPacketToVec(Ptr<Packet> pkt);
+GhnBuffer ConvertVecsToBuffer(std::vector<std::vector<uint8_t> > vec);
 }
 }
 #endif /* GHN_PLC_UTILIITES_H_ */
