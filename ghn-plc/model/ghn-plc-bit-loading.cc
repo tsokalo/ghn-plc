@@ -20,12 +20,13 @@
 #include "ns3/ghn-plc-bit-loading-data.h"
 #include "ghn-plc-net-device.h"
 
-NS_LOG_COMPONENT_DEFINE ("GhnPlcBitLoading");
+NS_LOG_COMPONENT_DEFINE("GhnPlcBitLoading");
 
 namespace ns3
 {
-namespace ghn {
-NS_OBJECT_ENSURE_REGISTERED (GhnPlcBitLoading);
+namespace ghn
+{
+NS_OBJECT_ENSURE_REGISTERED(GhnPlcBitLoading);
 
 PLC_InformationRateModel::McsInfo GhnPlcBitLoading::s_mcs_info[13] =
   {
@@ -47,12 +48,12 @@ PLC_InformationRateModel::McsInfo GhnPlcBitLoading::s_mcs_info[13] =
 TypeId
 GhnPlcBitLoading::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::GhnPlcBitLoading") .SetParent<Object> ()
+  static TypeId tid = TypeId ("ns3::GhnPlcBitLoading").SetParent<Object> ()
 
-  .AddTraceSource ("CapacityLog", "The capacity at the moment of the network start up", MakeTraceSourceAccessor (
-          &GhnPlcBitLoading::m_capacityTrace), "ns3::CapacityLogTrace::TracedCallback")
+  .AddTraceSource ("CapacityLog", "The capacity at the moment of the network start up",
+          MakeTraceSourceAccessor (&GhnPlcBitLoading::m_capacityTrace), "ns3::CapacityLogTrace::TracedCallback")
 
-  ;
+          ;
   return tid;
 }
 
@@ -68,43 +69,43 @@ GhnPlcBitLoading::~GhnPlcBitLoading ()
 void
 GhnPlcBitLoading::AddNode (Ptr<PLC_Node> node)
 {
-  NS_LOG_FUNCTION (this << node->GetVertexId());
+  NS_LOG_FUNCTION(this << node->GetVertexId());
   this->m_nodes.push_back (node);
 }
 
 ModulationAndCodingScheme
 GhnPlcBitLoading::GetModulationAndCodingScheme (uint32_t src_id, uint32_t dst_id)
 {
-  NS_LOG_FUNCTION (this);
-  NS_ASSERT_MSG(src_id <= m_mcs.size(), src_id);
-  NS_ASSERT_MSG(dst_id <= m_mcs.at(src_id).size(), dst_id);
+  NS_LOG_FUNCTION(this);
+  NS_ASSERT_MSG(src_id <= m_mcs.size (), src_id);
+  NS_ASSERT_MSG(dst_id <= m_mcs.at (src_id).size (), dst_id);
 
   return m_mcs[src_id][dst_id];
 }
 Ptr<SpectrumValue>
 GhnPlcBitLoading::GetTxPsd (uint32_t src_id, uint32_t dst_id)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
   if (dst_id == UanAddress::GetBroadcast ().GetAsInt ()) return m_txEnvelope;
 
-  NS_ASSERT_MSG(src_id <= m_blts.size(), src_id);
-  NS_ASSERT_MSG(dst_id <= m_blts.at(src_id).size(), dst_id);
+  NS_ASSERT_MSG(src_id <= m_blts.size (), src_id);
+  NS_ASSERT_MSG(dst_id <= m_blts.at (src_id).size (), dst_id);
 
   return m_blts[src_id][dst_id];
 }
 double
 GhnPlcBitLoading::GetNumEffBits (uint32_t src_id, uint32_t dst_id)
 {
-  NS_ASSERT_MSG(src_id <= m_capacityPerSymbol.size(), src_id);
-  NS_ASSERT_MSG(dst_id <= m_capacityPerSymbol.at(src_id).size(), dst_id);
+  NS_ASSERT_MSG(src_id <= m_capacityPerSymbol.size (), src_id);
+  NS_ASSERT_MSG(dst_id <= m_capacityPerSymbol.at (src_id).size (), dst_id);
 
   return m_capacityPerSymbol[src_id][dst_id];
 }
 void
 GhnPlcBitLoading::PrintBitLoadingTable ()
 {
-  NS_ASSERT(!m_mcs.empty());
-  NS_ASSERT(!m_capacityPerSymbol.empty());
+  NS_ASSERT(!m_mcs.empty ());
+  NS_ASSERT(!m_capacityPerSymbol.empty ());
 
   for (std::vector<std::vector<ModulationAndCodingScheme> >::iterator its = m_mcs.begin (); its < m_mcs.end (); its++)
     {
@@ -124,17 +125,16 @@ GhnPlcBitLoading::PrintBitLoadingTable ()
 uint32_t
 GhnPlcBitLoading::GetDataAmount (Time txTime, uint8_t src_id, uint8_t dst_id)
 {
-  NS_LOG_FUNCTION (this << txTime << (uint32_t)src_id << (uint32_t)dst_id);
-  NS_ASSERT_MSG(src_id <= m_capacityPerSymbol.size(), src_id);
-  NS_ASSERT_MSG(dst_id <= m_capacityPerSymbol.at(src_id).size(), dst_id);
+  NS_LOG_FUNCTION(this << txTime << (uint32_t)src_id << (uint32_t)dst_id);
+  NS_ASSERT_MSG(src_id <= m_capacityPerSymbol.size (), src_id);
+  NS_ASSERT_MSG(dst_id <= m_capacityPerSymbol.at (src_id).size (), dst_id);
 
   Time headerSymbDuration = PLC_Phy::GetHeaderSymbolDuration ();
   Time symbolDuration = PLC_Phy::GetSymbolDuration ();
-  double payloadSymbols =
-          (txTime.GetInteger () - headerSymbDuration.GetInteger () - PLC_Preamble::GetDuration ().GetInteger ())
-                  / symbolDuration.GetInteger ();
-  NS_LOG_DEBUG(headerSymbDuration << " / " << PLC_Preamble::GetDuration () << " / " << (txTime.GetInteger () - headerSymbDuration.GetInteger ()
-                  - PLC_Preamble::GetDuration ().GetInteger ()) << " / " << payloadSymbols << " / " << m_capacityPerSymbol[src_id][dst_id]);
+  double payloadSymbols = (txTime.GetInteger () - headerSymbDuration.GetInteger () - PLC_Preamble::GetDuration ().GetInteger ())
+          / symbolDuration.GetInteger ();
+  NS_LOG_DEBUG(
+          headerSymbDuration << " / " << PLC_Preamble::GetDuration () << " / " << (txTime.GetInteger () - headerSymbDuration.GetInteger () - PLC_Preamble::GetDuration ().GetInteger ()) << " / " << payloadSymbols << " / " << m_capacityPerSymbol[src_id][dst_id]);
   return payloadSymbols * m_capacityPerSymbol[src_id][dst_id] / 8;
 }
 Ptr<PLC_ChannelTransferImpl>
@@ -152,8 +152,8 @@ GhnPlcBitLoading::GetChannalTransferImpl (uint16_t src_id, uint16_t dst_id)
       NS_ASSERT(0);
     };
 
-  auto src_phy = find_phy(src_id);
-  auto dst_phy = find_phy(dst_id);
+  auto src_phy = find_phy (src_id);
+  auto dst_phy = find_phy (dst_id);
 
   return src_phy->GetTxInterface ()->GetChannelTransferImpl (PeekPointer (dst_phy->GetRxInterface ()));
 }
@@ -183,20 +183,21 @@ GhnPlcBitLoading::PrintCapacity ()
           if (it1 == it2) continue;
           uint32_t dst_id = (*it2)->GetVertexId ();
 
-          NS_LOG_DEBUG("Between " << src_id << " and " << dst_id << ", capacity: " << (double)m_capacityPerSymbol[src_id][dst_id] / (double)(PLC_Phy::GetSymbolDuration().GetSeconds()));
-          m_capacityTrace (src_id, dst_id, (double) m_capacityPerSymbol[src_id][dst_id]
-                  / (double) (PLC_Phy::GetSymbolDuration ().GetSeconds ()));
+          NS_LOG_DEBUG(
+                  "Between " << src_id << " and " << dst_id << ", capacity: " << (double)m_capacityPerSymbol[src_id][dst_id] / (double)(PLC_Phy::GetSymbolDuration().GetSeconds()));
+          m_capacityTrace (src_id, dst_id,
+                  (double) m_capacityPerSymbol[src_id][dst_id] / (double) (PLC_Phy::GetSymbolDuration ().GetSeconds ()));
         }
     }
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////              NcBlVarTxPsd           ////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-NS_OBJECT_ENSURE_REGISTERED (NcBlVarTxPsd);
+NS_OBJECT_ENSURE_REGISTERED(NcBlVarTxPsd);
 TypeId
 NcBlVarTxPsd::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::NcBlVarTxPsd") .SetParent<GhnPlcBitLoading> () .AddConstructor<NcBlVarTxPsd> ();
+  static TypeId tid = TypeId ("ns3::NcBlVarTxPsd").SetParent<GhnPlcBitLoading> ().AddConstructor<NcBlVarTxPsd> ();
   return tid;
 }
 NcBlVarTxPsd::NcBlVarTxPsd ()
@@ -208,7 +209,7 @@ NcBlVarTxPsd::~NcBlVarTxPsd ()
 void
 NcBlVarTxPsd::CalcBitLoadingTable ()
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
 
   NS_LOG_LOGIC("Calculation BAT for " << m_nodes.size() << " nodes");
 
@@ -238,7 +239,7 @@ NcBlVarTxPsd::CalcBitLoadingTable ()
 
           NS_LOG_LOGIC("Getting BAT between " << src_id << " and " << dst_id);
 
-          NS_ASSERT_MSG(src_id <= m_nodes.size() && dst_id <= m_nodes.size(), src_id << dst_id);
+          NS_ASSERT_MSG(src_id <= m_nodes.size () && dst_id <= m_nodes.size (), src_id << dst_id);
 
           //
           // calculate levels = N/ H^2
@@ -267,8 +268,8 @@ NcBlVarTxPsd::CalcBitLoadingTable ()
                       uint32_t band_length = std::distance (l, it);
                       uint32_t band_start = std::distance (m_txEnvelope->ValuesBegin (), l);
                       std::vector<double> nh2_part (nh2.begin () + band_start, nh2.begin () + band_start + band_length);
-                      NS_LOG_DEBUG("Band start: " << band_start << ", band end: " << band_start + band_length << ", Tx power: "
-                              << p);
+                      NS_LOG_DEBUG(
+                              "Band start: " << band_start << ", band end: " << band_start + band_length << ", Tx power: " << p);
                       m_waterFiller = std::shared_ptr<GhnPlcWaterFiller> (new GhnPlcWaterFiller (nh2_part, p));
                       std::vector<double> txD_part = m_waterFiller->CreateFill ();
                       txD.insert (txD.end (), txD_part.begin (), txD_part.end ());
@@ -307,9 +308,9 @@ NcBlVarTxPsd::CalcModulationAndCodingScheme ()
 {
   NS_LOG_FUNCTION(this);
 
-  NS_ASSERT(UanAddress::GetBroadcast().GetAsInt() >= m_nodes.size ());
-  m_mcs.resize (m_nodes.size (), std::vector<ModulationAndCodingScheme> (UanAddress::GetBroadcast ().GetAsInt () + 1,
-          ModulationAndCodingScheme ()));
+  NS_ASSERT(UanAddress::GetBroadcast ().GetAsInt () >= m_nodes.size ());
+  m_mcs.resize (m_nodes.size (),
+          std::vector<ModulationAndCodingScheme> (UanAddress::GetBroadcast ().GetAsInt () + 1, ModulationAndCodingScheme ()));
   m_capacityPerSymbol.resize (m_nodes.size (), std::vector<double> (UanAddress::GetBroadcast ().GetAsInt () + 1, 0));
 
   for (std::vector<Ptr<PLC_Node> >::iterator it1 = m_nodes.begin (); it1 != m_nodes.end (); it1++)
@@ -320,7 +321,7 @@ NcBlVarTxPsd::CalcModulationAndCodingScheme ()
           uint32_t src_id = (*it1)->GetVertexId ();
           uint32_t dst_id = (*it2)->GetVertexId ();
 
-          NS_ASSERT_MSG(src_id <= m_nodes.size() && dst_id <= m_nodes.size(), src_id << dst_id);
+          NS_ASSERT_MSG(src_id <= m_nodes.size () && dst_id <= m_nodes.size (), src_id << dst_id);
 
           for (uint16_t modulation = 12; modulation > 0; modulation--)
             {
@@ -333,7 +334,8 @@ NcBlVarTxPsd::CalcModulationAndCodingScheme ()
 
                   if (capacityPerSymbol > m_capacityPerSymbol[src_id][dst_id])
                     {
-                      NS_LOG_DEBUG("Between " << src_id << " and " << dst_id << " " << mcs << ", capacity per symbol: " << capacityPerSymbol);
+                      NS_LOG_DEBUG(
+                              "Between " << src_id << " and " << dst_id << " " << mcs << ", capacity per symbol: " << capacityPerSymbol);
                       m_capacityPerSymbol[src_id][dst_id] = capacityPerSymbol;
                       m_mcs[src_id][dst_id].mt = ModulationType (modulation);
                       m_mcs[src_id][dst_id].ct = ConvertGhnRateToPlcRate (FecRateType (codingRate));
@@ -359,7 +361,7 @@ NcBlVarTxPsd::CalcModulationAndCodingScheme ()
 double
 NcBlVarTxPsd::GetNumEffBits (ModulationAndCodingScheme mcs, SpectrumValue sinr)
 {
-  NS_LOG_FUNCTION (this << mcs);
+  NS_LOG_FUNCTION(this << mcs);
   SpectrumValue sinr_db = 20 * Log10 (sinr);
   SpectrumValue capacityPerHertz = GetCapacity (sinr_db, GhnPlcBitLoading::s_mcs_info[mcs.mt].mod,
           GhnPlcBitLoading::s_mcs_info[mcs.mt].cardinality);
@@ -378,17 +380,17 @@ NcBlVarTxPsd::GetNumEffBits (ModulationAndCodingScheme mcs, SpectrumValue sinr)
       c++;
     }
 
-  return (sum_bit * codingRates.at ((uint16_t) mcs.ct - 1) < (double) mcs.mt * c) ? 0 : (double) mcs.mt * c / codingRates.at (
-          (uint16_t) mcs.ct - 1);
+  return (sum_bit * codingRates.at ((uint16_t) mcs.ct - 1) < (double) mcs.mt * c) ? 0 :
+          (double) mcs.mt * c / codingRates.at ((uint16_t) mcs.ct - 1);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////              NcBlVarBatMap           ///////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-NS_OBJECT_ENSURE_REGISTERED (NcBlVarBatMap);
+NS_OBJECT_ENSURE_REGISTERED(NcBlVarBatMap);
 TypeId
 NcBlVarBatMap::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::NcBlVarBatMap") .SetParent<GhnPlcBitLoading> () .AddConstructor<NcBlVarBatMap> ();
+  static TypeId tid = TypeId ("ns3::NcBlVarBatMap").SetParent<GhnPlcBitLoading> ().AddConstructor<NcBlVarBatMap> ();
   return tid;
 }
 NcBlVarBatMap::NcBlVarBatMap ()
@@ -405,7 +407,7 @@ NcBlVarBatMap::SetPer (uint16_t src_id, double per)
 void
 NcBlVarBatMap::CalcBitLoadingTable ()
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
 
   NS_LOG_LOGIC("Calculation BAT for " << m_nodes.size() << " nodes");
 
@@ -456,9 +458,9 @@ NcBlVarBatMap::CalcModulationAndCodingScheme ()
 {
   NS_LOG_FUNCTION(this);
 
-  NS_ASSERT(UanAddress::GetBroadcast().GetAsInt() >= m_nodes.size ());
-  m_mcs.resize (m_nodes.size (), std::vector<ModulationAndCodingScheme> (UanAddress::GetBroadcast ().GetAsInt () + 1,
-          ModulationAndCodingScheme ()));
+  NS_ASSERT(UanAddress::GetBroadcast ().GetAsInt () >= m_nodes.size ());
+  m_mcs.resize (m_nodes.size (),
+          std::vector<ModulationAndCodingScheme> (UanAddress::GetBroadcast ().GetAsInt () + 1, ModulationAndCodingScheme ()));
   m_capacityPerSymbol.resize (m_nodes.size (), std::vector<double> (UanAddress::GetBroadcast ().GetAsInt () + 1, 0));
 
   for (std::vector<Ptr<PLC_Node> >::iterator it1 = m_nodes.begin (); it1 != m_nodes.end (); it1++)
@@ -495,7 +497,7 @@ NcBlVarBatMap::CalcModulationAndCodingScheme ()
 double
 NcBlVarBatMap::GetNumEffBits (ModulationAndCodingScheme mcs, SpectrumValue sinr)
 {
-  NS_LOG_FUNCTION (this << mcs);
+  NS_LOG_FUNCTION(this << mcs);
 
   if (!mcs.use_bat)
     {
@@ -504,7 +506,7 @@ NcBlVarBatMap::GetNumEffBits (ModulationAndCodingScheme mcs, SpectrumValue sinr)
         mcs.bat.push_back (mcs.mt);
     }
 
-  assert(mcs.bat.size() == sinr.GetSpectrumModel()->GetNumBands());
+  assert(mcs.bat.size () == sinr.GetSpectrumModel ()->GetNumBands ());
 
   double sum_bit = GetOfdmSymbolCapacity (mcs, sinr);
   double max_sum_bit = mcs.bat.get_total_bits ();
@@ -515,13 +517,13 @@ NcBlVarBatMap::GetNumEffBits (ModulationAndCodingScheme mcs, SpectrumValue sinr)
   std::array<double, 7> codingRates =
     { (4.0 / 1.0), (2.0 / 1.0), (3.0 / 2.0), (21.0 / 16.0), (6.0 / 5.0), (18.0 / 16.0), (21.0 / 20.0) };
 
-  return (sum_bit * codingRates.at ((uint16_t) mcs.ct - 1) < max_sum_bit) ? 0 : max_sum_bit / codingRates.at ((uint16_t) mcs.ct
-          - 1);
+  return (sum_bit * codingRates.at ((uint16_t) mcs.ct - 1) < max_sum_bit) ? 0 :
+          max_sum_bit / codingRates.at ((uint16_t) mcs.ct - 1);
 }
 BitAllocationTable
 NcBlVarBatMap::CalculateBat (double P_t, SpectrumValue sinr)
 {
-  SpectrumValue sinr_db = 20 * Log10 (sinr);// - m_mcs.gap2Capacity_dB;
+  SpectrumValue sinr_db = 20 * Log10 (sinr);  // - m_mcs.gap2Capacity_dB;
   //
   //  there is no force mask for modulation
   //
@@ -579,10 +581,13 @@ NcBlVarBatMap::CalculateBat (double P_t, SpectrumValue sinr)
         }
     }
 
-  std::cout << "Tone Map: ";
-  for (uint16_t i = 0; i < bat.size (); i++)
-    std::cout << i << "\t" << (uint16_t) bat.at (i) << "\n";
-  std::cout << std::endl;
+  if (0)
+    {
+      std::cout << "Tone Map: ";
+      for (uint16_t i = 0; i < bat.size (); i++)
+        std::cout << i << "\t" << (uint16_t) bat.at (i) << "\n";
+      std::cout << std::endl;
+    }
   return bat;
 }
 ser_map_t
@@ -602,7 +607,7 @@ NcBlVarBatMap::CalculateSerMap (SpectrumValue sinr)
 cap_map_t
 NcBlVarBatMap::CalculateCapMap (SpectrumValue sinr)
 {
-  SpectrumValue sinr_db = 20 * Log10 (sinr);// - m_mcs.gap2Capacity_dB;
+  SpectrumValue sinr_db = 20 * Log10 (sinr); // - m_mcs.gap2Capacity_dB;
   cap_map_t cap_map;
   cap_map.resize (sinr.GetSpectrumModel ()->GetNumBands ());
   for (uint16_t i = 0; i < sinr.GetSpectrumModel ()->GetNumBands (); i++)
@@ -617,10 +622,10 @@ NcBlVarBatMap::CalculateCapMap (SpectrumValue sinr)
 double
 NcBlVarBatMap::GetOfdmSymbolCapacity (ModulationAndCodingScheme mcs, SpectrumValue sinr)
 {
-  SpectrumValue sinr_db = 20 * Log10 (sinr);// - m_mcs.gap2Capacity_dB;
+  SpectrumValue sinr_db = 20 * Log10 (sinr); // - m_mcs.gap2Capacity_dB;
   double sum_bit = 0;
-  auto m_it = mcs.bat.begin();
-  auto sinr_db_it = sinr_db.ValuesBegin();
+  auto m_it = mcs.bat.begin ();
+  auto sinr_db_it = sinr_db.ValuesBegin ();
   while (m_it != mcs.bat.end ())
     {
       sum_bit += GetCapPerChannel (*sinr_db_it, *m_it);
@@ -633,7 +638,7 @@ double
 NcBlVarBatMap::CalcSer (ModulationType m, double sinr)
 {
   NS_ASSERT(m != NOMOD);
-  NS_ASSERT((uint16_t) m < 16);
+  NS_ASSERT((uint16_t ) m < 16);
 
   double ser = 0;
 

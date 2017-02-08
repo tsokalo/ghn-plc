@@ -67,18 +67,19 @@ main (int argc, char *argv[])
   //
   // Set constant parameters
   //
-  TopologyType topologyType = STAR_TOPOLOGY_TYPE;
+  TopologyType topologyType = LINE_TOPOLOGY_TYPE;
   std::vector<uint32_t> distance;
-  uint32_t distance_ptp = 10;
+  uint32_t distance_ptp = 1000;
   uint16_t num_modems = 3;
   if (argc > 1)
     {
       num_modems = atoi (argv[1]);
     }
+
   for (uint16_t i = 0; i < num_modems - 1; i++)
     distance.push_back (distance_ptp); //unit [meters]
   double load = 1.0; //no units
-  double dr = 200 * 1000 * 1000;//unit [bps]
+  double dr = 200 * 1000 * 1000; //unit [bps]
   double nodeRate = load * dr / (double) (num_modems - 1); //unit [bps]
   double simDuration = 1.0; //unit [s]
   double minSimDuration = 0.1; //unit [s]
@@ -126,7 +127,7 @@ main (int argc, char *argv[])
   //
   // Select background noise
   //
-  Ptr<SpectrumValue> noiseFloor = CreateBestCaseBgNoise(sm)->GetNoisePsd ();
+  Ptr<SpectrumValue> noiseFloor = CreateWorstCaseBgNoise(sm)->GetNoisePsd ();
   //
   // Create channel
   //
@@ -142,7 +143,7 @@ main (int argc, char *argv[])
   devHelper.SetNodeList (node_list);
   if (macMode == CSMA_CD)
     {
-      devHelper.DefinePhyType (GhnPlcPhyPmd::GetTypeId ());
+      devHelper.DefinePhyType (GhnPlcPhyPmdFullD::GetTypeId ());
       devHelper.DefineMacType (GhnPlcDllMacCsmaCd::GetTypeId ());
     }
   devHelper.SetNoiseFloor (noiseFloor);
@@ -178,52 +179,45 @@ main (int argc, char *argv[])
   //
   // Add transport layer
   //
-  GhnPlcUdpClientHelper clientHelper (plcInterfaces.GetAddress (0), 9, true);
-  clientHelper.SetAttribute ("PacketSize", UintegerValue (490));
-  clientHelper.SetResDirectory (resDir);
-  cout << "Added Transport layer.." << endl;
-  cout << "Configured traffic generators.." << endl;
-
-  //
   // Select and configure the source and destination nodes
-  // index of node_list corresponds to ncr::UanAddress
   //
-  typedef std::pair<UanAddress, UanAddress> AddressPair;
-  std::vector<AddressPair> address_pairs;
+  typedef std::pair<uint8_t, uint8_t> NodeIndexPair;
+  typedef std::pair<UanAddress, UanAddress> UanAdderssPair;
+  typedef std::pair<Ptr<Node>, Ptr<Node> > Ns3NodePair;
+  std::vector<NodeIndexPair> node_index_pairs;
+  std::vector<UanAdderssPair> uan_address_pairs;
+  NodeContainer dst_nodes;
   //
   // add address pairs HERE
   //
-  address_pairs.push_back (AddressPair (UanAddress (0), UadAddress (node_list.size () - 1)));
-
-  devHelper.SetSrcDstPairs(address_pairs);
-
-  std::vector<std::pair<uint32_t, uint32_t> > src_dst_pairs;
-
-  for(auto src_dst_address_pair: address_pairs)
+  node_index_pairs.push_back (NodeIndexPair (0, node_list.size () - 1));
+  //
+  // find correspondence of node indices and their UanAddresses
+  //
+  for (auto node_index_pair : node_index_pairs)
     {
-      assert(addressMap.find(src_dst_address_pair.first) != addressMap.end());
-      assert(addressMap.find(src_dst_address_pair.second) != addressMap.end());
-      src_dst_pairs.push_back (std::pair<uint32_t, uint32_t> (addressMap[src_dst_address_pair.first],
-                      addressMap[src_dst_address_pair.second]));
+      assert(addressMap.find (node_index_pair.first) != addressMap.end ());
+      assert(addressMap.find (node_index_pair.second) != addressMap.end ());
+      uan_address_pairs.push_back (UanAdderssPair (addressMap[node_index_pair.first], addressMap[node_index_pair.second]));
     }
-  NodeContainer src_nodes, dst_nodes;
-
-  for(auto src_dst_pair : src_dst_pairs)
+  //
+  // check if the communication between the selected pairs of sources and destinations is possible
+  //
+  auto devMap = devHelper.GetNetdeviceMap ();
+  for (auto node_index_pair : node_index_pairs)
     {
-      auto src_id = src_dst_pair.first;
-      auto dst_id = src_dst_pair.second;
-      cout << "Source: " << node_list.at (src_id)->GetName () << " with address "
-      << devMap[node_list.at (src_id)->GetName ()]->GetObject<PLC_NetDevice> ()->GetAddress () << endl;
-      cout << "Destination: " << node_list.at (dst_id)->GetName () << " with address "
-      << devMap[node_list.at (dst_id)->GetName ()]->GetObject<PLC_NetDevice> ()->GetAddress () << endl;
+      auto index_src = node_index_pair.first;
+      auto index_dst = node_index_pair.second;
+      auto address_src = devMap[node_list.at (index_src)->GetName ()]->GetObject<PLC_NetDevice> ()->GetAddress ();
+      auto address_dst = devMap[node_list.at (index_dst)->GetName ()]->GetObject<PLC_NetDevice> ()->GetAddress ();
 
-      src_nodes.Add(devMap[node_list.at (src_id)->GetName ()]->GetObject<PLC_NetDevice> ()->GetNode ());
-      dst_nodes.Add(devMap[node_list.at (dst_id)->GetName ()]->GetObject<PLC_NetDevice> ()->GetNode ());
+      cout << "Source: " << node_list.at (index_src)->GetName () << " with address " << address_src << endl;
+      cout << "Destination: " << node_list.at (index_dst)->GetName () << " with address " << address_dst << endl;
 
       //
       // Check if at least one route between the selected source and destination exits
       //
-      if (devHelper.IsCommunicationPossible (src_id, dst_id))
+      if (devHelper.IsCommunicationPossible (index_src, index_dst))
         {
           cout << "Ready to start! Starting.." << endl;
         }
@@ -237,31 +231,49 @@ main (int argc, char *argv[])
       //
       // Print communication cost table
       //
-      devHelper.PrintCostTable (dst_id);
+      devHelper.PrintCostTable (index_dst);
     }
-
-  ApplicationContainer clientApp = clientHelper.Install (src_nodes);
-  auto app_it = clientApp.Begin();
+  //
+  // create and install traffic generators on source nodes; collect destination nodes
+  //
   std::map<UanAddress, Ptr<Application> > appMap;
-  for(auto src_dst_address_pair: address_pairs)
+  ApplicationContainer clients;
+  for (auto node_index_pair : node_index_pairs)
     {
-      assert(app_it != clientApp.End());
-      appMap[src_dst_address_pair.first] = *app_it;
-      app_it++;
+      auto index_src = node_index_pair.first;
+      auto index_dst = node_index_pair.second;
+      auto address_dst = devMap[node_list.at (index_dst)->GetName ()]->GetObject<PLC_NetDevice> ()->GetAddress ();
+      auto ns3_node_src = devMap[node_list.at (index_src)->GetName ()]->GetObject<PLC_NetDevice> ()->GetNode ();
+
+      GhnPlcUdpClientHelper clientHelper (address_dst, 9, true);
+      clientHelper.SetAttribute ("PacketSize", UintegerValue (1000));
+      clientHelper.SetResDirectory (resDir);
+      auto clientApp = clientHelper.Install (ns3_node_src);
+
+      appMap[addressMap[index_src]] = clientApp;
+      clients.Add(clientApp);
+
+      dst_nodes.Add (devMap[node_list.at (index_dst)->GetName ()]->GetObject<PLC_NetDevice> ()->GetNode ());
     }
-  devHelper.SetAppMap(appMap);
 
+  devHelper.SetAppMap (appMap);
 
+  //
+  // create sinks on the destinations
+  //
   GhnPlcPacketSinkHelper packetSink ("ns3::UdpSocketFactory", Address (InetSocketAddress (Ipv4Address::GetAny (), 9)));
   packetSink.SetResDirectory (resDir);
   packetSink.SetLogId (logID);
-  ApplicationContainer serverApp = packetSink.Install (dst_nodes);
+  ApplicationContainer servers = packetSink.Install (dst_nodes);
+
+  cout << "Added Transport layer.." << endl;
+  cout << "Configured traffic generators.." << endl;
 
   Time startTime = Seconds (0.0);
-  serverApp.Start (startTime);
-  serverApp.Stop (startTime + Seconds (simDuration + minSimDuration));
-  clientApp.Start (startTime + Seconds (0.0001));
-  clientApp.Stop (startTime + Seconds (simDuration + minSimDuration));
+  servers.Start (startTime);
+  servers.Stop (startTime + Seconds (simDuration + minSimDuration));
+  clients.Start (startTime + Seconds (0.0001));
+  clients.Stop (startTime + Seconds (simDuration + minSimDuration));
 
   Simulator::Stop (startTime + Seconds (simDuration + minSimDuration));
 
@@ -271,13 +283,16 @@ main (int argc, char *argv[])
   // Cleanup simulation
   Simulator::Destroy ();
 
+  std::cout << "Finished the simulation" << std::endl;
+
   rv_t data, loss, latency, iat, jitter;
   ReadFileContents (resDir + "app_data_0" + logID + ".txt", data, loss, latency, iat);
   jitter = GetJitter (latency);
   std::cout << std::setprecision (5);
   FlatterIats (iat);
   uint16_t uh = 0;
-  for(auto d : iat)std::cout << uh++ << "\t" << d << "\n";
+  for (auto d : iat)
+    std::cout << uh++ << "\t" << d << "\n";
   std::cout << std::endl << std::endl << std::endl;
   bi_rv_t datarate = GetDatarate (iat, data);
 
@@ -292,6 +307,8 @@ main (int argc, char *argv[])
   std::cout << ss.str () << std::endl;
   std::string cmd = "echo \"" + ss.str () + "\" >> " + resDir + "/sim_res.txt";
   system (cmd.c_str ());
+
+  std::cout << "Finished the evaluation" << std::endl;
 
   return EXIT_SUCCESS;
 }

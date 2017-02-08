@@ -35,21 +35,24 @@ GhnPlcUdpClientHelper::GhnPlcUdpClientHelper ()
 {
 }
 
-GhnPlcUdpClientHelper::GhnPlcUdpClientHelper (Address address, uint16_t port, bool useGreedy) : m_useGreedy(useGreedy)
+GhnPlcUdpClientHelper::GhnPlcUdpClientHelper (Address address, uint16_t port, bool useGreedy) :
+        m_useGreedy (useGreedy)
 {
   m_factory.SetTypeId (useGreedy ? GhnPlcGreedyUdpClient::GetTypeId () : GhnPlcUdpClient::GetTypeId ());
   SetAttribute ("RemoteAddress", AddressValue (address));
   SetAttribute ("RemotePort", UintegerValue (port));
 }
 
-GhnPlcUdpClientHelper::GhnPlcUdpClientHelper (Ipv4Address address, uint16_t port, bool useGreedy) : m_useGreedy(useGreedy)
+GhnPlcUdpClientHelper::GhnPlcUdpClientHelper (Ipv4Address address, uint16_t port, bool useGreedy) :
+        m_useGreedy (useGreedy)
 {
   m_factory.SetTypeId (useGreedy ? GhnPlcGreedyUdpClient::GetTypeId () : GhnPlcUdpClient::GetTypeId ());
   SetAttribute ("RemoteAddress", AddressValue (Address (address)));
   SetAttribute ("RemotePort", UintegerValue (port));
 }
 
-GhnPlcUdpClientHelper::GhnPlcUdpClientHelper (Ipv6Address address, uint16_t port, bool useGreedy) : m_useGreedy(useGreedy)
+GhnPlcUdpClientHelper::GhnPlcUdpClientHelper (Ipv6Address address, uint16_t port, bool useGreedy) :
+        m_useGreedy (useGreedy)
 {
   m_factory.SetTypeId (useGreedy ? GhnPlcGreedyUdpClient::GetTypeId () : GhnPlcUdpClient::GetTypeId ());
   SetAttribute ("RemoteAddress", AddressValue (Address (address)));
@@ -69,22 +72,27 @@ GhnPlcUdpClientHelper::Install (NodeContainer c)
   for (NodeContainer::Iterator i = c.Begin (); i != c.End (); ++i)
     {
       Ptr<Node> node = *i;
-      if (!m_useGreedy)
-        {
-          Ptr<GhnPlcUdpClient> client = m_factory.Create<GhnPlcUdpClient> ();
-          client->SetResDirectory (m_resDir);
-          node->AddApplication (client);
-          apps.Add (client);
-        }
-      else
-        {
-          Ptr<GhnPlcGreedyUdpClient> client = m_factory.Create<GhnPlcGreedyUdpClient> ();
-          client->SetResDirectory (m_resDir);
-          node->AddApplication (client);
-          apps.Add (client);
-        }
+      apps.Add (Install(node));
     }
   return apps;
+}
+Ptr<Application>
+GhnPlcUdpClientHelper::Install (Ptr<Node> node)
+{
+  if (!m_useGreedy)
+    {
+      Ptr<GhnPlcUdpClient> client = m_factory.Create<GhnPlcUdpClient> ();
+      client->SetResDirectory (m_resDir);
+      node->AddApplication (client);
+      return client;
+    }
+  else
+    {
+      Ptr<GhnPlcGreedyUdpClient> client = m_factory.Create<GhnPlcGreedyUdpClient> ();
+      client->SetResDirectory (m_resDir);
+      node->AddApplication (client);
+      return client;
+    }
 }
 }
 } // namespace ns3

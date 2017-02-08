@@ -10,7 +10,7 @@
 #include "ghn-plc-llc-coded-flow.h"
 #include "header-value.h"
 
-NS_LOG_COMPONENT_DEFINE ("FictiveGhnPlcLlcCodedFlow");
+NS_LOG_COMPONENT_DEFINE ("GhnPlcLlcCodedFlow");
 
 namespace ns3
 {

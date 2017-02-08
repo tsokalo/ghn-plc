@@ -22,6 +22,7 @@
 #include "brr-feedback.h"
 #include "brr-netdiscovery.h"
 #include "sim-parameters.h"
+#include "brr-header.h"
 
 namespace ns3 {
 namespace ghn {

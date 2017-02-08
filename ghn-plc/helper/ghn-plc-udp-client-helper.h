@@ -94,6 +94,8 @@ public:
      */
   ApplicationContainer Install (NodeContainer c);
 
+  Ptr<Application> Install (Ptr<Node> c);
+
   void
   SetResDirectory (std::string resDir)
   {

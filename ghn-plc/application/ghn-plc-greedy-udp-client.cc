@@ -152,7 +152,7 @@ GhnPlcGreedyUdpClient::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
 
-  NS_LOG_UNCOND("Connecting to " << Ipv4Address::IsMatchingType(m_peerAddress) << " port " << m_peerPort);
+  NS_LOG_INFO("Connecting to " << Ipv4Address::IsMatchingType(m_peerAddress) << " port " << m_peerPort);
   if (m_socket == 0)
     {
       TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
@@ -170,6 +170,8 @@ GhnPlcGreedyUdpClient::StartApplication (void)
     }
   m_cutLog->SetResDirectory (m_resDir);
   m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
+
+  SendBatch(1);
 }
 
 void

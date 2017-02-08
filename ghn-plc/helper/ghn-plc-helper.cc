@@ -11,7 +11,8 @@
 //#include "ns3/plc-defs-extension.h"
 
 #include "ns3/ghn-plc-helper.h"
-#include "ns3/ghn-plc-module.h"
+//#include "ns3/ghn-plc-module.h"
+#include "ns3/ghn-plc-greedy-udp-client.h"
 
 namespace ns3
 {
@@ -525,7 +526,7 @@ auto  src_address = m_addressByIdMap[src_id];
   NS_LOG_UNCOND("Route between " << src_id << "(" << (uint32_t)src_address.GetAsInt() << ") "
           << " and " << dst_id << "(" << (uint32_t)dst_address.GetAsInt() << ") "
           << ": "
-          << m_routingTable->DoesRouteExist (src_address, dst_address));
+          << (m_routingTable->DoesRouteExist (src_address, dst_address) ? "exists" : "does not exist"));
   return m_routingTable->DoesRouteExist (src_address, dst_address);
 }
 void
@@ -533,6 +534,7 @@ GhnPlcHelper::PrintCostTable (uint32_t dst_id)
 {
   std::ofstream f (m_resDir + "cost.txt", std::ios_base::out);
 
+  std::cout << "Cost table:" << std::endl;
   auto dst_address = m_addressByIdMap[dst_id];
   NcNetdeviceMap::iterator dit;
   for (dit = m_netdeviceMap.begin (); dit != m_netdeviceMap.end (); dit++)

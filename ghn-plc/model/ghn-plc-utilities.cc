@@ -44,7 +44,7 @@ NS_LOG_COMPONENT_DEFINE("NC_Utilities");
 void
 CreateLineTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, Ptr<const SpectrumModel> sm, std::vector<uint32_t> distance)
 {
-  std::cout << "Creating line topology for " << distance.size () << " nodes" << std::endl;
+  std::cout << "Creating line topology for " << distance.size () + 1 << " nodes" << std::endl;
   uint16_t num_modems = distance.size () + 1;
   node_list.resize (num_modems);
 
