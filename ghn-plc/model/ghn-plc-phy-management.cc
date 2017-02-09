@@ -12,25 +12,24 @@
 
 #include "ghn-plc-phy-management.h"
 
-NS_LOG_COMPONENT_DEFINE ("GhnPlcPhyManagement");
+NS_LOG_COMPONENT_DEFINE("GhnPlcPhyManagement");
 
-namespace ns3 {
-namespace ghn {
+namespace ns3
+{
+namespace ghn
+{
 
 NS_OBJECT_ENSURE_REGISTERED (GhnPlcPhyManagement);
 
 TypeId
 GhnPlcPhyManagement::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::GhnPlcPhyManagement")
-    .SetParent<Object> ()
-    .AddConstructor<GhnPlcPhyManagement> ()
- ;
+  static TypeId tid = TypeId ("ns3::GhnPlcPhyManagement").SetParent<Object> ().AddConstructor<GhnPlcPhyManagement> ();
   return tid;
 }
 
 GhnPlcPhyManagement::GhnPlcPhyManagement () :
-		m_randGen (std::chrono::system_clock::now().time_since_epoch().count())
+        m_gen (m_rd ())
 {
   NS_LOG_FUNCTION_NOARGS ();
 
@@ -44,7 +43,7 @@ GhnPlcPhyManagement::GhnPlcPhyManagement () :
   m_rxAckReceived = false;
 }
 
-GhnPlcPhyManagement::~GhnPlcPhyManagement()
+GhnPlcPhyManagement::~GhnPlcPhyManagement ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 }
@@ -168,7 +167,8 @@ GhnPlcPhyManagement::GetTxFrameDuration (void)
   return m_txFrameDuration;
 }
 
-void GhnPlcPhyManagement::SetTxReplyRequired (uint8_t replyRequired)
+void
+GhnPlcPhyManagement::SetTxReplyRequired (uint8_t replyRequired)
 {
   m_txReplyRequired = replyRequired;
 }
@@ -202,7 +202,8 @@ GhnPlcPhyManagement::GetRxTime (void)
   return m_rxTime;
 }
 
-void GhnPlcPhyManagement::SetRxReplyRequired (uint8_t replyRequired)
+void
+GhnPlcPhyManagement::SetRxReplyRequired (uint8_t replyRequired)
 {
   m_rxReplyRequired = replyRequired;
 }
@@ -333,7 +334,7 @@ GhnPlcPhyManagement::GetTxFecBlockSizeFromHeader (void)
     return 540 * 8;
     break;
     }
-  NS_ASSERT_MSG(0, "Wrong FEC block size!");
+  NS_ASSERT_MSG (0, "Wrong FEC block size!");
   return 0;
 }
 
@@ -355,23 +356,25 @@ GhnPlcPhyManagement::GetTxTime (uint32_t mpduLength, uint8_t sourceId, uint8_t d
   uint16_t fecBlockSize = GetTxFecBlockSizeFromHeader ();
   uint32_t kFecPayloadBlocks = payloadUncodedBits / fecBlockSize;
   uint8_t repetitionsNumber = GetTxRepetitionsNumberFromHeader ();
-  uint32_t payloadEncodedBits = m_ghnPhyPma->GetPayloadEncodedBits (fecBlockSize, kFecPayloadBlocks, m_txPayloadFecRate, repetitionsNumber);
+  uint32_t payloadEncodedBits = m_ghnPhyPma->GetPayloadEncodedBits (fecBlockSize, kFecPayloadBlocks, m_txPayloadFecRate,
+          repetitionsNumber);
   uint32_t payloadSymbols = ceil ((double) payloadEncodedBits / m_ghnPhyPma->GetBitsPerSymbol ());
-  return Time::FromInteger((payloadSymbols + m_txHeaderSegmentationIndication + 1) * PLC_Phy::GetSymbolDuration ().GetInteger () +
-          PLC_Preamble::GetDuration ().GetInteger (), Time::GetResolution());
+  return Time::FromInteger (
+          (payloadSymbols + m_txHeaderSegmentationIndication + 1) * PLC_Phy::GetSymbolDuration ().GetInteger ()
+                  + PLC_Preamble::GetDuration ().GetInteger (), Time::GetResolution ());
 }
 
 uint32_t
 GhnPlcPhyManagement::GetDataAmount (Time txTime, uint8_t sourceId, uint8_t destinationId)
 {
-  uint32_t payloadSymbols = (txTime.GetInteger () - (m_txHeaderSegmentationIndication + 1) *
-          (PLC_Phy::GetHeaderSymbolDuration()).GetInteger () -
-          PLC_Preamble::GetDuration ().GetInteger ()) / (PLC_Phy::GetSymbolDuration()).GetInteger ();
+  uint32_t payloadSymbols = (txTime.GetInteger ()
+          - (m_txHeaderSegmentationIndication + 1) * (PLC_Phy::GetHeaderSymbolDuration ()).GetInteger ()
+          - PLC_Preamble::GetDuration ().GetInteger ()) / (PLC_Phy::GetSymbolDuration ()).GetInteger ();
   uint32_t payloadEncodedBits = payloadSymbols * m_ghnPhyPma->GetBitsPerSymbol ();
   uint8_t repetitionsNumber = GetTxRepetitionsNumberFromHeader ();
   uint32_t payloadUncodedBits = payloadEncodedBits / repetitionsNumber;
   switch (m_txPayloadFecRate)
-  {
+    {
   case FEC_RATE_1_2:
     payloadUncodedBits = payloadUncodedBits * 1 / 2;
     break;
@@ -387,39 +390,39 @@ GhnPlcPhyManagement::GetDataAmount (Time txTime, uint8_t sourceId, uint8_t desti
   case FEC_RATE_20_21:
     payloadUncodedBits = payloadUncodedBits * 20 / 21;
     break;
-  }
+    }
   return payloadUncodedBits;
 }
 
 uint32_t
 GhnPlcPhyManagement::GetDatarate (uint8_t sourceId, uint8_t destinationId)
 {
-  return (double) m_ghnPhyPma->GetBitsPerSymbol () / (PLC_Phy::GetSymbolDuration()).GetSeconds ();
+  return (double) m_ghnPhyPma->GetBitsPerSymbol () / (PLC_Phy::GetSymbolDuration ()).GetSeconds ();
 }
 
-bool GhnPlcPhyManagement::IsBlockSuccess()
+bool
+GhnPlcPhyManagement::IsBlockSuccess ()
 {
-  NS_ASSERT(!m_frameSizeCallback.IsNull() && !m_gatheredInfBitsCallback.IsNull());
-	std::array<double, 2> block_size = {120, 540};
-	uint32_t bs = block_size.at(m_txFecBlockSize);
+  NS_ASSERT (!m_frameSizeCallback.IsNull () && !m_gatheredInfBitsCallback.IsNull ());
+  std::array<double, 2> block_size =
+    { 120, 540 };
+  uint32_t bs = block_size.at (m_txFecBlockSize);
 
-	std::array<double, 6> fec_rate = {1, 1.0/2.0, 2.0/3.0, 5.0/6.0, 16.0/18.0, 20.0/21.0};
-	double fc = fec_rate.at(m_txPayloadFecRate);
+  std::array<double, 6> fec_rate =
+    { 1, 1.0 / 2.0, 2.0 / 3.0, 5.0 / 6.0, 16.0 / 18.0, 20.0 / 21.0 };
+  double fc = fec_rate.at (m_txPayloadFecRate);
 
-	uint32_t frame_size = m_frameSizeCallback();
-	uint32_t gathered_bits = m_gatheredInfBitsCallback();
-	uint32_t sent_bits = (double)frame_size / fc;
-	double ber = (gathered_bits > sent_bits) ? 0 : (double)(sent_bits - gathered_bits) / (double)sent_bits;
-	std::binomial_distribution<uint32_t> m_binomDistr(bs, 1 - ber);
-	uint32_t gathered_bits_rand = m_binomDistr(m_randGen);
+  uint32_t frame_size = m_frameSizeCallback ();
+  uint32_t gathered_bits = m_gatheredInfBitsCallback ();
+  uint32_t sent_bits = (double) frame_size / fc;
+  double ber = (gathered_bits > sent_bits) ? 0 : (double) (sent_bits - gathered_bits) / (double) sent_bits;
+  std::binomial_distribution<uint32_t> m_binomDistr (bs / fc, 1 - ber);
+  uint32_t gathered_bits_rand = m_binomDistr (m_gen);
 
-	NS_LOG_DEBUG("Frame size: " << frame_size << ", Gathered bits: " << gathered_bits
-			<< ", FEC rate: " << m_txPayloadFecRate << " -> " << fc
-			<< ", Sent bits: " << sent_bits << ", BER: " << ber << ", BS: " << bs
-			<< ", Gathered rand bits: " << gathered_bits_rand << ", bs * fc: " << bs * fc
-			<< ", ret: " << (gathered_bits_rand >= bs * fc));
+  NS_LOG_DEBUG(
+          "Frame size: " << frame_size << ", Gathered bits: " << gathered_bits << ", FEC rate: " << m_txPayloadFecRate << " -> " << fc << ", Sent bits: " << sent_bits << ", BER: " << ber << ", BS: " << bs << ", Gathered rand bits: " << gathered_bits_rand << ", ret: " << (gathered_bits_rand >= bs));
 
-	return (gathered_bits_rand >= bs * fc);
+  return (gathered_bits_rand >= bs);
 }
 }
 } // namespace ns3

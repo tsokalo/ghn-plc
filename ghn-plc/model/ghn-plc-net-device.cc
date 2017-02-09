@@ -143,6 +143,7 @@ bool
 GhnPlcNetDevice::SendFrom (Ptr<Packet> packet, const Address& src, const Address& dest, uint16_t protocolNumber)
 {
   NS_LOG_FUNCTION (this << src << dest << packet->GetSize() << protocolNumber);
+  NS_LOG_INFO("Src: " << src << ", Dst: " << dest << ", Protocol " << protocolNumber << ", Pkt size: " << packet->GetSize());
   NS_LOG_LOGIC ("UID is " << packet->GetUid ());
   NS_LOG_LOGIC ("PLC_NetDevice::SendFrom: Packet size without header: " << packet->GetSize ());
 

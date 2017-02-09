@@ -168,7 +168,7 @@ private:
       {
         auto l = m_flows.at (i).first;
 
-        if (!m_allowCooperation)
+        if (!m_allowCooperation || connId.dst == UanAddress::GetBroadcast () || connId.flowId == MANAGMENT_CONN_ID)
           {
             if (connId.flowId == -1 || l.flowId == -1)
               {

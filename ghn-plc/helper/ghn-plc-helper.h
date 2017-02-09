@@ -35,9 +35,11 @@ namespace ns3
 {
 namespace ghn {
 typedef std::map<std::string, Ptr<GhnPlcNetDevice> > NcNetdeviceMap;
+typedef std::map<uint32_t, UanAddress> AddressMap;
 
 class GhnPlcHelper : public Object
 {
+
 public:
   static TypeId
   GetTypeId (void);
@@ -97,7 +99,7 @@ public:
     m_payload_mcs = mcs;
   }
 
-  std::map<UanAddress, uint32_t>
+  AddressMap
   Setup (void);
 
   void
@@ -179,7 +181,6 @@ protected:
   ModulationAndCodingScheme m_payload_mcs;
   TypeId m_phyTid;
   TypeId m_macTid;
-  TypeId m_llcFlowTid;
   TypeId m_bitLoadingTid;
   bool m_create_nodes;
   BandPlanType m_bandplan;
@@ -191,7 +192,7 @@ protected:
   ncr::SimParameters m_sp;
   bool m_allowCooperation;
 
-  std::map<uint32_t, UanAddress> m_addressByIdMap;
+  AddressMap m_addressMap;
 
   std::vector<Ptr<GhnPlcLlcFlow> > m_flowStack;
   std::string m_resDir;

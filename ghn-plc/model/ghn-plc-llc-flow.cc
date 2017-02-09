@@ -244,9 +244,9 @@ GhnPlcLlcFlow::CheckCrc (GhnBuffer &buffer)
       RemoveCrc(packet);
       packet->PeekHeader (header);
       bool blockSuccess = phym->IsBlockSuccess();
-      if (header.GetVsf () != INVALID_VSF_VALUE && blockSuccess)
+      if (blockSuccess)
         {
-          NS_LOG_DEBUG("Flow " << m_connId << ": " << "CRC OK. The segment will be sent to the decoder: " << blockSuccess);
+          NS_LOG_DEBUG("Flow " << m_connId << ": " << "CRC OK. The segment will be sent to the decoder");
           state.push_back (DONE_SEGMENT_STATE);
         }
       else

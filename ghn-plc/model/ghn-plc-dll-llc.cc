@@ -14,12 +14,13 @@
 #include "ghn-plc-llc-coded-flow.h"
 #include "ghn-plc-lpdu-header.h"
 
-NS_LOG_COMPONENT_DEFINE ("GhnPlcDllLlc");
+NS_LOG_COMPONENT_DEFINE("GhnPlcDllLlc");
 
 namespace ns3
 {
-namespace ghn {
-NS_OBJECT_ENSURE_REGISTERED (GhnPlcDllLlc);
+namespace ghn
+{
+NS_OBJECT_ENSURE_REGISTERED(GhnPlcDllLlc);
 
 GhnPlcDllLlc::GhnPlcDllLlc ()
 {
@@ -35,13 +36,13 @@ GhnPlcDllLlc::~GhnPlcDllLlc ()
 TypeId
 GhnPlcDllLlc::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::GhnPlcDllLlc") .SetParent<Object> ()
+  static TypeId tid = TypeId ("ns3::GhnPlcDllLlc").SetParent<Object> ()
 
   .AddTraceSource ("LlcNoUseDroppedLog", "Received data by LLC but dropped because I don't belong to the main route",
           MakeTraceSourceAccessor (&GhnPlcDllLlc::m_llcNoUseDroppedLogTrace), "ns3::LlcNoUseDroppedLog::TracedCallback")
 
-  .AddTraceSource ("LlcRcvLog", "Log about all received LPDUs on LLC (dropped/fail CRC/normal)", MakeTraceSourceAccessor (
-          &GhnPlcDllLlc::m_llcRcvLogTrace), "ns3::LlcRcvLog::TracedCallback");
+  .AddTraceSource ("LlcRcvLog", "Log about all received LPDUs on LLC (dropped/fail CRC/normal)",
+          MakeTraceSourceAccessor (&GhnPlcDllLlc::m_llcRcvLogTrace), "ns3::LlcRcvLog::TracedCallback");
   return tid;
 }
 
@@ -55,7 +56,7 @@ GhnPlcDllLlc::AllowCooperation (bool v)
 void
 GhnPlcDllLlc::SetDllMac (Ptr<GhnPlcDllMacCsma> dllMac)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
   m_dllMac = dllMac;
 }
 
@@ -96,7 +97,7 @@ GhnPlcDllLlc::SetCreateFlowCallback (CreateFlowCallback cb)
 bool
 GhnPlcDllLlc::SendFrom (Ptr<Packet> packet, const UanAddress& source, const UanAddress& dest, int16_t ttl)
 {
-  NS_LOG_FUNCTION (this << packet->GetSize());
+  NS_LOG_FUNCTION(this << packet->GetSize());
 
   auto dll = m_dllMac->GetDllManagement ();
 
@@ -104,6 +105,11 @@ GhnPlcDllLlc::SendFrom (Ptr<Packet> packet, const UanAddress& source, const UanA
   // in this implementation there can be only one flow between a given source and a destination
   //
   ConnId connId = ConnId (source, dest);
+
+  //
+  // treat packets differently depending on their size
+  //
+  connId.flowId = (m_allowCooperation && packet->GetSize() < 500) ? MANAGMENT_CONN_ID : connId.flowId;
 
   MatchFlow (connId);
 
@@ -113,7 +119,7 @@ GhnPlcDllLlc::SendFrom (Ptr<Packet> packet, const UanAddress& source, const UanA
 GroupEncAckInfo
 GhnPlcDllLlc::Receive (GhnBuffer buffer, ConnId connId)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
 
   if (m_aggr.empty ()) CreateLogger ();
 
@@ -143,8 +149,10 @@ GhnPlcDllLlc::Receive (GhnBuffer buffer, ConnId connId)
     {
       if (!dll->GetRoutingTable ()->IsNextOnRoute (connId.src, connId.dst, dll->GetAddress ()))
         {
-          NS_LOG_DEBUG ("Drop the packets");
-          for(auto packet : buffer)m_llcNoUseDroppedLogTrace (connId.dst.GetAsInt (), connId.src.GetAsInt (), dll->GetAddress ().GetAsInt (), packet->GetSize ());
+          NS_LOG_DEBUG("Drop the packets");
+          for (auto packet : buffer)
+            m_llcNoUseDroppedLogTrace (connId.dst.GetAsInt (), connId.src.GetAsInt (), dll->GetAddress ().GetAsInt (),
+                    packet->GetSize ());
           return GroupEncAckInfo (false);
         }
     }
@@ -170,12 +178,12 @@ GhnPlcDllLlc::Receive (GhnBuffer buffer, ConnId connId)
 void
 GhnPlcDllLlc::ReceiveAck (GroupEncAckInfo info, ConnId connId)
 {
-  NS_LOG_FUNCTION (this << connId);
+  NS_LOG_FUNCTION(this << connId);
 
   auto dll = m_dllMac->GetDllManagement ();
 
   NS_ASSERT(connId.dst != dll->GetBroadcast ());
-  NS_ASSERT(connId.IsFlowIdValid());
+  NS_ASSERT(connId.IsFlowIdValid ());
   //
   // if packet is destined to us
   //
@@ -186,7 +194,7 @@ GhnPlcDllLlc::ReceiveAck (GroupEncAckInfo info, ConnId connId)
     }
   connId.SwapSrcDst ();
 
-  NS_ASSERT_MSG (m_flowMap.is_in (connId), "We do not have a corresponding flow fo this ACK");
+  NS_ASSERT_MSG(m_flowMap.is_in (connId), "We do not have a corresponding flow fo this ACK");
   m_flowMap.at (connId).ReceiveAck (info, connId);
 }
 SendTuple
@@ -232,6 +240,8 @@ GhnPlcDllLlc::MatchFlow (ConnId &connId)
 
   auto c = m_flowMap.match (connId);
 
+  NS_LOG_INFO("Connection " << connId << " matches " << c);
+
   //
   // In this implementation there can be only one flow between a selected source and destination
   //
@@ -240,15 +250,19 @@ GhnPlcDllLlc::MatchFlow (ConnId &connId)
 void
 GhnPlcDllLlc::CreateLogger ()
 {
-  m_aggr.push_back (CreateObject<FileAggregator> (m_resDir + "llc_dropped_nouse_" + std::to_string (
-          m_dllMac->GetDllManagement ()->GetAddress ().GetAsInt ()) + ".txt", FileAggregator::FORMATTED));
+  m_aggr.push_back (
+          CreateObject<FileAggregator> (
+                  m_resDir + "llc_dropped_nouse_" + std::to_string (m_dllMac->GetDllManagement ()->GetAddress ().GetAsInt ())
+                          + ".txt", FileAggregator::FORMATTED));
   auto aggr = *(m_aggr.end () - 1);
   aggr->Set4dFormat ("%.0f\t%.0f\t%.0f\t%.0f");
   aggr->Enable ();
   TraceConnect ("LlcNoUseDroppedLog", "LlcNoUseDroppedLogContext", MakeCallback (&FileAggregator::Write4d, aggr));
 
-  m_aggr.push_back (CreateObject<FileAggregator> (m_resDir + "llc_rcv_all_" + std::to_string (
-          m_dllMac->GetDllManagement ()->GetAddress ().GetAsInt ()) + ".txt", FileAggregator::FORMATTED));
+  m_aggr.push_back (
+          CreateObject<FileAggregator> (
+                  m_resDir + "llc_rcv_all_" + std::to_string (m_dllMac->GetDllManagement ()->GetAddress ().GetAsInt ())
+                          + ".txt", FileAggregator::FORMATTED));
   aggr = *(m_aggr.end () - 1);
   aggr->Set7dFormat ("%.0f\t%.0f\t%.0f\t%.0f\t%.0f\t%.0f\t%.0f");
   aggr->Enable ();
@@ -263,8 +277,8 @@ GhnPlcDllLlc::SaveRcvLog (GhnBuffer buffer, ConnId connId)
 
   double orig_cost = rt->GetRouteCost (connId.src, connId.dst);
   double my_cost = rt->GetRouteCost (my, connId.dst);
-  NS_LOG_DEBUG("Src: " << connId.src << "\tDst: " << connId.dst << "\tMy: " <<
-          my << "\tOrig. cost: " << orig_cost << "\tMy cost: " << my_cost);
+  NS_LOG_DEBUG(
+          "Src: " << connId.src << "\tDst: " << connId.dst << "\tMy: " << my << "\tOrig. cost: " << orig_cost << "\tMy cost: " << my_cost);
   //  bool behind = (my_cost > orig_cost);
   //
   //  if(behind)return;
@@ -278,11 +292,12 @@ GhnPlcDllLlc::SaveRcvLog (GhnBuffer buffer, ConnId connId)
 
   uint16_t mpduSeqNum = m_dllMac->GetPhyManagement ()->GetMcAckSlotsNumber ();
 
-  for(auto packet : buffer)
+  for (auto packet : buffer)
     {
-      if(!m_dllMac->GetPhyManagement()->IsBlockSuccess())continue;
-      packet->PeekHeader(header);
-      m_llcRcvLogTrace(mpduSeqNum, connId.src.GetAsInt(), my.GetAsInt(), drop, before_next_hop, i_am_next_hop, header.GetSsn());
+      if (!m_dllMac->GetPhyManagement ()->IsBlockSuccess ()) continue;
+      packet->PeekHeader (header);
+      m_llcRcvLogTrace (mpduSeqNum, connId.src.GetAsInt (), my.GetAsInt (), drop, before_next_hop, i_am_next_hop,
+              header.GetSsn ());
     };;
 }
 

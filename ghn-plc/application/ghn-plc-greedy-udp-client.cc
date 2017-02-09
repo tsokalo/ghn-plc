@@ -102,7 +102,7 @@ GhnPlcGreedyUdpClient::SetRemote (Address ip, uint16_t port)
   m_peerPort = port;
 }
 void
-GhnPlcGreedyUdpClient::SendBatch (uint16_t numPkts)
+GhnPlcGreedyUdpClient::SendBatch (uint32_t numBytes)
 {
   NS_LOG_FUNCTION (this);
   NS_ASSERT (m_sendEvent.IsExpired ());
@@ -117,7 +117,7 @@ GhnPlcGreedyUdpClient::SendBatch (uint16_t numPkts)
       peerAddressStringStream << Ipv6Address::ConvertFrom (m_peerAddress);
     }
 
-  while (numPkts != 0)
+  while (numBytes >= m_size)
     {
       Ptr<Packet> p = Create<Packet> (m_size);
       m_cutLog->AddLogData (p, this->GetNode ()->GetId ());
@@ -136,7 +136,7 @@ GhnPlcGreedyUdpClient::SendBatch (uint16_t numPkts)
           NS_LOG_INFO ("Error while sending " << m_size << " bytes to "
                   << peerAddressStringStream.str ());
         }
-      numPkts--;
+      numBytes -= m_size;
     }
 }
 
@@ -152,26 +152,35 @@ GhnPlcGreedyUdpClient::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
 
-  NS_LOG_INFO("Connecting to " << Ipv4Address::IsMatchingType(m_peerAddress) << " port " << m_peerPort);
   if (m_socket == 0)
     {
       TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tid);
       if (Ipv4Address::IsMatchingType (m_peerAddress) == true)
         {
+          NS_LOG_INFO("Connecting to " << Ipv4Address::ConvertFrom (m_peerAddress) << " port " << m_peerPort);
           m_socket->Bind ();
           m_socket->Connect (InetSocketAddress (Ipv4Address::ConvertFrom (m_peerAddress), m_peerPort));
         }
       else if (Ipv6Address::IsMatchingType (m_peerAddress) == true)
         {
+          NS_LOG_INFO("Connecting to " << Ipv6Address::ConvertFrom (m_peerAddress) << " port " << m_peerPort);
           m_socket->Bind6 ();
           m_socket->Connect (Inet6SocketAddress (Ipv6Address::ConvertFrom (m_peerAddress), m_peerPort));
         }
+      else
+        {
+          NS_ASSERT_MSG(0, "The address " << m_peerAddress << " matches neither IPv4 nor IPv6 address spaces");
+        }
+    }
+  else
+    {
+      NS_LOG_INFO("Socket is already created");
     }
   m_cutLog->SetResDirectory (m_resDir);
   m_socket->SetRecvCallback (MakeNullCallback<void, Ptr<Socket> > ());
 
-  SendBatch(1);
+  SendBatch(m_size);
 }
 
 void

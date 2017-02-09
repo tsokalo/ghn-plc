@@ -30,7 +30,7 @@ class GhnPlcLlcCodedFlow: public GhnPlcLlcFlow {
 	typedef std::shared_ptr<ncr::NcRoutingRules> routing_rules_ptr;
 	typedef std::shared_ptr<ncr::encoder_queue> encoder_queue_ptr;
 	typedef std::shared_ptr<ncr::decoder_queue> decoder_queue_ptr;
-	typedef Callback<void,uint16_t> GenCallback;
+	typedef Callback<void,uint32_t> GenCallback;
 
 public:
 	static TypeId

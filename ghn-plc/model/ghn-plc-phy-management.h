@@ -161,7 +161,8 @@ private:
   uint8_t m_rxConnectionIdentifier; //used to transfer current MAC
   uint16_t m_rxCtmgData16; //used to transfer current MAC in CTMG
 
-  std::default_random_engine m_randGen;
+  std::random_device m_rd;
+  std::mt19937 m_gen;
 
   FrameSizeCallback m_frameSizeCallback;
   GatheredInfBitsCallback m_gatheredInfBitsCallback;

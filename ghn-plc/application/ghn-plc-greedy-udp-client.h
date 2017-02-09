@@ -90,7 +90,7 @@ public:
     m_resDir = resDir;
   }
   void
-  SendBatch(uint16_t numPkts);
+  SendBatch(uint32_t numBytes);
 
 protected:
   virtual void

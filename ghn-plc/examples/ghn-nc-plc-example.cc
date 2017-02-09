@@ -69,8 +69,8 @@ main (int argc, char *argv[])
   //
   TopologyType topologyType = LINE_TOPOLOGY_TYPE;
   std::vector<uint32_t> distance;
-  uint32_t distance_ptp = 1000;
-  uint16_t num_modems = 3;
+  uint32_t distance_ptp = 100;
+  uint16_t num_modems = 2;
   if (argc > 1)
     {
       num_modems = atoi (argv[1]);
