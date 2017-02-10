@@ -33,6 +33,7 @@ operator<< (std::ostream& os, GhnPlcCsmaNodeState state);
 typedef Callback<uint64_t> BackoffValueCallback;
 typedef Callback<void, ModulationAndCodingScheme> SetMcsCallback;
 typedef Callback<void, Ptr<SpectrumValue> > SetTxPsdCallback;
+typedef Callback<void, uint64_t> TimeCallback;
 
 class GhnPlcPhyManagement;
 class GhnPlcDllManagement;
@@ -123,6 +124,10 @@ public:
   {
     m_resDir = resDir;
   }
+  void SetTimeCallback(TimeCallback cb)
+  {
+    m_setTimeCallback = cb;
+  }
 
 protected:
 
@@ -170,6 +175,8 @@ protected:
   TracedCallback<double, double, double, double, double> m_mpduBits;
 
   std::string m_resDir;
+
+  TimeCallback m_setTimeCallback;
 };
 /*
  * CSMA with Collision Avoidance

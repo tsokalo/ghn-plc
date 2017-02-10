@@ -33,74 +33,66 @@
 
 #include "ghn-plc-packet-sink.h"
 
-namespace ns3 {
-namespace ghn {
+namespace ns3
+{
+namespace ghn
+{
 
-NS_LOG_COMPONENT_DEFINE ("GhnPlcPacketSink");
+NS_LOG_COMPONENT_DEFINE("GhnPlcPacketSink");
 
-NS_OBJECT_ENSURE_REGISTERED (GhnPlcPacketSink);
+NS_OBJECT_ENSURE_REGISTERED(GhnPlcPacketSink);
 
 TypeId
 GhnPlcPacketSink::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::GhnPlcPacketSink")
-    .SetParent<Application> ()
-    .SetGroupName("Applications")
-    .AddConstructor<GhnPlcPacketSink> ()
-    .AddAttribute ("Local",
-                   "The Address on which to Bind the rx socket.",
-                   AddressValue (),
-                   MakeAddressAccessor (&GhnPlcPacketSink::m_local),
-                   MakeAddressChecker ())
-    .AddAttribute ("Protocol",
-                   "The type id of the protocol to use for the rx socket.",
-                   TypeIdValue (UdpSocketFactory::GetTypeId ()),
-                   MakeTypeIdAccessor (&GhnPlcPacketSink::m_tid),
-                   MakeTypeIdChecker ())
-    .AddTraceSource ("Rx",
-                     "A packet has been received",
-                     MakeTraceSourceAccessor (&GhnPlcPacketSink::m_rxTrace),
-                     "ns3::Packet::PacketAddressTracedCallback")
-  ;
+  static TypeId tid = TypeId ("ns3::GhnPlcPacketSink").SetParent<Application> ().SetGroupName ("Applications").AddConstructor<
+          GhnPlcPacketSink> ().AddAttribute ("Local", "The Address on which to Bind the rx socket.", AddressValue (),
+          MakeAddressAccessor (&GhnPlcPacketSink::m_local), MakeAddressChecker ()).AddAttribute ("Protocol",
+          "The type id of the protocol to use for the rx socket.", TypeIdValue (UdpSocketFactory::GetTypeId ()),
+          MakeTypeIdAccessor (&GhnPlcPacketSink::m_tid), MakeTypeIdChecker ()).AddTraceSource ("Rx",
+          "A packet has been received", MakeTraceSourceAccessor (&GhnPlcPacketSink::m_rxTrace),
+          "ns3::Packet::PacketAddressTracedCallback");
   return tid;
 }
 
 GhnPlcPacketSink::GhnPlcPacketSink ()
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
   m_socket = 0;
   m_totalRx = 0;
-  m_cutLog = CreateObject<GhnPlcCutLog>();
+  m_cutLog = CreateObject<GhnPlcCutLog> ();
 }
 
-GhnPlcPacketSink::~GhnPlcPacketSink()
+GhnPlcPacketSink::~GhnPlcPacketSink ()
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
 }
 
-uint32_t GhnPlcPacketSink::GetTotalRx () const
+uint32_t
+GhnPlcPacketSink::GetTotalRx () const
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
   return m_totalRx;
 }
 
 Ptr<Socket>
 GhnPlcPacketSink::GetListeningSocket (void) const
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
   return m_socket;
 }
 
 std::list<Ptr<Socket> >
 GhnPlcPacketSink::GetAcceptedSockets (void) const
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
   return m_socketList;
 }
 
-void GhnPlcPacketSink::DoDispose (void)
+void
+GhnPlcPacketSink::DoDispose (void)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
   m_socket = 0;
   m_socketList.clear ();
 
@@ -108,13 +100,13 @@ void GhnPlcPacketSink::DoDispose (void)
   Application::DoDispose ();
 }
 
-
 // Application Methods
-void GhnPlcPacketSink::StartApplication ()    // Called at time specified by Start
+void
+GhnPlcPacketSink::StartApplication ()    // Called at time specified by Start
 {
-  NS_LOG_FUNCTION (this);
-  m_cutLog->SetResDirectory(m_resDir);
-  m_cutLog->SetLogId(m_logId);
+  NS_LOG_FUNCTION(this);
+  m_cutLog->SetResDirectory (m_resDir);
+  m_cutLog->SetLogId (m_logId);
   // Create the socket if not already
   if (!m_socket)
     {
@@ -132,24 +124,23 @@ void GhnPlcPacketSink::StartApplication ()    // Called at time specified by Sta
             }
           else
             {
-              NS_FATAL_ERROR ("Error: joining multicast on a non-UDP socket");
+              NS_FATAL_ERROR("Error: joining multicast on a non-UDP socket");
             }
         }
     }
 
   m_socket->SetRecvCallback (MakeCallback (&GhnPlcPacketSink::HandleRead, this));
-  m_socket->SetAcceptCallback (
-    MakeNullCallback<bool, Ptr<Socket>, const Address &> (),
-    MakeCallback (&GhnPlcPacketSink::HandleAccept, this));
-  m_socket->SetCloseCallbacks (
-    MakeCallback (&GhnPlcPacketSink::HandlePeerClose, this),
-    MakeCallback (&GhnPlcPacketSink::HandlePeerError, this));
+  m_socket->SetAcceptCallback (MakeNullCallback<bool, Ptr<Socket>, const Address &> (),
+          MakeCallback (&GhnPlcPacketSink::HandleAccept, this));
+  m_socket->SetCloseCallbacks (MakeCallback (&GhnPlcPacketSink::HandlePeerClose, this),
+          MakeCallback (&GhnPlcPacketSink::HandlePeerError, this));
 }
 
-void GhnPlcPacketSink::StopApplication ()     // Called at time specified by Stop
+void
+GhnPlcPacketSink::StopApplication ()     // Called at time specified by Stop
 {
-  NS_LOG_FUNCTION (this);
-  while(!m_socketList.empty ()) //these are accepted sockets, close them
+  NS_LOG_FUNCTION(this);
+  while (!m_socketList.empty ()) //these are accepted sockets, close them
     {
       Ptr<Socket> acceptedSocket = m_socketList.front ();
       m_socketList.pop_front ();
@@ -162,9 +153,10 @@ void GhnPlcPacketSink::StopApplication ()     // Called at time specified by Sto
     }
 }
 
-void GhnPlcPacketSink::HandleRead (Ptr<Socket> socket)
+void
+GhnPlcPacketSink::HandleRead (Ptr<Socket> socket)
 {
-  NS_LOG_FUNCTION (this << socket);
+  NS_LOG_FUNCTION(this << socket);
   Ptr<Packet> packet;
   Address from;
   while ((packet = socket->RecvFrom (from)))
@@ -173,45 +165,38 @@ void GhnPlcPacketSink::HandleRead (Ptr<Socket> socket)
         { //EOF
           break;
         }
-      m_cutLog->ReadLogData(packet, this->GetNode()->GetId());
+      m_cutLog->ReadLogData (packet, this->GetNode ()->GetId ());
       m_totalRx += packet->GetSize ();
       if (InetSocketAddress::IsMatchingType (from))
         {
-          NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds ()
-                       << "s packet sink received "
-                       <<  packet->GetSize () << " bytes from "
-                       << InetSocketAddress::ConvertFrom(from).GetIpv4 ()
-                       << " port " << InetSocketAddress::ConvertFrom (from).GetPort ()
-                       << " total Rx " << m_totalRx << " bytes");
+          NS_LOG_INFO(
+                  "At time " << Simulator::Now ().GetSeconds () << "s packet sink received " << packet->GetSize () << " bytes from " << InetSocketAddress::ConvertFrom(from).GetIpv4 () << " port " << InetSocketAddress::ConvertFrom (from).GetPort () << " total Rx " << m_totalRx << " bytes");
         }
       else if (Inet6SocketAddress::IsMatchingType (from))
         {
-          NS_LOG_INFO ("At time " << Simulator::Now ().GetSeconds ()
-                       << "s packet sink received "
-                       <<  packet->GetSize () << " bytes from "
-                       << Inet6SocketAddress::ConvertFrom(from).GetIpv6 ()
-                       << " port " << Inet6SocketAddress::ConvertFrom (from).GetPort ()
-                       << " total Rx " << m_totalRx << " bytes");
+          NS_LOG_INFO(
+                  "At time " << Simulator::Now ().GetSeconds () << "s packet sink received " << packet->GetSize () << " bytes from " << Inet6SocketAddress::ConvertFrom(from).GetIpv6 () << " port " << Inet6SocketAddress::ConvertFrom (from).GetPort () << " total Rx " << m_totalRx << " bytes");
         }
       m_rxTrace (packet, from);
     }
 }
 
-
-void GhnPlcPacketSink::HandlePeerClose (Ptr<Socket> socket)
+void
+GhnPlcPacketSink::HandlePeerClose (Ptr<Socket> socket)
 {
-  NS_LOG_FUNCTION (this << socket);
+  NS_LOG_FUNCTION(this << socket);
 }
 
-void GhnPlcPacketSink::HandlePeerError (Ptr<Socket> socket)
+void
+GhnPlcPacketSink::HandlePeerError (Ptr<Socket> socket)
 {
-  NS_LOG_FUNCTION (this << socket);
+  NS_LOG_FUNCTION(this << socket);
 }
 
-
-void GhnPlcPacketSink::HandleAccept (Ptr<Socket> s, const Address& from)
+void
+GhnPlcPacketSink::HandleAccept (Ptr<Socket> s, const Address& from)
 {
-  NS_LOG_FUNCTION (this << s << from);
+  NS_LOG_FUNCTION(this << s << from);
   s->SetRecvCallback (MakeCallback (&GhnPlcPacketSink::HandleRead, this));
   m_socketList.push_back (s);
 }

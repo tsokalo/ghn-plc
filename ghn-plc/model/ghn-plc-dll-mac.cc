@@ -155,6 +155,8 @@ GhnPlcDllMac::StartTx (void)
   NS_LOG_FUNCTION (this);
   NS_LOG_DEBUG ("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
 
+  m_setTimeCallback(Simulator::Now ().GetMilliSeconds());
+
   return DoStartTx ();
 }
 

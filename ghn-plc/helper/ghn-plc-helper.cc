@@ -96,6 +96,8 @@ GhnPlcHelper::Setup (void)
       m_noiseFloor = CreateBestCaseBgNoise(m_spectrum_model)->GetNoisePsd ();
     }
 
+  m_logger = logger_ptr (new ncr::Logger (m_resDir));
+
   ObjectFactory netdeviceFactory;
   netdeviceFactory.SetTypeId (GhnPlcNetDevice::GetTypeId ());
 
@@ -307,6 +309,8 @@ GhnPlcHelper::Setup (void)
                   MakeCallback (&GhnPlcDllMacCsmaCd::CcaConfirm,
                           StaticCast<GhnPlcDllMacCsmaCd, GhnPlcDllMacCsma> (dllManager->GetDllMac ())));
         }
+
+      dllManager->GetDllMac ()->SetTimeCallback (MakeCallback (&ncr::Logger::IncTime, &(*m_logger)));
 
       dev->SetDllManagement (dllManager);
       dev->SetDllApc (apc);
@@ -564,14 +568,21 @@ GhnPlcHelper::CreateFlow (ConnId connId, Ptr<GhnPlcDllMacCsma> mac, Ptr<GhnPlcDl
       flow_o->SetDllApc (apc);
       flow_o->SetDllLlc (llc);
       flow_o->SetResDirectory (m_resDir);
+      flow_o->SetLogCallback(std::bind(&ncr::Logger::AddLog, m_logger, std::placeholders::_1, std::placeholders::_2));
 
       FlowInterface flow_i (MakeCallback (&GhnPlcLlcCodedFlow::SendFrom, flow_o),
               MakeCallback (&GhnPlcLlcCodedFlow::Receive, flow_o), MakeCallback (&GhnPlcLlcCodedFlow::ReceiveAck, flow_o),
               MakeCallback (&GhnPlcLlcCodedFlow::IsQueueEmpty, flow_o), MakeCallback (&GhnPlcLlcCodedFlow::SendDown, flow_o));
 
-      ncr::NodeType type =
-              (own_addr == connId.src && connId.dst != UanAddress::GetBroadcast ()) ? ncr::SOURCE_NODE_TYPE :
-                      ncr::RELAY_NODE_TYPE;
+      ncr::NodeType type;
+      if (own_addr == connId.src && connId.dst != UanAddress::GetBroadcast ())
+        {
+          type = ncr::SOURCE_NODE_TYPE;
+        }
+      else
+        {
+          type = (own_addr == connId.dst) ? ncr::DESTINATION_NODE_TYPE : ncr::RELAY_NODE_TYPE;
+        }
 
       auto app = m_appMap.find (own_addr);
       if (type == ncr::SOURCE_NODE_TYPE) assert(app != m_appMap.end ());

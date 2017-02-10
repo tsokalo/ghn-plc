@@ -70,6 +70,7 @@ bool
 GhnPlcDllApc::Receive (Ptr<Packet> packet, const UanAddress& source, const UanAddress& dest)
 {
   NS_LOG_FUNCTION (this << packet->GetSize());
+  NS_LOG_UNCOND("Receive packet with size " << packet->GetSize() << ", src " << source << ", dst " << dest);
   return m_forwardUp (packet, source, dest);
 }
 

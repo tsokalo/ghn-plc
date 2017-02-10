@@ -4,6 +4,7 @@
 
 #include <string>
 #include <map>
+#include <memory>
 
 #include <ns3/object.h>
 #include <ns3/random-variable-stream.h>
@@ -31,6 +32,8 @@
 #include "ns3/ghn-plc-fulld-phy-pmd.h"
 #include "ns3/ghn-plc-llc-coded-flow.h"
 
+#include "logger.h"
+
 namespace ns3
 {
 namespace ghn {
@@ -39,6 +42,7 @@ typedef std::map<uint32_t, UanAddress> AddressMap;
 
 class GhnPlcHelper : public Object
 {
+  typedef std::shared_ptr<ncr::Logger> logger_ptr;
 
 public:
   static TypeId
@@ -199,6 +203,7 @@ protected:
   uint16_t m_maxCwSize;
 
   Ptr<FileAggregator> m_aggr;
+  logger_ptr m_logger;
   //
   // <from ID> <to ID> <cost>
   //

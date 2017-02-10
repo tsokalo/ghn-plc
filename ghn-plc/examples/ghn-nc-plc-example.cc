@@ -28,11 +28,13 @@ using namespace std;
 //CXXFLAGS="-std=c++0x" ./waf configure --disable-python --with-nsc /home/tsokalo/workspace/ns3sims/ns-3-dev/nsc
 //CXXFLAGS="-std=c++0x" ./waf configure --disable-python --enable-examples --with-nsc /home/tsokalo/workspace/ns3sims/ns-3-dev/nsc
 //export 'NS_LOG=*=level_info|prefix_time|prefix_node|prefix_func'
+//export 'NS_LOG=GhnPlcGreedyUdpClient=level_info|prefix_time|prefix_node|prefix_func'
+//export 'NS_LOG=GhnPlcLlcFlow=level_all|prefix_time|prefix_node|prefix_func:GhnPlcLlcCodedFlow=level_all|prefix_time|prefix_node|prefix_func:GhnPlcPhyManagement=level_all|prefix_time|prefix_node|prefix_func'
 //export 'NS_LOG=GhnPlcNetDevice=level_debug|prefix_time|prefix_node|prefix_func:PLC_Electrical_Device=level_debug|prefix_time|prefix_node|prefix_func:GhnPlcMacBackoff=level_debug|prefix_time|prefix_node|prefix_func:GhnPlcDllMac=level_debug|prefix_time|prefix_node|prefix_func:GhnPlcDllLlc=level_debug|prefix_time|prefix_node|prefix_func:GhnPlcDllApc=level_debug|prefix_time|prefix_node|prefix_func:GhnPlcPhyPmd=level_debug|prefix_time|prefix_node|prefix_func:GhnPlcPhyPma=level_debug|prefix_time|prefix_node|prefix_func:GhnPlcPhyPcs=level_debug|prefix_time|prefix_node|prefix_func:GhnPlcPhyManagement=level_debug|prefix_time|prefix_node|prefix_func:PLC_INHOME_TOPOLOGY=level_debug|prefix_time|prefix_node|prefix_func'
 //export 'NS_LOG=GhnPlcNetDevice=level_logic|prefix_time|prefix_node|prefix_func:PLC_Electrical_Device=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcMacBackoff=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcDllMac=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcDllLlc=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcDllApc=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcPhyPmd=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcPhyPma=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcPhyPcs=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcPhyManagement=level_logic|prefix_time|prefix_node|prefix_func:PLC_INHOME_TOPOLOGY=level_logic|prefix_time|prefix_node|prefix_func:PLC_Phy=level_logic|prefix_time|prefix_node|prefix_func:PLC_LinkPerformanceModel=level_logic|prefix_time|prefix_node|prefix_func:PLC_Channel=level_logic|prefix_time|prefix_node|prefix_func:NcHelper=level_logic|prefix_time|prefix_node|prefix_func'
 //export 'NS_LOG=GhnPlcNetDevice=level_logic|prefix_time|prefix_node|prefix_func:PLC_Electrical_Device=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcMacBackoff=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcDllMac=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcDllLlc=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcDllApc=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcPhyPmd=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcPhyPma=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcPhyPcs=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcPhyManagement=level_logic|prefix_time|prefix_node|prefix_func:PLC_INHOME_TOPOLOGY=level_logic|prefix_time|prefix_node|prefix_func:PLC_Phy=level_logic|prefix_time|prefix_node|prefix_func:PLC_LinkPerformanceModel=level_logic|prefix_time|prefix_node|prefix_func'
 //export 'NS_LOG=GhnPlcNetDevice=level_logic|prefix_time|prefix_node|prefix_func:PLC_Electrical_Device=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcMacBackoff=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcDllMac=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcDllLlc=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcDllApc=level_logic|prefix_time|prefix_node|prefix_func:PLC_INHOME_TOPOLOGY=level_logic|prefix_time|prefix_node|prefix_func:NcCutLog=level_logic|prefix_time|prefix_node|prefix_func'
-//./waf --run nc-aware-routing --command-template="gdb --args %s bt"
+//./waf --run ghn-nc-plc-example --command-template="gdb --args %s bt"
 //export 'NS_LOG=NcCutLog=level_logic|prefix_time|prefix_node|prefix_func:TimeProbe=level_logic|prefix_time|prefix_node|prefix_func:FileHelper=level_logic|prefix_time|prefix_node|prefix_func:NcDllLlc=level_logic|prefix_time|prefix_node|prefix_func:NcRoutingTable=level_logic|prefix_time|prefix_node|prefix_func:NcDllLlc=level_logic|prefix_time|prefix_node|prefix_func:NcDllMac=level_logic|prefix_time|prefix_node|prefix_func:NcDllApc=level_logic|prefix_time|prefix_node|prefix_func'
 //export 'NS_LOG=NcCutLog=level_logic|prefix_time|prefix_node|prefix_func:NcDllLlc=level_logic|prefix_time|prefix_node|prefix_func:NcLlcFlow=level_logic|prefix_time|prefix_node|prefix_func:NcRoutingTable=level_logic|prefix_time|prefix_node|prefix_func:NcDllMac=level_logic|prefix_time|prefix_node|prefix_func:NcDllApc=level_logic|prefix_time|prefix_node|prefix_func:NcNetDevice=level_logic|prefix_time|prefix_node|prefix_func:GhnSegmenter=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcPhyManagement=level_debug|prefix_time|prefix_node|prefix_func'
 //export 'NS_LOG=NcBitLoading=level_logic|prefix_time|prefix_node|prefix_func:NcHelper=level_logic|prefix_time|prefix_node|prefix_func:PLC_InfRateFDPhy=level_all|prefix_time|prefix_node|prefix_func:NcDllMac=level_logic|prefix_time|prefix_node|prefix_func:NcPhyPmd=level_logic|prefix_time|prefix_node|prefix_func'
@@ -182,24 +184,12 @@ main (int argc, char *argv[])
   // Select and configure the source and destination nodes
   //
   typedef std::pair<uint8_t, uint8_t> NodeIndexPair;
-  typedef std::pair<UanAddress, UanAddress> UanAdderssPair;
-  typedef std::pair<Ptr<Node>, Ptr<Node> > Ns3NodePair;
   std::vector<NodeIndexPair> node_index_pairs;
-  std::vector<UanAdderssPair> uan_address_pairs;
   NodeContainer dst_nodes;
   //
   // add address pairs HERE
   //
   node_index_pairs.push_back (NodeIndexPair (0, node_list.size () - 1));
-  //
-  // find correspondence of node indices and their UanAddresses
-  //
-  for (auto node_index_pair : node_index_pairs)
-    {
-      assert(addressMap.find (node_index_pair.first) != addressMap.end ());
-      assert(addressMap.find (node_index_pair.second) != addressMap.end ());
-      uan_address_pairs.push_back (UanAdderssPair (addressMap[node_index_pair.first], addressMap[node_index_pair.second]));
-    }
   //
   // check if the communication between the selected pairs of sources and destinations is possible
   //
@@ -208,8 +198,12 @@ main (int argc, char *argv[])
     {
       auto index_src = node_index_pair.first;
       auto index_dst = node_index_pair.second;
-      auto address_src = devMap[node_list.at (index_src)->GetName ()]->GetObject<PLC_NetDevice> ()->GetAddress ();
-      auto address_dst = devMap[node_list.at (index_dst)->GetName ()]->GetObject<PLC_NetDevice> ()->GetAddress ();
+      assert(addressMap.find (index_src) != addressMap.end ());
+      assert(addressMap.find (index_dst) != addressMap.end ());
+      assert(node_list.size () > index_src);
+      assert(node_list.size () > index_dst);
+      auto address_src = addressMap[index_src];
+      auto address_dst = addressMap[index_dst];
 
       cout << "Source: " << node_list.at (index_src)->GetName () << " with address " << address_src << endl;
       cout << "Destination: " << node_list.at (index_dst)->GetName () << " with address " << address_dst << endl;
@@ -217,13 +211,9 @@ main (int argc, char *argv[])
       //
       // Check if at least one route between the selected source and destination exits
       //
-      if (devHelper.IsCommunicationPossible (index_src, index_dst))
+      if (!devHelper.IsCommunicationPossible (index_src, index_dst))
         {
-          cout << "Ready to start! Starting.." << endl;
-        }
-      else
-        {
-          cout << "There is no route between the selected source and destination. Stopping.." << endl;
+          cout << "Stopping.." << endl;
           // Cleanup simulation
           simDuration = 0;
           break;
@@ -238,21 +228,31 @@ main (int argc, char *argv[])
   //
   std::map<UanAddress, Ptr<Application> > appMap;
   ApplicationContainer clients;
+  uint16_t port = 9;
   for (auto node_index_pair : node_index_pairs)
     {
       auto index_src = node_index_pair.first;
       auto index_dst = node_index_pair.second;
-      auto address_dst = devMap[node_list.at (index_dst)->GetName ()]->GetObject<PLC_NetDevice> ()->GetAddress ();
+      assert(addressMap.find (index_src) != addressMap.end ());
+      assert(addressMap.find (index_dst) != addressMap.end ());
+      assert(node_list.size () > index_src);
+      assert(node_list.size () > index_dst);
       auto ns3_node_src = devMap[node_list.at (index_src)->GetName ()]->GetObject<PLC_NetDevice> ()->GetNode ();
+      auto inet_addr_src = plcInterfaces.GetAddress (index_src);
+      auto inet_addr_dst = plcInterfaces.GetAddress (index_dst);
 
-      GhnPlcUdpClientHelper clientHelper (address_dst, 9, true);
-      clientHelper.SetAttribute ("PacketSize", UintegerValue (1000));
+      cout << "Installing client with address " << inet_addr_src << " and sink address " << inet_addr_dst << endl;
+
+      GhnPlcUdpClientHelper clientHelper (inet_addr_dst, port, true);
+      clientHelper.SetAttribute ("PacketSize", UintegerValue (750));
       clientHelper.SetResDirectory (resDir);
       auto clientApp = clientHelper.Install (ns3_node_src);
 
       appMap[addressMap[index_src]] = clientApp;
-      clients.Add(clientApp);
+      clients.Add (clientApp);
 
+      cout << "Adding sink with address " << inet_addr_dst << " to the list of sinks" << endl;
+      assert(devMap.find (node_list.at (index_dst)->GetName ()) != devMap.end ());
       dst_nodes.Add (devMap[node_list.at (index_dst)->GetName ()]->GetObject<PLC_NetDevice> ()->GetNode ());
     }
 
@@ -261,7 +261,7 @@ main (int argc, char *argv[])
   //
   // create sinks on the destinations
   //
-  GhnPlcPacketSinkHelper packetSink ("ns3::UdpSocketFactory", Address (InetSocketAddress (Ipv4Address::GetAny (), 9)));
+  GhnPlcPacketSinkHelper packetSink ("ns3::UdpSocketFactory", Address (InetSocketAddress (Ipv4Address::GetAny (), port)));
   packetSink.SetResDirectory (resDir);
   packetSink.SetLogId (logID);
   ApplicationContainer servers = packetSink.Install (dst_nodes);

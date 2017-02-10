@@ -31,6 +31,7 @@ class GhnPlcLlcCodedFlow: public GhnPlcLlcFlow {
 	typedef std::shared_ptr<ncr::encoder_queue> encoder_queue_ptr;
 	typedef std::shared_ptr<ncr::decoder_queue> decoder_queue_ptr;
 	typedef Callback<void,uint32_t> GenCallback;
+	typedef std::function<void(ncr::LogItem item, ncr::UanAddress node_id)> add_log_func;
 
 public:
 	static TypeId
@@ -45,6 +46,7 @@ public:
 	GroupEncAckInfo Receive (GhnBuffer buffer, ConnId connId);
 	void ReceiveAck (GroupEncAckInfo info, ConnId connId);
 	bool IsQueueEmpty ();
+	void SetLogCallback(add_log_func addLog);
 
 private:
 
@@ -72,6 +74,7 @@ private:
 
 	ncr::get_rank_func m_getRank;
 	GenCallback m_genCallback;
+	add_log_func m_addLog;
 };
 }
 }

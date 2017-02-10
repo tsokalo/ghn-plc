@@ -109,7 +109,7 @@ GhnPlcDllLlc::SendFrom (Ptr<Packet> packet, const UanAddress& source, const UanA
   //
   // treat packets differently depending on their size
   //
-  connId.flowId = (m_allowCooperation && packet->GetSize() < 500) ? MANAGMENT_CONN_ID : connId.flowId;
+  connId.flowId = (m_allowCooperation && packet->GetSize () < 500) ? MANAGMENT_CONN_ID : connId.flowId;
 
   MatchFlow (connId);
 
@@ -121,16 +121,19 @@ GhnPlcDllLlc::Receive (GhnBuffer buffer, ConnId connId)
 {
   NS_LOG_FUNCTION(this);
 
+  NS_LOG_UNCOND("Connection " << connId << " recieve down");
+
   if (m_aggr.empty ()) CreateLogger ();
 
   auto dll = m_dllMac->GetDllManagement ();
 
-  if (connId.src == dll->GetAddress ()) return GroupEncAckInfo (false);
+  if (!m_allowCooperation) if (connId.src == dll->GetAddress ()) return GroupEncAckInfo (false);
 
   auto foward_packet_to_flow = [&](GhnBuffer buffer, ConnId connId)
     {
       NS_ASSERT (connId.IsFlowIdValid ());
       if (!m_flowMap.is_in (connId)) CreateFlow (connId);
+      NS_LOG_UNCOND("Connection " << connId << " forward to the flow");
       return m_flowMap.at (connId).Receive (buffer, connId);
     };
   //
@@ -202,10 +205,30 @@ GhnPlcDllLlc::SendDown ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 
+  //
+  // give priority to the management connections
+  //
+  for (uint32_t i = 0; i < m_flowMap.size (); i++)
+    {
+      if (m_flowMap.at (i).first.flowId == MANAGMENT_CONN_ID)
+        {
+          auto f = m_flowMap.at (i).second;
+          if (!f.IsQueueEmpty ())
+            {
+              NS_LOG_UNCOND("Connection " << m_flowMap.at (i).first << " send down");
+              return f.SendDown ();
+            }
+        }
+    }
+
   for (uint32_t i = 0; i < m_flowMap.size (); i++)
     {
       auto f = m_flowMap.at (i).second;
-      if (!f.IsQueueEmpty ()) return f.SendDown ();
+      if (!f.IsQueueEmpty ())
+        {
+          NS_LOG_UNCOND("Connection " << m_flowMap.at (i).first << " send down");
+          return f.SendDown ();
+        }
     }
   NS_ASSERT(0);
 }

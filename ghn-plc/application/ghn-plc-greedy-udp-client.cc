@@ -117,7 +117,9 @@ GhnPlcGreedyUdpClient::SendBatch (uint32_t numBytes)
       peerAddressStringStream << Ipv6Address::ConvertFrom (m_peerAddress);
     }
 
-  while (numBytes >= m_size)
+  uint32_t n = ceil((double) numBytes / (double)m_size);
+
+  while (n != 0)
     {
       Ptr<Packet> p = Create<Packet> (m_size);
       m_cutLog->AddLogData (p, this->GetNode ()->GetId ());
@@ -128,7 +130,8 @@ GhnPlcGreedyUdpClient::SendBatch (uint32_t numBytes)
           NS_LOG_INFO ("TraceDelay TX " << m_size << " bytes to "
                   << peerAddressStringStream.str () << " Uid: "
                   << p->GetUid () << " Time: "
-                  << (Simulator::Now ()).GetSeconds ());
+                  << (Simulator::Now ()).GetSeconds ()
+                  << " n: " << n);
 
         }
       else
@@ -136,7 +139,7 @@ GhnPlcGreedyUdpClient::SendBatch (uint32_t numBytes)
           NS_LOG_INFO ("Error while sending " << m_size << " bytes to "
                   << peerAddressStringStream.str ());
         }
-      numBytes -= m_size;
+      n--;
     }
 }
 
@@ -151,6 +154,8 @@ void
 GhnPlcGreedyUdpClient::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
+
+  m_cutLog->SetResDirectory(m_resDir);
 
   if (m_socket == 0)
     {
