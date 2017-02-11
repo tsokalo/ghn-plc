@@ -155,8 +155,6 @@ GhnPlcGreedyUdpClient::StartApplication (void)
 {
   NS_LOG_FUNCTION (this);
 
-  m_cutLog->SetResDirectory(m_resDir);
-
   if (m_socket == 0)
     {
       TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");

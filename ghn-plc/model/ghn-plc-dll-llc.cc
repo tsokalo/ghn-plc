@@ -121,8 +121,6 @@ GhnPlcDllLlc::Receive (GhnBuffer buffer, ConnId connId)
 {
   NS_LOG_FUNCTION(this);
 
-  NS_LOG_UNCOND("Connection " << connId << " recieve down");
-
   if (m_aggr.empty ()) CreateLogger ();
 
   auto dll = m_dllMac->GetDllManagement ();
@@ -133,7 +131,6 @@ GhnPlcDllLlc::Receive (GhnBuffer buffer, ConnId connId)
     {
       NS_ASSERT (connId.IsFlowIdValid ());
       if (!m_flowMap.is_in (connId)) CreateFlow (connId);
-      NS_LOG_UNCOND("Connection " << connId << " forward to the flow");
       return m_flowMap.at (connId).Receive (buffer, connId);
     };
   //
@@ -215,7 +212,6 @@ GhnPlcDllLlc::SendDown ()
           auto f = m_flowMap.at (i).second;
           if (!f.IsQueueEmpty ())
             {
-              NS_LOG_UNCOND("Connection " << m_flowMap.at (i).first << " send down");
               return f.SendDown ();
             }
         }
@@ -226,7 +222,6 @@ GhnPlcDllLlc::SendDown ()
       auto f = m_flowMap.at (i).second;
       if (!f.IsQueueEmpty ())
         {
-          NS_LOG_UNCOND("Connection " << m_flowMap.at (i).first << " send down");
           return f.SendDown ();
         }
     }

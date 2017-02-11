@@ -212,7 +212,7 @@ ConvertPlcRateToGhnRate (CodingType rate)
     }
   case CODING_RATE_16_21:
     {
-      assert(0);
+      return FEC_RATE_16_21;
     }
   case CODING_RATE_5_6:
     {

@@ -134,8 +134,8 @@ namespace ghn {
  * G.9961
  * unit [s]
  */
-#define GHN_CYCLE_MIN (0.05/GHN_POWER_FREQUENCY)
-#define GHN_CYCLE_MAX (0.05/GHN_POWER_FREQUENCY)
+#define GHN_CYCLE_MIN (2/GHN_POWER_FREQUENCY)
+#define GHN_CYCLE_MAX (2/GHN_POWER_FREQUENCY)
 /*
  * G.9961
  * unit [us]

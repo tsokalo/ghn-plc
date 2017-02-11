@@ -408,8 +408,8 @@ GhnPlcPhyManagement::IsBlockSuccess ()
     { 120, 540 };
   uint32_t bs = block_size.at (m_txFecBlockSize);
 
-  std::array<double, 6> fec_rate =
-    { 1, 1.0 / 2.0, 2.0 / 3.0, 5.0 / 6.0, 16.0 / 18.0, 20.0 / 21.0 };
+  std::array<double, 7> fec_rate =
+    { 1, 1.0 / 2.0, 2.0 / 3.0, 5.0 / 6.0, 16.0 / 18.0, 16.0 / 21.0, 20.0 / 21.0 };
   double fc = fec_rate.at (m_txPayloadFecRate);
 
   uint32_t frame_size = m_frameSizeCallback ();
@@ -419,7 +419,7 @@ GhnPlcPhyManagement::IsBlockSuccess ()
   std::binomial_distribution<uint32_t> m_binomDistr (bs / fc, 1 - ber);
   uint32_t gathered_bits_rand = m_binomDistr (m_gen);
 
-  NS_LOG_DEBUG(
+  NS_LOG_UNCOND(
           "Frame size: " << frame_size << ", Gathered bits: " << gathered_bits << ", FEC rate: " << m_txPayloadFecRate << " -> " << fc << ", Sent bits: " << sent_bits << ", BER: " << ber << ", BS: " << bs << ", Gathered rand bits: " << gathered_bits_rand << ", ret: " << (gathered_bits_rand >= bs));
 
   return (gathered_bits_rand >= bs);

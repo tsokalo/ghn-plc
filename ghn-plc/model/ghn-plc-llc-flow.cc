@@ -130,7 +130,7 @@ GhnPlcLlcFlow::Enqueue (Ptr<Packet> packet, ConnId connId)
 {
   NS_LOG_FUNCTION (this << connId << packet->GetSize());
   NS_ASSERT_MSG(m_connId == connId, m_connId << " " << connId);
-  NS_LOG_UNCOND("Got a packet with size " << packet->GetSize());
+
   if (m_frameBuffer.size () >= MAX_LLC_QUEUE_LENGTH)
     {
       m_dllMac->TriggerSend ();

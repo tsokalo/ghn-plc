@@ -48,6 +48,8 @@ GhnPlcHelper::GhnPlcHelper (Ptr<const SpectrumModel> sm, Ptr<SpectrumValue> txPs
   // Create ns3::Node for this NetDevice by default
   m_create_nodes = true;
   m_allowCooperation = false;
+
+  std::cout << "Mutual LLC and PHY coding: " << (m_sp.mutualPhyLlcCoding ? "ACTIVE" : "NOT ACTIVE") << std::endl;
 }
 GhnPlcHelper::GhnPlcHelper (BandPlanType bandplan)
 {
@@ -71,6 +73,7 @@ GhnPlcHelper::GhnPlcHelper (BandPlanType bandplan)
   // Create ns3::Node for this NetDevice by default
   m_create_nodes = true;
   m_allowCooperation = false;
+  std::cout << "Mutual LLC and PHY coding: " << (m_sp.mutualPhyLlcCoding ? "ACTIVE" : "NOT ACTIVE") << std::endl;
 }
 
 AddressMap
@@ -97,6 +100,7 @@ GhnPlcHelper::Setup (void)
     }
 
   m_logger = logger_ptr (new ncr::Logger (m_resDir));
+  if (m_sp.mutualPhyLlcCoding) assert(m_allowCooperation);
 
   ObjectFactory netdeviceFactory;
   netdeviceFactory.SetTypeId (GhnPlcNetDevice::GetTypeId ());
@@ -282,7 +286,6 @@ GhnPlcHelper::Setup (void)
       dllManager->GetDllMac ()->SetMaxCw (m_maxCwSize);
       dllManager->GetDllMac ()->SetBackoffSlotDuration (NanoSeconds (GDOTHN_IST));
       dllManager->GetDllMac ()->AllowCooperation (m_allowCooperation);
-      if (!m_sp.mutualPhyLlcCoding) assert(!m_sp.mutualPhyLlcCoding);
 
       if (m_macTid == GhnPlcDllMacCsma::GetTypeId ())
         {
@@ -394,6 +397,7 @@ GhnPlcHelper::CreateRoutingTable ()
 void
 GhnPlcHelper::CreateBitLoadingTable ()
 {
+
   NS_LOG_LOGIC("Creating bit loading table");
   ObjectFactory blFactory;
   blFactory.SetTypeId (m_bitLoadingTid);
@@ -413,7 +417,8 @@ GhnPlcHelper::CreateBitLoadingTable ()
       for (nit = m_node_list.begin (); nit != m_node_list.end (); nit++)
         {
           m_bitLoadingTable->GetObject<NcBlVarBatMap> ()->SetPer ((*nit)->GetVertexId (),
-                  m_sp.mutualPhyLlcCoding ? m_sp.per : 0.01);
+                  m_sp.mutualPhyLlcCoding ? m_sp.per : 0.001);
+          std::cout << "Setting PER " << (m_sp.mutualPhyLlcCoding ? m_sp.per : 0.001) << " for node " << (*nit)->GetVertexId () << std::endl;
         }
     }
 

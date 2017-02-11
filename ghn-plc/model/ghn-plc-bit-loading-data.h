@@ -57,7 +57,7 @@ public:
   static PbMapping
   get_val (double per)
   {
-    uint16_t i = per * 1000;
+    uint16_t i = per * 1000 - 1;
     assert(i < PER_BER_MAP_SIZE);
     return m_pbMapping.at (i);
   }

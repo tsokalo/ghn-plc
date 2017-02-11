@@ -29,7 +29,8 @@
 
 namespace ns3
 {
-namespace ghn {
+namespace ghn
+{
 
 class TimeProbe;
 
@@ -74,7 +75,7 @@ public:
     m_resDir = resDir;
   }
   void
-  SetLogId(std::string logId)
+  SetLogId (std::string logId)
   {
     m_logId = logId;
   }
@@ -110,20 +111,23 @@ private:
 };
 
 //------------------------------------------------------
-class LogTag : public Tag
+class AppHeader : public Header
 {
 public:
+
   static TypeId
   GetTypeId (void);
   virtual TypeId
   GetInstanceTypeId (void) const;
+  virtual void
+  Print (std::ostream &os) const;
 
   virtual uint32_t
   GetSerializedSize (void) const;
   virtual void
-  Serialize (TagBuffer i) const;
-  virtual void
-  Deserialize (TagBuffer i);
+  Serialize (Buffer::Iterator start) const;
+  virtual uint32_t
+  Deserialize (Buffer::Iterator start);
 
   // these are our accessors to our tag structure
   void
@@ -138,9 +142,6 @@ public:
   SetNodeId (uint16_t nodeId);
   uint16_t
   GetNodeId (void) const;
-
-  void
-  Print (std::ostream &os) const;
 
 private:
   Time m_timestamp;

@@ -119,6 +119,7 @@ GhnPlcLlcCodedFlow::SendDown ()
       auto rt = dll->GetRoutingTable ();
       auto bt = dll->GetBitLoadingTable ();
       auto nh = (m_sp.mutualPhyLlcCoding) ? m_brr->GetSinkVertex () : rt->GetNextHopAddress (src, dst).GetAsInt ();
+      if(nh == -1) nh = rt->GetNextHopAddress (src, dst).GetAsInt ();
       m_brr->SetSendingRate (bt->GetNumEffBits (src, nh));
       auto dataAmount = bt->GetDataAmount (Seconds (GHN_CYCLE_MAX), src, nh);
       uint32_t pushedPkts = 0, maxPkts = floor ((double) dataAmount / (double) m_blockSize);
@@ -155,7 +156,6 @@ GhnPlcLlcCodedFlow::SendDown ()
               PrepareForSend (dataAmount);
               auto fspace_prev = fspace;
               fspace = m_brr->GetAmountTxData ();
-//              if(maxPkts < fspace) assert (fspace_prev != fspace);
             }
           SIM_LOG(COMM_NODE_LOG,
                   "Flow " << connId << ": busy space: " << fspace << ", max pkts: " << maxPkts << ", frame buffer size: " << m_frameBuffer.size());
@@ -273,7 +273,6 @@ GhnPlcLlcCodedFlow::PrepareForSend (uint64_t dataAmount)
 
       NS_LOG_DEBUG(
               "Flow " << m_connId << ": " << "AFTER INDEXING: Free buffer size: " << freeBufSize << ", number of non-indexed segments: " << m_nonindexedSegs.size() << ", number of indexed segments: " << m_indexedSegs.size() << ", not-segmented data: " << m_frameBuffer.size());
-
     }
 }
 
@@ -282,7 +281,6 @@ GhnPlcLlcCodedFlow::ConvertBrrHeaderToPkt (TxPlan plan)
 {
   auto str = m_brr->GetHeader (plan, m_feedback).Serialize ();
   m_feedback.updated = false;
-  std::cout << str << std::endl;
   auto pkt = Create<Packet> ((const uint8_t*) str.c_str (), str.size ());
   assert(pkt->GetSize() < m_blockSize - GHN_CRC_LENGTH);
   if (m_blockSize - pkt->GetSize () - GHN_CRC_LENGTH != 0) pkt->AddPaddingAtEnd (
@@ -306,6 +304,7 @@ GhnPlcLlcCodedFlow::Receive (GhnBuffer buffer, ConnId connId)
 
   NS_ASSERT(buffer.size () > 0);
   NS_ASSERT_MSG(m_connId == connId, m_connId << " " << connId);
+
 
   //
   // remove and check CRC
@@ -468,7 +467,7 @@ GhnPlcLlcCodedFlow::ProcessRcvdPacket (std::vector<uint8_t> vec, bool crc, ncr::
 
   if (!crc)
     {
-      SIM_LOG(COMM_NODE_LOG, "Node " << m_id << " loosing segment");
+      SIM_LOG(1, "Node " << m_id << " loosing segment");
       m_brr->UpdateLoss (genId, addr);
       return;
     }

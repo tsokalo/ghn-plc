@@ -49,7 +49,8 @@ enum FecRateType
   FEC_RATE_2_3          = 2,
   FEC_RATE_5_6          = 3,
   FEC_RATE_16_18        = 4,
-  FEC_RATE_20_21        = 5,
+  FEC_RATE_16_21        = 5,
+  FEC_RATE_20_21        = 6,
 };
 
 enum EncodingRepetitionsNumberType
