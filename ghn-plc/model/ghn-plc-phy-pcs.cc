@@ -327,6 +327,9 @@ GhnPlcPhyPcs::GetDataAmount (Time txTime, uint8_t sourceId, uint8_t destinationI
   case FEC_RATE_16_18:
     payloadUncodedBits = payloadUncodedBits * 16 / 18;
     break;
+  case FEC_RATE_16_21:
+    payloadUncodedBits = payloadUncodedBits * 16 / 21;
+    break;
   case FEC_RATE_20_21:
     payloadUncodedBits = payloadUncodedBits * 20 / 21;
     break;

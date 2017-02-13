@@ -96,6 +96,7 @@ protected:
 	SpectrumTable m_sinr;
 	std::vector<std::vector<ModulationAndCodingScheme> > m_mcs;
 	std::vector<std::vector<double> > m_capacityPerSymbol;
+	std::map<uint16_t, std::map<uint16_t, double> > m_bitsPerSymbol;
 
 	Ptr<FileAggregator> m_aggr;
 	//
@@ -160,6 +161,7 @@ private:
 	double GetOfdmSymbolCapacity(ModulationAndCodingScheme mcs, SpectrumValue sinr);
 	// functions in plc-dcmc-capacity should give the same results
 	double CalcSer(ModulationType m, double sinr);
+	uint32_t CalcBitsPerSymbol(BitAllocationTable bat);
 
 	std::map<uint16_t, double> m_desiredPer;
 };

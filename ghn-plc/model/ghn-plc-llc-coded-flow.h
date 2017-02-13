@@ -53,8 +53,8 @@ private:
 	void PrepareForSend(uint64_t dataAmount);
 	void ProcessDecoded(GhnBuffer buffer, ConnId connId);
 
-	Ptr<Packet> ConvertBrrHeaderToPkt(ncr::TxPlan txPlan);
-	ncr::BrrHeader ConvertPktToBrrHeader(Ptr<Packet> pkt);
+	GhnBuffer ConvertBrrHeaderToPkt(ncr::TxPlan txPlan);
+	ncr::BrrHeader ConvertPktToBrrHeader(GhnBuffer &buffer, std::deque<SegmentState> &state);
 
 	void ProcessRcvdPacket(std::vector<uint8_t> pkt, bool crc, ncr::UanAddress addr, ncr::TxPlan::iterator item, ConnId connId);
 

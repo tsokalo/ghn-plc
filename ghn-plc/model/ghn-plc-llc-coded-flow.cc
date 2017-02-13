@@ -61,7 +61,7 @@ GhnPlcLlcCodedFlow::Configure (NodeType type, ncr::UanAddress dst, SimParameters
   m_sp.numGen = (m_nodeType == SOURCE_NODE_TYPE) ? 2 * m_sp.numGen : m_sp.numGen;
 
   m_brr = routing_rules_ptr (new NcRoutingRules (m_id, m_nodeType, dst, m_sp));
-  m_brr->SetLogCallback(m_addLog);
+  m_brr->SetLogCallback (m_addLog);
   //
   // initialize the feedback
   //
@@ -119,7 +119,7 @@ GhnPlcLlcCodedFlow::SendDown ()
       auto rt = dll->GetRoutingTable ();
       auto bt = dll->GetBitLoadingTable ();
       auto nh = (m_sp.mutualPhyLlcCoding) ? m_brr->GetSinkVertex () : rt->GetNextHopAddress (src, dst).GetAsInt ();
-      if(nh == -1) nh = rt->GetNextHopAddress (src, dst).GetAsInt ();
+      if (nh == -1) nh = rt->GetNextHopAddress (src, dst).GetAsInt ();
       m_brr->SetSendingRate (bt->GetNumEffBits (src, nh));
       auto dataAmount = bt->GetDataAmount (Seconds (GHN_CYCLE_MAX), src, nh);
       uint32_t pushedPkts = 0, maxPkts = floor ((double) dataAmount / (double) m_blockSize);
@@ -157,7 +157,7 @@ GhnPlcLlcCodedFlow::SendDown ()
               auto fspace_prev = fspace;
               fspace = m_brr->GetAmountTxData ();
             }
-          SIM_LOG(COMM_NODE_LOG,
+          SIM_LOG(1,
                   "Flow " << connId << ": busy space: " << fspace << ", max pkts: " << maxPkts << ", frame buffer size: " << m_frameBuffer.size());
         }
 
@@ -201,12 +201,14 @@ GhnPlcLlcCodedFlow::SendDown ()
             }
         }
 
-      toTransmit.push_front (ConvertBrrHeaderToPkt (planI));
+      auto hBuf = ConvertBrrHeaderToPkt (planI);
+      toTransmit.insert (toTransmit.begin (), hBuf.begin (), hBuf.end ());
     }
   else
     {
       SIM_LOG(COMM_NODE_LOG, "Flow " << connId << ": " << "I am the destination. I can send the feedback only");
-      toTransmit.push_front (ConvertBrrHeaderToPkt (TxPlan ()));
+      auto hBuf = ConvertBrrHeaderToPkt (TxPlan ());
+      toTransmit.insert (toTransmit.begin (), hBuf.begin (), hBuf.end ());
     }
 
   NS_LOG_DEBUG("Flow " << connId << ": " << "Segments number to be transmitted: " << toTransmit.size());
@@ -276,20 +278,62 @@ GhnPlcLlcCodedFlow::PrepareForSend (uint64_t dataAmount)
     }
 }
 
-Ptr<Packet>
+GhnBuffer
 GhnPlcLlcCodedFlow::ConvertBrrHeaderToPkt (TxPlan plan)
 {
   auto str = m_brr->GetHeader (plan, m_feedback).Serialize ();
-  m_feedback.updated = false;
-  auto pkt = Create<Packet> ((const uint8_t*) str.c_str (), str.size ());
-  assert(pkt->GetSize() < m_blockSize - GHN_CRC_LENGTH);
-  if (m_blockSize - pkt->GetSize () - GHN_CRC_LENGTH != 0) pkt->AddPaddingAtEnd (
-          m_blockSize - pkt->GetSize () - GHN_CRC_LENGTH);
-  return pkt;
+  m_feedback.Reset ();
+  auto bs = m_blockSize - GHN_CRC_LENGTH;
+  auto pkt_size = str.size () + 1;
+  uint8_t n_bs = ceil ((double) pkt_size / (double) bs);
+
+  auto pkt = Create<Packet> ((const uint8_t*) (&n_bs), 1);
+  pkt->AddAtEnd (Create<Packet> ((const uint8_t*) str.c_str (), str.size ()));
+
+  auto padding_length = n_bs * bs - pkt->GetSize ();
+  NS_LOG_UNCOND("Adding " << (uint16_t)n_bs << " BRR header blocks");
+
+
+  if (padding_length != 0) pkt->AddPaddingAtEnd (padding_length);
+
+  GhnBuffer buffer;
+
+  while (pkt->GetSize () != 0)
+    {
+      NS_ASSERT(pkt->GetSize () >= bs);
+      buffer.push_back ((pkt->GetSize () == bs) ? pkt : pkt->CreateFragment (0, bs));
+      if (pkt->GetSize () == bs) break;
+      pkt->RemoveAtStart (bs);
+    }
+  return buffer;
 }
 BrrHeader
-GhnPlcLlcCodedFlow::ConvertPktToBrrHeader (Ptr<Packet> pkt)
+GhnPlcLlcCodedFlow::ConvertPktToBrrHeader (GhnBuffer &buffer, std::deque<SegmentState> &state)
 {
+  //
+  // convert buffer to packet
+  //
+  assert(!buffer.empty ());
+  auto pkt = *buffer.begin ();
+
+  uint8_t n_bs = 0;
+  pkt->CopyData (&n_bs, 1);
+  assert(n_bs != 0);
+  pkt->RemoveAtStart (1);
+
+  for (uint16_t i = 1; i < n_bs; i++)
+    pkt->AddAtEnd (*(buffer.begin () + i));
+
+  buffer.erase (buffer.begin (), buffer.begin () + n_bs);
+
+  //
+  // determine the data consistency: TODO
+  //
+  state.erase (state.begin (), state.begin () + n_bs);
+
+  //
+  // convert packet to header
+  //
   uint8_t * v = new uint8_t[pkt->GetSize () + 1];
   pkt->CopyData (v, pkt->GetSize ());
   BrrHeader h;
@@ -305,7 +349,6 @@ GhnPlcLlcCodedFlow::Receive (GhnBuffer buffer, ConnId connId)
   NS_ASSERT(buffer.size () > 0);
   NS_ASSERT_MSG(m_connId == connId, m_connId << " " << connId);
 
-
   //
   // remove and check CRC
   //
@@ -320,9 +363,8 @@ GhnPlcLlcCodedFlow::Receive (GhnBuffer buffer, ConnId connId)
   //
   // process header
   //
-  auto header = ConvertPktToBrrHeader (*(buffer.begin ()));
-  buffer.pop_front ();
-  state.pop_front ();
+  auto header = ConvertPktToBrrHeader (buffer, state);
+
   m_brr->RcvHeaderInfo (header.h);
   ProcessFeedback (header.f);
 
@@ -467,7 +509,7 @@ GhnPlcLlcCodedFlow::ProcessRcvdPacket (std::vector<uint8_t> vec, bool crc, ncr::
 
   if (!crc)
     {
-      SIM_LOG(1, "Node " << m_id << " loosing segment");
+      SIM_LOG(COMM_NODE_LOG, "Node " << m_id << " loosing segment");
       m_brr->UpdateLoss (genId, addr);
       return;
     }

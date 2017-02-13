@@ -72,7 +72,7 @@ GhnPlcPhyPmdFullD::Send (Ptr<Packet> txPhyFrame, GhnPlcPhyFrameType frameType, u
   NS_LOG_LOGIC ("header_duration: " << metaInfo->GetHeaderDuration ());
   NS_LOG_LOGIC ("payload_duration: " << metaInfo->GetPayloadDuration ());
   NS_LOG_LOGIC ("preamble_duration: " << PLC_Preamble::GetDuration ());
-  NS_LOG_LOGIC ("tx_duration: " << tx_duration);
+  NS_LOG_UNCOND ("tx_duration: " << tx_duration);
 
   DoStartTx (metaInfo);
 }

@@ -140,6 +140,9 @@ GhnPlcPhyPma::GetPayloadEncodedBits (uint16_t blockSize, uint16_t blocksNumber, 
   case FEC_RATE_16_18:
     fecOutputBlockSize = blockSize * 18 / 16;
     break;
+  case FEC_RATE_16_21:
+    fecOutputBlockSize = blockSize * 21 / 16;
+    break;
   case FEC_RATE_20_21:
     fecOutputBlockSize = blockSize * 21 / 20;
     break;

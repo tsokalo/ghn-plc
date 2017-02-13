@@ -12,7 +12,11 @@
 #include <vector>
 #include "ns3/plc-defs.h"
 
-#define PER_BER_MAP_SIZE        500
+#include "comparison.h"
+
+//#define PER_BER_MAP_SIZE        500
+#define MIN_PER_VAL     0.01
+#define MAX_PER_VAL     0.49
 
 namespace ns3
 {
@@ -57,9 +61,21 @@ public:
   static PbMapping
   get_val (double per)
   {
-    uint16_t i = per * 1000 - 1;
-    assert(i < PER_BER_MAP_SIZE);
-    return m_pbMapping.at (i);
+    assert(ncr::geq(per, MIN_PER_VAL));
+    assert(ncr::leq(per, MAX_PER_VAL));
+
+    for(auto pbm : m_pbMapping)
+      {
+        if(ncr::geq(pbm.per, per))
+          {
+            return pbm;
+          }
+      }
+    assert(0);
+//
+//    uint16_t i = per * 1000 - 1;
+//    assert(i < PER_BER_MAP_SIZE);
+//    return m_pbMapping.at (i);
   }
 
 private:

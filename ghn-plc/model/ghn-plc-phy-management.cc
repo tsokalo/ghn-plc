@@ -387,6 +387,9 @@ GhnPlcPhyManagement::GetDataAmount (Time txTime, uint8_t sourceId, uint8_t desti
   case FEC_RATE_16_18:
     payloadUncodedBits = payloadUncodedBits * 16 / 18;
     break;
+  case FEC_RATE_16_21:
+    payloadUncodedBits = payloadUncodedBits * 16 / 21;
+    break;
   case FEC_RATE_20_21:
     payloadUncodedBits = payloadUncodedBits * 20 / 21;
     break;
@@ -419,7 +422,7 @@ GhnPlcPhyManagement::IsBlockSuccess ()
   std::binomial_distribution<uint32_t> m_binomDistr (bs / fc, 1 - ber);
   uint32_t gathered_bits_rand = m_binomDistr (m_gen);
 
-  NS_LOG_UNCOND(
+  NS_LOG_LOGIC(
           "Frame size: " << frame_size << ", Gathered bits: " << gathered_bits << ", FEC rate: " << m_txPayloadFecRate << " -> " << fc << ", Sent bits: " << sent_bits << ", BER: " << ber << ", BS: " << bs << ", Gathered rand bits: " << gathered_bits_rand << ", ret: " << (gathered_bits_rand >= bs));
 
   return (gathered_bits_rand >= bs);

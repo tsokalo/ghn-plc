@@ -4,256 +4,179 @@ namespace ns3
 {
 namespace ghn
 {
+
 std::vector<PbMapping> PbMappingList::m_pbMapping =
-  { PbMapping (0.001, CODING_RATE_20_21, 0.0032625, 0.00214485), PbMapping (0.002, CODING_RATE_20_21, 0.0036375, 0.00265366),
-      PbMapping (0.003, CODING_RATE_20_21, 0.0035125, 0.00247832), PbMapping (0.004, CODING_RATE_20_21, 0.0045125, 0.00403903),
-      PbMapping (0.005, CODING_RATE_20_21, 0.0037625, 0.0028347), PbMapping (0.006, CODING_RATE_20_21, 0.0043875, 0.00382439),
-      PbMapping (0.007, CODING_RATE_20_21, 0.0057625, 0.00648364), PbMapping (0.008, CODING_RATE_20_21, 0.0055125, 0.005952),
-      PbMapping (0.009, CODING_RATE_20_21, 0.0070125, 0.00945158), PbMapping (0.01, CODING_RATE_20_21, 0.0062625, 0.0076095),
-      PbMapping (0.011, CODING_RATE_20_21, 0.0066375, 0.00850782), PbMapping (0.012, CODING_RATE_20_21, 0.0072625, 0.0101056),
-      PbMapping (0.013, CODING_RATE_20_21, 0.0083875, 0.0132895), PbMapping (0.014, CODING_RATE_20_21, 0.0093875, 0.0164394),
-      PbMapping (0.015, CODING_RATE_20_21, 0.0081375, 0.0125485), PbMapping (0.016, CODING_RATE_20_21, 0.0087625, 0.0144362),
-      PbMapping (0.017, CODING_RATE_20_21, 0.0090125, 0.0152238), PbMapping (0.018, CODING_RATE_20_21, 0.0100125, 0.0185551),
-      PbMapping (0.019, CODING_RATE_20_21, 0.0105125, 0.0203266), PbMapping (0.02, CODING_RATE_20_21, 0.0105125, 0.0203266),
-      PbMapping (0.021, CODING_RATE_20_21, 0.0103875, 0.0198772), PbMapping (0.022, CODING_RATE_20_21, 0.0111375, 0.0226372),
-      PbMapping (0.023, CODING_RATE_20_21, 0.0110125, 0.0221666), PbMapping (0.024, CODING_RATE_20_21, 0.0108875, 0.0217002),
-      PbMapping (0.025, CODING_RATE_20_21, 0.0121375, 0.0265497), PbMapping (0.026, CODING_RATE_20_21, 0.0113875, 0.0235907),
-      PbMapping (0.027, CODING_RATE_20_21, 0.0116375, 0.0245608), PbMapping (0.028, CODING_RATE_20_21, 0.0122625, 0.027057),
-      PbMapping (0.029, CODING_RATE_20_21, 0.0132625, 0.031256), PbMapping (0.03, CODING_RATE_20_21, 0.0131375, 0.0307176),
-      PbMapping (0.031, CODING_RATE_20_21, 0.0126375, 0.0286025), PbMapping (0.032, CODING_RATE_20_21, 0.0128875, 0.0296524),
-      PbMapping (0.033, CODING_RATE_20_21, 0.0140125, 0.0345652), PbMapping (0.034, CODING_RATE_20_21, 0.0141375, 0.0351296),
-      PbMapping (0.035, CODING_RATE_20_21, 0.0142625, 0.0356977), PbMapping (0.036, CODING_RATE_20_21, 0.0145125, 0.0368448),
-      PbMapping (0.037, CODING_RATE_20_21, 0.0140125, 0.0345652), PbMapping (0.038, CODING_RATE_20_21, 0.0142625, 0.0356977),
-      PbMapping (0.039, CODING_RATE_20_21, 0.0153875, 0.0409712), PbMapping (0.04, CODING_RATE_20_21, 0.0151375, 0.0397748),
-      PbMapping (0.041, CODING_RATE_20_21, 0.0153875, 0.0409712), PbMapping (0.042, CODING_RATE_20_21, 0.0153875, 0.0409712),
-      PbMapping (0.043, CODING_RATE_20_21, 0.0162625, 0.0452661), PbMapping (0.044, CODING_RATE_20_21, 0.0161375, 0.0446425),
-      PbMapping (0.045, CODING_RATE_20_21, 0.0157625, 0.0427917), PbMapping (0.046, CODING_RATE_20_21, 0.0163875, 0.045893),
-      PbMapping (0.047, CODING_RATE_20_21, 0.0161375, 0.0446425), PbMapping (0.048, CODING_RATE_20_21, 0.0167625, 0.0477932),
-      PbMapping (0.049, CODING_RATE_20_21, 0.0165125, 0.0465231), PbMapping (0.05, CODING_RATE_20_21, 0.0176375, 0.0523389),
-      PbMapping (0.051, CODING_RATE_20_21, 0.0172625, 0.0503719), PbMapping (0.052, CODING_RATE_20_21, 0.0180125, 0.0543337),
-      PbMapping (0.053, CODING_RATE_20_21, 0.0178875, 0.0536657), PbMapping (0.054, CODING_RATE_20_21, 0.0175125, 0.0516801),
-      PbMapping (0.055, CODING_RATE_20_21, 0.0180125, 0.0543337), PbMapping (0.056, CODING_RATE_20_21, 0.0180125, 0.0543337),
-      PbMapping (0.057, CODING_RATE_20_21, 0.0187625, 0.0584044), PbMapping (0.058, CODING_RATE_20_21, 0.0182625, 0.0556787),
-      PbMapping (0.059, CODING_RATE_20_21, 0.0192625, 0.0611769), PbMapping (0.06, CODING_RATE_20_21, 0.0186375, 0.0577186),
-      PbMapping (0.061, CODING_RATE_20_21, 0.0188875, 0.0590932), PbMapping (0.062, CODING_RATE_20_21, 0.0193875, 0.0618771),
-      PbMapping (0.063, CODING_RATE_20_21, 0.0196375, 0.0632861), PbMapping (0.064, CODING_RATE_20_21, 0.0197625, 0.0639947),
-      PbMapping (0.065, CODING_RATE_20_21, 0.0195125, 0.0625802), PbMapping (0.066, CODING_RATE_20_21, 0.0205125, 0.0683043),
-      PbMapping (0.067, CODING_RATE_20_21, 0.0201375, 0.0661373), PbMapping (0.068, CODING_RATE_20_21, 0.0208875, 0.0704954),
-      PbMapping (0.069, CODING_RATE_20_21, 0.0205125, 0.0683043), PbMapping (0.07, CODING_RATE_20_21, 0.0203875, 0.0675793),
-      PbMapping (0.071, CODING_RATE_20_21, 0.0210125, 0.071231), PbMapping (0.072, CODING_RATE_20_21, 0.0207625, 0.0697624),
-      PbMapping (0.073, CODING_RATE_20_21, 0.0210125, 0.071231), PbMapping (0.074, CODING_RATE_20_21, 0.0211375, 0.0719691),
-      PbMapping (0.075, CODING_RATE_16_18, 0.0551375, 0.0735856), PbMapping (0.076, CODING_RATE_16_18, 0.0558875, 0.0759877),
-      PbMapping (0.077, CODING_RATE_16_18, 0.0565125, 0.0780171), PbMapping (0.078, CODING_RATE_16_18, 0.0557625, 0.0755849),
-      PbMapping (0.079, CODING_RATE_16_18, 0.0567625, 0.0788358), PbMapping (0.08, CODING_RATE_16_18, 0.0563875, 0.0776092),
-      PbMapping (0.081, CODING_RATE_16_18, 0.0570125, 0.0796585), PbMapping (0.082, CODING_RATE_16_18, 0.0570125, 0.0796585),
-      PbMapping (0.083, CODING_RATE_16_18, 0.0581375, 0.0834094), PbMapping (0.084, CODING_RATE_16_18, 0.0583875, 0.0842536),
-      PbMapping (0.085, CODING_RATE_16_18, 0.0578875, 0.082569), PbMapping (0.086, CODING_RATE_16_18, 0.0595125, 0.0881006),
-      PbMapping (0.087, CODING_RATE_16_18, 0.0592625, 0.087239), PbMapping (0.088, CODING_RATE_16_18, 0.0587625, 0.0855273),
-      PbMapping (0.089, CODING_RATE_16_18, 0.0593875, 0.0876693), PbMapping (0.09, CODING_RATE_16_18, 0.0593875, 0.0876693),
-      PbMapping (0.091, CODING_RATE_16_18, 0.0596375, 0.0885328), PbMapping (0.092, CODING_RATE_16_18, 0.0612625, 0.0942376),
-      PbMapping (0.093, CODING_RATE_16_18, 0.0613875, 0.094683), PbMapping (0.094, CODING_RATE_16_18, 0.0610125, 0.0933497),
-      PbMapping (0.095, CODING_RATE_16_18, 0.0613875, 0.094683), PbMapping (0.096, CODING_RATE_16_18, 0.0611375, 0.0937932),
-      PbMapping (0.097, CODING_RATE_16_18, 0.0613875, 0.094683), PbMapping (0.098, CODING_RATE_16_18, 0.0625125, 0.0987328),
-      PbMapping (0.099, CODING_RATE_16_18, 0.0620125, 0.0969237), PbMapping (0.1, CODING_RATE_16_18, 0.0635125, 0.102394),
-      PbMapping (0.101, CODING_RATE_16_18, 0.0625125, 0.0987328), PbMapping (0.102, CODING_RATE_16_18, 0.0627625, 0.0996427),
-      PbMapping (0.103, CODING_RATE_16_18, 0.0636375, 0.102856), PbMapping (0.104, CODING_RATE_16_18, 0.0645125, 0.106113),
-      PbMapping (0.105, CODING_RATE_16_18, 0.0643875, 0.105645), PbMapping (0.106, CODING_RATE_16_18, 0.0651375, 0.108466),
-      PbMapping (0.107, CODING_RATE_16_18, 0.0641375, 0.104712), PbMapping (0.108, CODING_RATE_16_18, 0.0643875, 0.105645),
-      PbMapping (0.109, CODING_RATE_16_18, 0.0646375, 0.106582), PbMapping (0.11, CODING_RATE_16_18, 0.0648875, 0.107522),
-      PbMapping (0.111, CODING_RATE_16_18, 0.0656375, 0.110363), PbMapping (0.112, CODING_RATE_16_18, 0.0658875, 0.111318),
-      PbMapping (0.113, CODING_RATE_16_18, 0.0662625, 0.112755), PbMapping (0.114, CODING_RATE_16_18, 0.0660125, 0.111796),
-      PbMapping (0.115, CODING_RATE_16_18, 0.0662625, 0.112755), PbMapping (0.116, CODING_RATE_16_18, 0.0665125, 0.113718),
-      PbMapping (0.117, CODING_RATE_16_18, 0.0667625, 0.114683), PbMapping (0.118, CODING_RATE_16_21, 0.163763, 0.115655),
-      PbMapping (0.119, CODING_RATE_16_21, 0.164137, 0.11664), PbMapping (0.12, CODING_RATE_16_21, 0.164513, 0.117631),
-      PbMapping (0.121, CODING_RATE_16_21, 0.164887, 0.118626), PbMapping (0.122, CODING_RATE_16_21, 0.165513, 0.120294),
-      PbMapping (0.123, CODING_RATE_16_21, 0.165887, 0.121301), PbMapping (0.124, CODING_RATE_16_21, 0.166887, 0.12401),
-      PbMapping (0.125, CODING_RATE_16_21, 0.167263, 0.125034), PbMapping (0.126, CODING_RATE_16_21, 0.167637, 0.126063),
-      PbMapping (0.127, CODING_RATE_16_21, 0.168513, 0.128481), PbMapping (0.128, CODING_RATE_16_21, 0.167513, 0.125719),
-      PbMapping (0.129, CODING_RATE_16_21, 0.168137, 0.127441), PbMapping (0.13, CODING_RATE_16_21, 0.168263, 0.127787),
-      PbMapping (0.131, CODING_RATE_16_21, 0.168637, 0.128828), PbMapping (0.132, CODING_RATE_16_21, 0.170387, 0.133745),
-      PbMapping (0.133, CODING_RATE_16_21, 0.169263, 0.130573), PbMapping (0.134, CODING_RATE_16_21, 0.170137, 0.133037),
-      PbMapping (0.135, CODING_RATE_16_21, 0.171013, 0.135525), PbMapping (0.136, CODING_RATE_16_21, 0.172013, 0.138398),
-      PbMapping (0.137, CODING_RATE_16_21, 0.172387, 0.139484), PbMapping (0.138, CODING_RATE_16_21, 0.171513, 0.136958),
-      PbMapping (0.139, CODING_RATE_16_21, 0.171387, 0.136599), PbMapping (0.14, CODING_RATE_16_21, 0.171763, 0.137677),
-      PbMapping (0.141, CODING_RATE_16_21, 0.173513, 0.142768), PbMapping (0.142, CODING_RATE_16_21, 0.173888, 0.143872),
-      PbMapping (0.143, CODING_RATE_16_21, 0.172763, 0.140574), PbMapping (0.144, CODING_RATE_16_21, 0.173137, 0.141669),
-      PbMapping (0.145, CODING_RATE_16_21, 0.174388, 0.14535), PbMapping (0.146, CODING_RATE_16_21, 0.174263, 0.14498),
-      PbMapping (0.147, CODING_RATE_16_21, 0.175763, 0.149455), PbMapping (0.148, CODING_RATE_16_21, 0.175763, 0.149455),
-      PbMapping (0.149, CODING_RATE_16_21, 0.175263, 0.147955), PbMapping (0.15, CODING_RATE_16_21, 0.176138, 0.150584),
-      PbMapping (0.151, CODING_RATE_16_21, 0.175513, 0.148704), PbMapping (0.152, CODING_RATE_16_21, 0.176263, 0.150962),
-      PbMapping (0.153, CODING_RATE_16_21, 0.176138, 0.150584), PbMapping (0.154, CODING_RATE_16_21, 0.177762, 0.155529),
-      PbMapping (0.155, CODING_RATE_16_21, 0.178388, 0.157452), PbMapping (0.156, CODING_RATE_16_21, 0.178388, 0.157452),
-      PbMapping (0.157, CODING_RATE_16_21, 0.178262, 0.157067), PbMapping (0.158, CODING_RATE_16_21, 0.179138, 0.159776),
-      PbMapping (0.159, CODING_RATE_16_21, 0.178138, 0.156682), PbMapping (0.16, CODING_RATE_16_21, 0.179012, 0.159388),
-      PbMapping (0.161, CODING_RATE_16_21, 0.178762, 0.158612), PbMapping (0.162, CODING_RATE_16_21, 0.179512, 0.160944),
-      PbMapping (0.163, CODING_RATE_16_21, 0.180638, 0.164473), PbMapping (0.164, CODING_RATE_16_21, 0.179762, 0.161725),
-      PbMapping (0.165, CODING_RATE_16_21, 0.180012, 0.162508), PbMapping (0.166, CODING_RATE_16_21, 0.181138, 0.166054),
-      PbMapping (0.167, CODING_RATE_16_21, 0.181262, 0.16645), PbMapping (0.168, CODING_RATE_16_21, 0.181762, 0.16804),
-      PbMapping (0.169, CODING_RATE_16_21, 0.182012, 0.168838), PbMapping (0.17, CODING_RATE_16_21, 0.182388, 0.170038),
-      PbMapping (0.171, CODING_RATE_16_21, 0.182512, 0.170439), PbMapping (0.172, CODING_RATE_16_21, 0.182262, 0.169637),
-      PbMapping (0.173, CODING_RATE_16_21, 0.183638, 0.174067), PbMapping (0.174, CODING_RATE_16_21, 0.182888, 0.171644),
-      PbMapping (0.175, CODING_RATE_16_21, 0.183762, 0.174472), PbMapping (0.176, CODING_RATE_16_21, 0.183512, 0.173662),
-      PbMapping (0.177, CODING_RATE_16_21, 0.184388, 0.176506), PbMapping (0.178, CODING_RATE_16_21, 0.185262, 0.179371),
-      PbMapping (0.179, CODING_RATE_16_21, 0.184388, 0.176506), PbMapping (0.18, CODING_RATE_16_21, 0.185012, 0.17855),
-      PbMapping (0.181, CODING_RATE_16_21, 0.185012, 0.17855), PbMapping (0.182, CODING_RATE_16_21, 0.186388, 0.183088),
-      PbMapping (0.183, CODING_RATE_16_21, 0.186888, 0.184751), PbMapping (0.184, CODING_RATE_16_21, 0.187262, 0.186002),
-      PbMapping (0.185, CODING_RATE_16_21, 0.186888, 0.184751), PbMapping (0.186, CODING_RATE_16_21, 0.186888, 0.184751),
-      PbMapping (0.187, CODING_RATE_16_21, 0.187512, 0.186839), PbMapping (0.188, CODING_RATE_16_21, 0.188138, 0.188938),
-      PbMapping (0.189, CODING_RATE_16_21, 0.188888, 0.191471), PbMapping (0.19, CODING_RATE_16_21, 0.188888, 0.191471),
-      PbMapping (0.191, CODING_RATE_16_21, 0.188012, 0.188518), PbMapping (0.192, CODING_RATE_16_21, 0.189513, 0.193594),
-      PbMapping (0.193, CODING_RATE_16_21, 0.188762, 0.191048), PbMapping (0.194, CODING_RATE_16_21, 0.189763, 0.194446),
-      PbMapping (0.195, CODING_RATE_16_21, 0.190638, 0.197441), PbMapping (0.196, CODING_RATE_16_21, 0.189763, 0.194446),
-      PbMapping (0.197, CODING_RATE_16_21, 0.190888, 0.1983), PbMapping (0.198, CODING_RATE_16_21, 0.191388, 0.200024),
-      PbMapping (0.199, CODING_RATE_16_21, 0.190763, 0.19787), PbMapping (0.2, CODING_RATE_16_21, 0.191013, 0.198731),
-      PbMapping (0.201, CODING_RATE_16_21, 0.192388, 0.203491), PbMapping (0.202, CODING_RATE_16_21, 0.191513, 0.200456),
-      PbMapping (0.203, CODING_RATE_16_21, 0.192388, 0.203491), PbMapping (0.204, CODING_RATE_16_21, 0.192388, 0.203491),
-      PbMapping (0.205, CODING_RATE_16_21, 0.192263, 0.203056), PbMapping (0.206, CODING_RATE_16_21, 0.193263, 0.206546),
-      PbMapping (0.207, CODING_RATE_16_21, 0.193013, 0.205671), PbMapping (0.208, CODING_RATE_16_21, 0.193887, 0.20874),
-      PbMapping (0.209, CODING_RATE_16_21, 0.193887, 0.20874), PbMapping (0.21, CODING_RATE_16_21, 0.194013, 0.20918),
-      PbMapping (0.211, CODING_RATE_16_21, 0.194263, 0.210061), PbMapping (0.212, CODING_RATE_16_21, 0.194513, 0.210944),
-      PbMapping (0.213, CODING_RATE_16_21, 0.194387, 0.210503), PbMapping (0.214, CODING_RATE_2_3, 0.299138, 0.214914),
-      PbMapping (0.215, CODING_RATE_2_3, 0.299888, 0.215858), PbMapping (0.216, CODING_RATE_2_3, 0.299888, 0.215858),
-      PbMapping (0.217, CODING_RATE_2_3, 0.300762, 0.216961), PbMapping (0.218, CODING_RATE_2_3, 0.302513, 0.219173),
-      PbMapping (0.219, CODING_RATE_2_3, 0.303388, 0.220282), PbMapping (0.22, CODING_RATE_2_3, 0.304138, 0.221234), PbMapping (
-              0.221, CODING_RATE_2_3, 0.303888, 0.220916), PbMapping (0.222, CODING_RATE_2_3, 0.304638, 0.221869), PbMapping (
-              0.223, CODING_RATE_2_3, 0.306138, 0.223778), PbMapping (0.224, CODING_RATE_2_3, 0.307262, 0.225213), PbMapping (
-              0.225, CODING_RATE_2_3, 0.307013, 0.224894), PbMapping (0.226, CODING_RATE_2_3, 0.308513, 0.226811), PbMapping (
-              0.227, CODING_RATE_2_3, 0.309262, 0.227772), PbMapping (0.228, CODING_RATE_2_3, 0.310013, 0.228734), PbMapping (
-              0.229, CODING_RATE_2_3, 0.310887, 0.229858), PbMapping (0.23, CODING_RATE_2_3, 0.311638, 0.230823), PbMapping (
-              0.231, CODING_RATE_2_3, 0.310762, 0.229697), PbMapping (0.232, CODING_RATE_2_3, 0.311513, 0.230662), PbMapping (
-              0.233, CODING_RATE_2_3, 0.313262, 0.232917), PbMapping (0.234, CODING_RATE_2_3, 0.314763, 0.234856), PbMapping (
-              0.235, CODING_RATE_2_3, 0.315513, 0.235827), PbMapping (0.236, CODING_RATE_2_3, 0.316263, 0.2368), PbMapping (
-              0.237, CODING_RATE_2_3, 0.317013, 0.237773), PbMapping (0.238, CODING_RATE_2_3, 0.317138, 0.237936), PbMapping (
-              0.239, CODING_RATE_2_3, 0.318887, 0.240213), PbMapping (0.24, CODING_RATE_2_3, 0.319387, 0.240865), PbMapping (
-              0.241, CODING_RATE_2_3, 0.320138, 0.241844), PbMapping (0.242, CODING_RATE_2_3, 0.320887, 0.242824), PbMapping (
-              0.243, CODING_RATE_2_3, 0.321638, 0.243805), PbMapping (0.244, CODING_RATE_2_3, 0.322387, 0.244787), PbMapping (
-              0.245, CODING_RATE_2_3, 0.323138, 0.245771), PbMapping (0.246, CODING_RATE_2_3, 0.323887, 0.246756), PbMapping (
-              0.247, CODING_RATE_2_3, 0.325012, 0.248235), PbMapping (0.248, CODING_RATE_2_3, 0.325763, 0.249223), PbMapping (
-              0.249, CODING_RATE_2_3, 0.326512, 0.250212), PbMapping (0.25, CODING_RATE_2_3, 0.327263, 0.251202), PbMapping (
-              0.251, CODING_RATE_2_3, 0.328012, 0.252193), PbMapping (0.252, CODING_RATE_2_3, 0.328763, 0.253186), PbMapping (
-              0.253, CODING_RATE_2_3, 0.329138, 0.253683), PbMapping (0.254, CODING_RATE_2_3, 0.330012, 0.254843), PbMapping (
-              0.255, CODING_RATE_2_3, 0.330888, 0.256004), PbMapping (0.256, CODING_RATE_2_3, 0.331512, 0.256835), PbMapping (
-              0.257, CODING_RATE_2_3, 0.332263, 0.257833), PbMapping (0.258, CODING_RATE_2_3, 0.333012, 0.258832), PbMapping (
-              0.259, CODING_RATE_2_3, 0.333012, 0.258832), PbMapping (0.26, CODING_RATE_2_3, 0.334512, 0.260833), PbMapping (
-              0.261, CODING_RATE_2_3, 0.335512, 0.26217), PbMapping (0.262, CODING_RATE_2_3, 0.335388, 0.262002), PbMapping (
-              0.263, CODING_RATE_2_3, 0.336012, 0.262839), PbMapping (0.264, CODING_RATE_2_3, 0.336763, 0.263843), PbMapping (
-              0.265, CODING_RATE_2_3, 0.337512, 0.264849), PbMapping (0.266, CODING_RATE_2_3, 0.338637, 0.266359), PbMapping (
-              0.267, CODING_RATE_2_3, 0.339763, 0.267872), PbMapping (0.268, CODING_RATE_2_3, 0.340763, 0.269219), PbMapping (
-              0.269, CODING_RATE_2_3, 0.341512, 0.270231), PbMapping (0.27, CODING_RATE_2_3, 0.341637, 0.270399), PbMapping (
-              0.271, CODING_RATE_2_3, 0.342012, 0.270906), PbMapping (0.272, CODING_RATE_2_3, 0.343763, 0.273271), PbMapping (
-              0.273, CODING_RATE_2_3, 0.344263, 0.273948), PbMapping (0.274, CODING_RATE_2_3, 0.345137, 0.275134), PbMapping (
-              0.275, CODING_RATE_2_3, 0.345012, 0.274965), PbMapping (0.276, CODING_RATE_2_3, 0.346388, 0.276831), PbMapping (
-              0.277, CODING_RATE_2_3, 0.347137, 0.27785), PbMapping (0.278, CODING_RATE_2_3, 0.348137, 0.279211), PbMapping (
-              0.279, CODING_RATE_2_3, 0.348637, 0.279892), PbMapping (0.28, CODING_RATE_2_3, 0.348637, 0.279892), PbMapping (
-              0.281, CODING_RATE_2_3, 0.350263, 0.282108), PbMapping (0.282, CODING_RATE_2_3, 0.349263, 0.280744), PbMapping (
-              0.283, CODING_RATE_2_3, 0.351513, 0.283817), PbMapping (0.284, CODING_RATE_2_3, 0.352263, 0.284843), PbMapping (
-              0.285, CODING_RATE_2_3, 0.353013, 0.28587), PbMapping (0.286, CODING_RATE_2_3, 0.353762, 0.286898), PbMapping (
-              0.287, CODING_RATE_2_3, 0.353762, 0.286898), PbMapping (0.288, CODING_RATE_2_3, 0.353637, 0.286727), PbMapping (
-              0.289, CODING_RATE_2_3, 0.355888, 0.289817), PbMapping (0.29, CODING_RATE_2_3, 0.356013, 0.289989), PbMapping (
-              0.291, CODING_RATE_2_3, 0.357388, 0.291882), PbMapping (0.292, CODING_RATE_2_3, 0.358137, 0.292916), PbMapping (
-              0.293, CODING_RATE_2_3, 0.357262, 0.29171), PbMapping (0.294, CODING_RATE_2_3, 0.358013, 0.292744), PbMapping (
-              0.295, CODING_RATE_2_3, 0.359637, 0.294987), PbMapping (0.296, CODING_RATE_2_3, 0.361013, 0.296889), PbMapping (
-              0.297, CODING_RATE_2_3, 0.361762, 0.297927), PbMapping (0.298, CODING_RATE_2_3, 0.362638, 0.29914), PbMapping (
-              0.299, CODING_RATE_2_3, 0.362388, 0.298793), PbMapping (0.3, CODING_RATE_2_3, 0.363888, 0.300875), PbMapping (
-              0.301, CODING_RATE_2_3, 0.364638, 0.301917), PbMapping (0.302, CODING_RATE_2_3, 0.365262, 0.302786), PbMapping (
-              0.303, CODING_RATE_2_3, 0.365262, 0.302786), PbMapping (0.304, CODING_RATE_2_3, 0.366762, 0.304874), PbMapping (
-              0.305, CODING_RATE_2_3, 0.367513, 0.30592), PbMapping (0.306, CODING_RATE_2_3, 0.368138, 0.306792), PbMapping (
-              0.307, CODING_RATE_2_3, 0.369138, 0.308188), PbMapping (0.308, CODING_RATE_2_3, 0.369638, 0.308887), PbMapping (
-              0.309, CODING_RATE_2_3, 0.369638, 0.308887), PbMapping (0.31, CODING_RATE_2_3, 0.371013, 0.310811), PbMapping (
-              0.311, CODING_RATE_2_3, 0.371013, 0.310811), PbMapping (0.312, CODING_RATE_2_3, 0.372513, 0.312913), PbMapping (
-              0.313, CODING_RATE_2_3, 0.372513, 0.312913), PbMapping (0.314, CODING_RATE_2_3, 0.373887, 0.314843), PbMapping (
-              0.315, CODING_RATE_2_3, 0.374638, 0.315897), PbMapping (0.316, CODING_RATE_2_3, 0.375887, 0.317655), PbMapping (
-              0.317, CODING_RATE_2_3, 0.376013, 0.317831), PbMapping (0.318, CODING_RATE_2_3, 0.376763, 0.318887), PbMapping (
-              0.319, CODING_RATE_2_3, 0.376763, 0.318887), PbMapping (0.32, CODING_RATE_2_3, 0.377513, 0.319944), PbMapping (
-              0.321, CODING_RATE_2_3, 0.378887, 0.321884), PbMapping (0.322, CODING_RATE_2_3, 0.379513, 0.322767), PbMapping (
-              0.323, CODING_RATE_2_3, 0.379638, 0.322944), PbMapping (0.324, CODING_RATE_2_3, 0.381013, 0.324888), PbMapping (
-              0.325, CODING_RATE_2_3, 0.379387, 0.32259), PbMapping (0.326, CODING_RATE_2_3, 0.381763, 0.32595), PbMapping (
-              0.327, CODING_RATE_2_3, 0.383387, 0.328253), PbMapping (0.328, CODING_RATE_2_3, 0.381513, 0.325596), PbMapping (
-              0.329, CODING_RATE_2_3, 0.384513, 0.329849), PbMapping (0.33, CODING_RATE_2_3, 0.384013, 0.32914), PbMapping (
-              0.331, CODING_RATE_2_3, 0.386138, 0.332159), PbMapping (0.332, CODING_RATE_2_3, 0.386638, 0.33287), PbMapping (
-              0.333, CODING_RATE_2_3, 0.386138, 0.332159), PbMapping (0.334, CODING_RATE_2_3, 0.388012, 0.334828), PbMapping (
-              0.335, CODING_RATE_2_3, 0.388012, 0.334828), PbMapping (0.336, CODING_RATE_2_3, 0.388763, 0.335897), PbMapping (
-              0.337, CODING_RATE_2_3, 0.389512, 0.336966), PbMapping (0.338, CODING_RATE_2_3, 0.391512, 0.339822), PbMapping (
-              0.339, CODING_RATE_2_3, 0.391512, 0.339822), PbMapping (0.34, CODING_RATE_2_3, 0.391012, 0.339108), PbMapping (
-              0.341, CODING_RATE_2_3, 0.393138, 0.342147), PbMapping (0.342, CODING_RATE_2_3, 0.393638, 0.342863), PbMapping (
-              0.343, CODING_RATE_2_3, 0.393138, 0.342147), PbMapping (0.344, CODING_RATE_2_3, 0.394388, 0.343937), PbMapping (
-              0.345, CODING_RATE_2_3, 0.394512, 0.344116), PbMapping (0.346, CODING_RATE_2_3, 0.396388, 0.346806), PbMapping (
-              0.347, CODING_RATE_2_3, 0.397138, 0.347883), PbMapping (0.348, CODING_RATE_2_3, 0.396638, 0.347165), PbMapping (
-              0.349, CODING_RATE_2_3, 0.397888, 0.348961), PbMapping (0.35, CODING_RATE_2_3, 0.399388, 0.351118), PbMapping (
-              0.351, CODING_RATE_2_3, 0.399888, 0.351838), PbMapping (0.352, CODING_RATE_2_3, 0.400638, 0.352918), PbMapping (
-              0.353, CODING_RATE_2_3, 0.399012, 0.350579), PbMapping (0.354, CODING_RATE_2_3, 0.402012, 0.3549), PbMapping (
-              0.355, CODING_RATE_2_3, 0.402637, 0.355802), PbMapping (0.356, CODING_RATE_2_3, 0.403388, 0.356885), PbMapping (
-              0.357, CODING_RATE_2_3, 0.401763, 0.35454), PbMapping (0.358, CODING_RATE_2_3, 0.404763, 0.358871), PbMapping (
-              0.359, CODING_RATE_2_3, 0.403137, 0.356524), PbMapping (0.36, CODING_RATE_2_3, 0.405512, 0.359956), PbMapping (
-              0.361, CODING_RATE_2_3, 0.405637, 0.360137), PbMapping (0.362, CODING_RATE_2_3, 0.407512, 0.362851), PbMapping (
-              0.363, CODING_RATE_2_3, 0.408263, 0.363938), PbMapping (0.364, CODING_RATE_2_3, 0.408263, 0.363938), PbMapping (
-              0.365, CODING_RATE_2_3, 0.409637, 0.365932), PbMapping (0.366, CODING_RATE_2_3, 0.408013, 0.363575), PbMapping (
-              0.367, CODING_RATE_2_3, 0.411013, 0.367928), PbMapping (0.368, CODING_RATE_2_3, 0.409388, 0.365569), PbMapping (
-              0.369, CODING_RATE_2_3, 0.412388, 0.369926), PbMapping (0.37, CODING_RATE_2_3, 0.413013, 0.370835), PbMapping (
-              0.371, CODING_RATE_2_3, 0.414013, 0.37229), PbMapping (0.372, CODING_RATE_2_3, 0.414388, 0.372836), PbMapping (
-              0.373, CODING_RATE_2_3, 0.415388, 0.374293), PbMapping (0.374, CODING_RATE_2_3, 0.415763, 0.374839), PbMapping (
-              0.375, CODING_RATE_2_3, 0.416513, 0.375933), PbMapping (0.376, CODING_RATE_2_3, 0.417388, 0.377209), PbMapping (
-              0.377, CODING_RATE_2_3, 0.417888, 0.377939), PbMapping (0.378, CODING_RATE_2_3, 0.417888, 0.377939), PbMapping (
-              0.379, CODING_RATE_2_3, 0.419262, 0.379946), PbMapping (0.38, CODING_RATE_2_3, 0.420388, 0.38159), PbMapping (
-              0.381, CODING_RATE_2_3, 0.419388, 0.380129), PbMapping (0.382, CODING_RATE_2_3, 0.419013, 0.379581), PbMapping (
-              0.383, CODING_RATE_2_3, 0.419762, 0.380677), PbMapping (0.384, CODING_RATE_2_3, 0.420388, 0.38159), PbMapping (
-              0.385, CODING_RATE_2_3, 0.421137, 0.382687), PbMapping (0.386, CODING_RATE_1_2, 0.621387, 0.386122), PbMapping (
-              0.387, CODING_RATE_1_2, 0.622138, 0.387055), PbMapping (0.388, CODING_RATE_1_2, 0.624012, 0.389392), PbMapping (
-              0.389, CODING_RATE_1_2, 0.623762, 0.38908), PbMapping (0.39, CODING_RATE_1_2, 0.624513, 0.390016), PbMapping (
-              0.391, CODING_RATE_1_2, 0.625387, 0.39111), PbMapping (0.392, CODING_RATE_1_2, 0.626138, 0.392048), PbMapping (
-              0.393, CODING_RATE_1_2, 0.627012, 0.393145), PbMapping (0.394, CODING_RATE_1_2, 0.627763, 0.394086), PbMapping (
-              0.395, CODING_RATE_1_2, 0.628513, 0.395028), PbMapping (0.396, CODING_RATE_1_2, 0.629387, 0.396129), PbMapping (
-              0.397, CODING_RATE_1_2, 0.630138, 0.397073), PbMapping (0.398, CODING_RATE_1_2, 0.630888, 0.398019), PbMapping (
-              0.399, CODING_RATE_1_2, 0.631763, 0.399124), PbMapping (0.4, CODING_RATE_1_2, 0.632513, 0.400072), PbMapping (
-              0.401, CODING_RATE_1_2, 0.633263, 0.401021), PbMapping (0.402, CODING_RATE_1_2, 0.634012, 0.401972), PbMapping (
-              0.403, CODING_RATE_1_2, 0.634888, 0.403082), PbMapping (0.404, CODING_RATE_1_2, 0.635637, 0.404035), PbMapping (
-              0.405, CODING_RATE_1_2, 0.636387, 0.404989), PbMapping (0.406, CODING_RATE_1_2, 0.637263, 0.406103), PbMapping (
-              0.407, CODING_RATE_1_2, 0.638012, 0.40706), PbMapping (0.408, CODING_RATE_1_2, 0.638763, 0.408018), PbMapping (
-              0.409, CODING_RATE_1_2, 0.639513, 0.408976), PbMapping (0.41, CODING_RATE_1_2, 0.640263, 0.409936), PbMapping (
-              0.411, CODING_RATE_1_2, 0.641138, 0.411057), PbMapping (0.412, CODING_RATE_1_2, 0.641888, 0.41202), PbMapping (
-              0.413, CODING_RATE_1_2, 0.642637, 0.412983), PbMapping (0.414, CODING_RATE_1_2, 0.643388, 0.413947), PbMapping (
-              0.415, CODING_RATE_1_2, 0.644262, 0.415074), PbMapping (0.416, CODING_RATE_1_2, 0.645012, 0.416041), PbMapping (
-              0.417, CODING_RATE_1_2, 0.645763, 0.417009), PbMapping (0.418, CODING_RATE_1_2, 0.646513, 0.417978), PbMapping (
-              0.419, CODING_RATE_1_2, 0.647262, 0.418949), PbMapping (0.42, CODING_RATE_1_2, 0.648138, 0.420082), PbMapping (
-              0.421, CODING_RATE_1_2, 0.648888, 0.421055), PbMapping (0.422, CODING_RATE_1_2, 0.649637, 0.422029), PbMapping (
-              0.423, CODING_RATE_1_2, 0.650388, 0.423004), PbMapping (0.424, CODING_RATE_1_2, 0.651138, 0.42398), PbMapping (
-              0.425, CODING_RATE_1_2, 0.651888, 0.424957), PbMapping (0.426, CODING_RATE_1_2, 0.652763, 0.426099), PbMapping (
-              0.427, CODING_RATE_1_2, 0.653513, 0.427079), PbMapping (0.428, CODING_RATE_1_2, 0.654262, 0.428059), PbMapping (
-              0.429, CODING_RATE_1_2, 0.655012, 0.429041), PbMapping (0.43, CODING_RATE_1_2, 0.655763, 0.430024), PbMapping (
-              0.431, CODING_RATE_1_2, 0.656513, 0.431009), PbMapping (0.432, CODING_RATE_1_2, 0.657262, 0.431994), PbMapping (
-              0.433, CODING_RATE_1_2, 0.658013, 0.43298), PbMapping (0.434, CODING_RATE_1_2, 0.658763, 0.433968), PbMapping (
-              0.435, CODING_RATE_1_2, 0.659637, 0.435122), PbMapping (0.436, CODING_RATE_1_2, 0.660388, 0.436112), PbMapping (
-              0.437, CODING_RATE_1_2, 0.661138, 0.437103), PbMapping (0.438, CODING_RATE_1_2, 0.661887, 0.438095), PbMapping (
-              0.439, CODING_RATE_1_2, 0.662637, 0.439088), PbMapping (0.44, CODING_RATE_1_2, 0.663388, 0.440083), PbMapping (
-              0.441, CODING_RATE_1_2, 0.664138, 0.441079), PbMapping (0.442, CODING_RATE_1_2, 0.664887, 0.442075), PbMapping (
-              0.443, CODING_RATE_1_2, 0.665637, 0.443073), PbMapping (0.444, CODING_RATE_1_2, 0.666388, 0.444072), PbMapping (
-              0.445, CODING_RATE_1_2, 0.667138, 0.445072), PbMapping (0.446, CODING_RATE_1_2, 0.667887, 0.446074), PbMapping (
-              0.447, CODING_RATE_1_2, 0.668637, 0.447076), PbMapping (0.448, CODING_RATE_1_2, 0.669388, 0.44808), PbMapping (
-              0.449, CODING_RATE_1_2, 0.670138, 0.449084), PbMapping (0.45, CODING_RATE_1_2, 0.670887, 0.45009), PbMapping (
-              0.451, CODING_RATE_1_2, 0.671637, 0.451097), PbMapping (0.452, CODING_RATE_1_2, 0.672388, 0.452105), PbMapping (
-              0.453, CODING_RATE_1_2, 0.673138, 0.453114), PbMapping (0.454, CODING_RATE_1_2, 0.673887, 0.454124), PbMapping (
-              0.455, CODING_RATE_1_2, 0.674512, 0.454967), PbMapping (0.456, CODING_RATE_1_2, 0.675262, 0.455979), PbMapping (
-              0.457, CODING_RATE_1_2, 0.676013, 0.456993), PbMapping (0.458, CODING_RATE_1_2, 0.676763, 0.458007), PbMapping (
-              0.459, CODING_RATE_1_2, 0.677512, 0.459023), PbMapping (0.46, CODING_RATE_1_2, 0.678262, 0.46004), PbMapping (
-              0.461, CODING_RATE_1_2, 0.679013, 0.461058), PbMapping (0.462, CODING_RATE_1_2, 0.679763, 0.462077), PbMapping (
-              0.463, CODING_RATE_1_2, 0.680512, 0.463097), PbMapping (0.464, CODING_RATE_1_2, 0.681138, 0.463948), PbMapping (
-              0.465, CODING_RATE_1_2, 0.681887, 0.464971), PbMapping (0.466, CODING_RATE_1_2, 0.682638, 0.465994), PbMapping (
-              0.467, CODING_RATE_1_2, 0.683388, 0.467018), PbMapping (0.468, CODING_RATE_1_2, 0.684138, 0.468044), PbMapping (
-              0.469, CODING_RATE_1_2, 0.684887, 0.469071), PbMapping (0.47, CODING_RATE_1_2, 0.685512, 0.469927), PbMapping (
-              0.471, CODING_RATE_1_2, 0.686262, 0.470956), PbMapping (0.472, CODING_RATE_1_2, 0.687013, 0.471986), PbMapping (
-              0.473, CODING_RATE_1_2, 0.687763, 0.473017), PbMapping (0.474, CODING_RATE_1_2, 0.688512, 0.474049), PbMapping (
-              0.475, CODING_RATE_1_2, 0.689263, 0.475083), PbMapping (0.476, CODING_RATE_1_2, 0.689887, 0.475945), PbMapping (
-              0.477, CODING_RATE_1_2, 0.690638, 0.47698), PbMapping (0.478, CODING_RATE_1_2, 0.691388, 0.478017), PbMapping (
-              0.479, CODING_RATE_1_2, 0.692137, 0.479054), PbMapping (0.48, CODING_RATE_1_2, 0.692887, 0.480093), PbMapping (
-              0.481, CODING_RATE_1_2, 0.693512, 0.48096), PbMapping (0.482, CODING_RATE_1_2, 0.694263, 0.482), PbMapping (
-              0.483, CODING_RATE_1_2, 0.695013, 0.483042), PbMapping (0.484, CODING_RATE_1_2, 0.695763, 0.484085), PbMapping (
-              0.485, CODING_RATE_1_2, 0.696388, 0.484956), PbMapping (0.486, CODING_RATE_1_2, 0.697137, 0.486001), PbMapping (
-              0.487, CODING_RATE_1_2, 0.697887, 0.487047), PbMapping (0.488, CODING_RATE_1_2, 0.698638, 0.488094), PbMapping (
-              0.489, CODING_RATE_1_2, 0.699263, 0.488968), PbMapping (0.49, CODING_RATE_1_2, 0.700013, 0.490018), PbMapping (
-              0.491, CODING_RATE_1_2, 0.700763, 0.491068), PbMapping (0.492, CODING_RATE_1_2, 0.701512, 0.49212), PbMapping (
-              0.493, CODING_RATE_1_2, 0.702137, 0.492997), PbMapping (0.494, CODING_RATE_1_2, 0.702887, 0.494051), PbMapping (
-              0.495, CODING_RATE_1_2, 0.703638, 0.495106), PbMapping (0.496, CODING_RATE_1_2, 0.704263, 0.495986), PbMapping (
-              0.497, CODING_RATE_1_2, 0.705013, 0.497043), PbMapping (0.498, CODING_RATE_1_2, 0.705762, 0.498101), PbMapping (
-              0.499, CODING_RATE_1_2, 0.706388, 0.498983), PbMapping (0.5, CODING_RATE_1_2, 0.707137, 0.500043) };
+  { PbMapping (0.01     , CODING_RATE_5_6,      0.154762,       0.0098),
+          PbMapping (0.011        , CODING_RATE_20_21,    0.0408875,      0.0107),
+          PbMapping (0.012        , CODING_RATE_20_21,    0.0410125,      0.0125),
+          PbMapping (0.013        , CODING_RATE_20_21,    0.0410125,      0.0125),
+          PbMapping (0.014        , CODING_RATE_16_18,    0.101513,       0.0137),
+          PbMapping (0.015        , CODING_RATE_5_6,      0.155762,       0.0148),
+          PbMapping (0.016        , CODING_RATE_20_21,    0.0412625,      0.0159),
+          PbMapping (0.017        , CODING_RATE_20_21,    0.0413875,      0.0171),
+          PbMapping (0.018        , CODING_RATE_20_21,    0.0415125,      0.0184),
+          PbMapping (0.019        , CODING_RATE_20_21,    0.0415125,      0.0184),
+          PbMapping (0.02 , CODING_RATE_5_6,      0.156262,       0.0196),
+          PbMapping (0.021        , CODING_RATE_5_6,      0.156762,       0.0214),
+          PbMapping (0.022        , CODING_RATE_20_21,    0.0416375,      0.0219),
+          PbMapping (0.023        , CODING_RATE_20_21,    0.0417625,      0.0226),
+          PbMapping (0.024        , CODING_RATE_16_18,    0.102513,       0.0238),
+          PbMapping (0.025        , CODING_RATE_1_2,      0.489388,       0.0252),
+          PbMapping (0.026        , CODING_RATE_5_6,      0.157012,       0.0257),
+          PbMapping (0.027        , CODING_RATE_20_21,    0.0418875,      0.0268),
+          PbMapping (0.028        , CODING_RATE_5_6,      0.157138,       0.0278),
+          PbMapping (0.029        , CODING_RATE_20_21,    0.0421375,      0.0288),
+          PbMapping (0.03 , CODING_RATE_20_21,    0.0420125,      0.0302),
+          PbMapping (0.031        , CODING_RATE_16_18,    0.103013,       0.0305),
+          PbMapping (0.032        , CODING_RATE_16_18,    0.102888,       0.0316),
+          PbMapping (0.033        , CODING_RATE_16_18,    0.103138,       0.0333),
+          PbMapping (0.034        , CODING_RATE_16_18,    0.103263,       0.0341),
+          PbMapping (0.035        , CODING_RATE_5_6,      0.157762,       0.0347),
+          PbMapping (0.036        , CODING_RATE_5_6,      0.157388,       0.0364),
+          PbMapping (0.037        , CODING_RATE_20_21,    0.0422625,      0.0367),
+          PbMapping (0.038        , CODING_RATE_16_21,    0.228263,       0.038),
+          PbMapping (0.039        , CODING_RATE_20_21,    0.0423875,      0.0387),
+          PbMapping (0.04 , CODING_RATE_20_21,    0.0425125,      0.04),
+          PbMapping (0.042        , CODING_RATE_16_18,    0.103638,       0.0422),
+          PbMapping (0.043        , CODING_RATE_5_6,      0.157888,       0.043),
+          PbMapping (0.044        , CODING_RATE_16_21,    0.228513,       0.0435),
+          PbMapping (0.045        , CODING_RATE_2_3,      0.323512,       0.0445),
+          PbMapping (0.046        , CODING_RATE_16_21,    0.228763,       0.0465),
+          PbMapping (0.047        , CODING_RATE_5_6,      0.158263,       0.047),
+          PbMapping (0.048        , CODING_RATE_20_21,    0.0426375,      0.048),
+          PbMapping (0.049        , CODING_RATE_16_21,    0.228887,       0.0486),
+          PbMapping (0.05 , CODING_RATE_20_21,    0.0427625,      0.0505),
+          PbMapping (0.051        , CODING_RATE_20_21,    0.0427625,      0.0505),
+          PbMapping (0.052        , CODING_RATE_16_21,    0.229137,       0.0525),
+          PbMapping (0.053        , CODING_RATE_16_18,    0.104263,       0.0535),
+          PbMapping (0.054        , CODING_RATE_16_18,    0.104263,       0.0535),
+          PbMapping (0.055        , CODING_RATE_5_6,      0.158638,       0.0544),
+          PbMapping (0.056        , CODING_RATE_5_6,      0.158513,       0.0555),
+          PbMapping (0.057        , CODING_RATE_2_3,      0.324263,       0.0575),
+          PbMapping (0.058        , CODING_RATE_20_21,    0.0430125,      0.0577),
+          PbMapping (0.06 , CODING_RATE_16_18,    0.104388,       0.06),
+          PbMapping (0.061        , CODING_RATE_5_6,      0.158888,       0.0609),
+          PbMapping (0.062        , CODING_RATE_16_21,    0.229513,       0.0619),
+          PbMapping (0.063        , CODING_RATE_5_6,      0.159013,       0.0635),
+          PbMapping (0.064        , CODING_RATE_5_6,      0.159013,       0.0635),
+          PbMapping (0.065        , CODING_RATE_2_3,      0.324638,       0.0647),
+          PbMapping (0.068        , CODING_RATE_1_2,      0.492013,       0.0678),
+          PbMapping (0.069        , CODING_RATE_16_21,    0.229763,       0.0689),
+          PbMapping (0.071        , CODING_RATE_5_6,      0.159138,       0.0715),
+          PbMapping (0.072        , CODING_RATE_5_6,      0.159138,       0.0715),
+          PbMapping (0.073        , CODING_RATE_16_21,    0.230137,       0.0727),
+          PbMapping (0.075        , CODING_RATE_2_3,      0.325138,       0.0753),
+          PbMapping (0.077        , CODING_RATE_16_21,    0.230263,       0.0773),
+          PbMapping (0.078        , CODING_RATE_16_21,    0.230013,       0.0784),
+          PbMapping (0.079        , CODING_RATE_16_21,    0.230013,       0.0784),
+          PbMapping (0.08 , CODING_RATE_5_6,      0.159513,       0.0798),
+          PbMapping (0.081        , CODING_RATE_1_2,      0.492638,       0.0813),
+          PbMapping (0.082        , CODING_RATE_5_6,      0.159638,       0.0818),
+          PbMapping (0.083        , CODING_RATE_2_3,      0.325387,       0.0831),
+          PbMapping (0.084        , CODING_RATE_5_6,      0.159763,       0.0839),
+          PbMapping (0.085        , CODING_RATE_1_2,      0.492513,       0.0851),
+          PbMapping (0.087        , CODING_RATE_2_3,      0.325638,       0.0876),
+          PbMapping (0.088        , CODING_RATE_2_3,      0.325638,       0.0876),
+          PbMapping (0.089        , CODING_RATE_16_21,    0.230637,       0.089),
+          PbMapping (0.09 , CODING_RATE_1_2,      0.492888,       0.0904),
+          PbMapping (0.091        , CODING_RATE_1_2,      0.492888,       0.0904),
+          PbMapping (0.093        , CODING_RATE_16_21,    0.230887,       0.093),
+          PbMapping (0.094        , CODING_RATE_16_21,    0.231013,       0.0935),
+          PbMapping (0.095        , CODING_RATE_16_21,    0.230763,       0.0947),
+          PbMapping (0.096        , CODING_RATE_1_2,      0.493013,       0.0963),
+          PbMapping (0.097        , CODING_RATE_2_3,      0.326012,       0.0972),
+          PbMapping (0.099        , CODING_RATE_2_3,      0.325763,       0.0993),
+          PbMapping (0.101        , CODING_RATE_2_3,      0.325887,       0.1011),
+          PbMapping (0.103        , CODING_RATE_1_2,      0.493262,       0.1033),
+          PbMapping (0.107        , CODING_RATE_2_3,      0.326138,       0.1074),
+          PbMapping (0.108        , CODING_RATE_16_21,    0.231387,       0.1082),
+          PbMapping (0.109        , CODING_RATE_16_21,    0.231137,       0.1084),
+          PbMapping (0.111        , CODING_RATE_2_3,      0.326387,       0.1111),
+          PbMapping (0.112        , CODING_RATE_1_2,      0.493388,       0.1116),
+          PbMapping (0.116        , CODING_RATE_1_2,      0.493638,       0.116),
+          PbMapping (0.117        , CODING_RATE_16_21,    0.231513,       0.1168),
+          PbMapping (0.118        , CODING_RATE_1_2,      0.493513,       0.1183),
+          PbMapping (0.121        , CODING_RATE_2_3,      0.326512,       0.1213),
+          PbMapping (0.122        , CODING_RATE_1_2,      0.493762,       0.1222),
+          PbMapping (0.123        , CODING_RATE_16_21,    0.231637,       0.1236),
+          PbMapping (0.124        , CODING_RATE_16_21,    0.231637,       0.1236),
+          PbMapping (0.125        , CODING_RATE_16_21,    0.231763,       0.1248),
+          PbMapping (0.126        , CODING_RATE_2_3,      0.326763,       0.126),
+          PbMapping (0.127        , CODING_RATE_1_2,      0.494013,       0.1267),
+          PbMapping (0.133        , CODING_RATE_1_2,      0.494138,       0.1332),
+          PbMapping (0.134        , CODING_RATE_2_3,      0.326887,       0.1337),
+          PbMapping (0.136        , CODING_RATE_2_3,      0.327138,       0.1362),
+          PbMapping (0.137        , CODING_RATE_1_2,      0.494262,       0.1365),
+          PbMapping (0.143        , CODING_RATE_1_2,      0.494388,       0.1427),
+          PbMapping (0.149        , CODING_RATE_2_3,      0.327512,       0.1487),
+          PbMapping (0.153        , CODING_RATE_2_3,      0.327387,       0.1529),
+          PbMapping (0.154        , CODING_RATE_2_3,      0.327263,       0.1537),
+          PbMapping (0.157        , CODING_RATE_1_2,      0.494638,       0.1567),
+          PbMapping (0.162        , CODING_RATE_1_2,      0.494762,       0.1621),
+          PbMapping (0.166        , CODING_RATE_2_3,      0.327887,       0.1666),
+          PbMapping (0.167        , CODING_RATE_2_3,      0.327887,       0.1666),
+          PbMapping (0.168        , CODING_RATE_1_2,      0.494888,       0.1682),
+          PbMapping (0.169        , CODING_RATE_1_2,      0.495013,       0.1696),
+          PbMapping (0.17 , CODING_RATE_2_3,      0.327763,       0.17),
+          PbMapping (0.174        , CODING_RATE_2_3,      0.328012,       0.1746),
+          PbMapping (0.175        , CODING_RATE_2_3,      0.328012,       0.1746),
+          PbMapping (0.176        , CODING_RATE_1_2,      0.495262,       0.1764),
+          PbMapping (0.177        , CODING_RATE_1_2,      0.495262,       0.1764),
+          PbMapping (0.179        , CODING_RATE_1_2,      0.495138,       0.1795),
+          PbMapping (0.18 , CODING_RATE_1_2,      0.495138,       0.1795),
+          PbMapping (0.183        , CODING_RATE_2_3,      0.328138,       0.1834),
+          PbMapping (0.184        , CODING_RATE_2_3,      0.328138,       0.1834),
+          PbMapping (0.188        , CODING_RATE_2_3,      0.328387,       0.1882),
+          PbMapping (0.191        , CODING_RATE_2_3,      0.328263,       0.1907),
+          PbMapping (0.196        , CODING_RATE_1_2,      0.495388,       0.1959),
+          PbMapping (0.199        , CODING_RATE_1_2,      0.495513,       0.1994),
+          PbMapping (0.2  , CODING_RATE_1_2,      0.495513,       0.1994),
+          PbMapping (0.203        , CODING_RATE_2_3,      0.328512,       0.2028),
+          PbMapping (0.206        , CODING_RATE_2_3,      0.328638,       0.2062),
+          PbMapping (0.207        , CODING_RATE_2_3,      0.328763,       0.2071),
+          PbMapping (0.208        , CODING_RATE_1_2,      0.495762,       0.2074),
+          PbMapping (0.217        , CODING_RATE_2_3,      0.328887,       0.2169),
+          PbMapping (0.221        , CODING_RATE_1_2,      0.495888,       0.2213),
+          PbMapping (0.226        , CODING_RATE_1_2,      0.496013,       0.2263),
+          PbMapping (0.227        , CODING_RATE_2_3,      0.329012,       0.2275),
+          PbMapping (0.228        , CODING_RATE_2_3,      0.329012,       0.2275),
+          PbMapping (0.234        , CODING_RATE_2_3,      0.329138,       0.2341),
+          PbMapping (0.236        , CODING_RATE_1_2,      0.496138,       0.2362),
+          PbMapping (0.239        , CODING_RATE_2_3,      0.329263,       0.2393),
+          PbMapping (0.24 , CODING_RATE_2_3,      0.329387,       0.2403),
+          PbMapping (0.244        , CODING_RATE_1_2,      0.496388,       0.2444),
+          PbMapping (0.245        , CODING_RATE_1_2,      0.496388,       0.2444),
+          PbMapping (0.247        , CODING_RATE_2_3,      0.329512,       0.2473),
+          PbMapping (0.268        , CODING_RATE_1_2,      0.496638,       0.2686),
+          PbMapping (0.269        , CODING_RATE_1_2,      0.496638,       0.2686),
+          PbMapping (0.272        , CODING_RATE_1_2,      0.496762,       0.2722),
+          PbMapping (0.279        , CODING_RATE_1_2,      0.496888,       0.279),
+          PbMapping (0.29 , CODING_RATE_1_2,      0.497013,       0.2904),
+          PbMapping (0.291        , CODING_RATE_1_2,      0.497013,       0.2904),
+          PbMapping (0.292        , CODING_RATE_1_2,      0.497138,       0.2923),
+          PbMapping (0.307        , CODING_RATE_1_2,      0.497388,       0.307),
+          PbMapping (0.308        , CODING_RATE_1_2,      0.497262,       0.3074),
+          PbMapping (0.317        , CODING_RATE_1_2,      0.497513,       0.3169),
+          PbMapping (0.336        , CODING_RATE_1_2,      0.497762,       0.3358),
+          PbMapping (0.341        , CODING_RATE_1_2,      0.497887,       0.3413),
+          PbMapping (0.353        , CODING_RATE_1_2,      0.498013,       0.3528),
+          PbMapping (0.359        , CODING_RATE_1_2,      0.498138,       0.3593),
+          PbMapping (0.375        , CODING_RATE_1_2,      0.498262,       0.3751),
+          PbMapping (0.377        , CODING_RATE_1_2,      0.498387,       0.3767),
+          PbMapping (0.387        , CODING_RATE_1_2,      0.498513,       0.3873),
+          PbMapping (0.398        , CODING_RATE_1_2,      0.498638,       0.3981),
+          PbMapping (0.403        , CODING_RATE_1_2,      0.498762,       0.4028),
+          PbMapping (0.411        , CODING_RATE_1_2,      0.498887,       0.4112),
+          PbMapping (0.423        , CODING_RATE_1_2,      0.499013,       0.423),
+          PbMapping (0.432        , CODING_RATE_1_2,      0.499138,       0.4318),
+          PbMapping (0.435        , CODING_RATE_1_2,      0.499262,       0.4348),
+          PbMapping (0.457        , CODING_RATE_1_2,      0.499513,       0.4568),
+          PbMapping (0.459        , CODING_RATE_1_2,      0.499387,       0.4594),
+          PbMapping (0.46 , CODING_RATE_1_2,      0.499387,       0.4594),
+          PbMapping (0.47 , CODING_RATE_1_2,      0.499638,       0.4704),
+          PbMapping (0.471        , CODING_RATE_1_2,      0.499638,       0.4704),
+          PbMapping (0.482        , CODING_RATE_1_2,      0.499762,       0.482),
+          PbMapping (0.492        , CODING_RATE_1_2,      0.499887,       0.4924),
+          PbMapping (0.493        , CODING_RATE_1_2,      0.499887,       0.4924) };
 }
 }
