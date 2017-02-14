@@ -17,34 +17,35 @@
 #include "ghn-plc-utilities.h"
 #include "ghn-plc-header.h"
 
-NS_LOG_COMPONENT_DEFINE ("GhnPlcLlcFlow");
+NS_LOG_COMPONENT_DEFINE("GhnPlcLlcFlow");
 
 namespace ns3
 {
-namespace ghn {
+namespace ghn
+{
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-NS_OBJECT_ENSURE_REGISTERED (GhnPlcLlcFlow);
+NS_OBJECT_ENSURE_REGISTERED(GhnPlcLlcFlow);
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 TypeId
 GhnPlcLlcFlow::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::GhnPlcLlcFlow") .SetParent<Object> () .AddConstructor<GhnPlcLlcFlow>()
+  static TypeId tid = TypeId ("ns3::GhnPlcLlcFlow").SetParent<Object> ().AddConstructor<GhnPlcLlcFlow> ()
 
   .AddTraceSource ("LlcRcvLog", "Received data by LLC counting only those packets destined to this node",
           MakeTraceSourceAccessor (&GhnPlcLlcFlow::m_llcRcvLogTrace), "ns3::LlcRcvLog::TracedCallback")
 
-  .AddTraceSource ("LlcRelayLog", "Received data by LLC, which is relayed", MakeTraceSourceAccessor (
-          &GhnPlcLlcFlow::m_llcRelayedLogTrace), "ns3::LlcRelayLog::TracedCallback")
+  .AddTraceSource ("LlcRelayLog", "Received data by LLC, which is relayed",
+          MakeTraceSourceAccessor (&GhnPlcLlcFlow::m_llcRelayedLogTrace), "ns3::LlcRelayLog::TracedCallback")
 
-  .AddTraceSource ("LlcTtlDroppedLog", "Received data by LLC but dropped because TTL expires", MakeTraceSourceAccessor (
-          &GhnPlcLlcFlow::m_llcTtlDroppedLogTrace), "ns3::LlcTtlDroppedLog::TracedCallback");
+  .AddTraceSource ("LlcTtlDroppedLog", "Received data by LLC but dropped because TTL expires",
+          MakeTraceSourceAccessor (&GhnPlcLlcFlow::m_llcTtlDroppedLogTrace), "ns3::LlcTtlDroppedLog::TracedCallback");
   return tid;
 }
 
 GhnPlcLlcFlow::GhnPlcLlcFlow ()
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
 
   uint8_t lssN = LSS_N_MAX;
   m_blockSize = GHN_BLKSZ_540;
@@ -60,9 +61,11 @@ GhnPlcLlcFlow::GhnPlcLlcFlow ()
   GhnPlcLpduHeader header;
   m_rxSegmenter = new GhnPlcSegmenter (m_blockSize - header.GetSerializedSize () - GHN_CRC_LENGTH);
   m_txSegmenter = new GhnPlcSegmenter (m_blockSize - header.GetSerializedSize () - GHN_CRC_LENGTH);
+
+  std::cout << "Creating original G.hn LLC flow" << std::endl;
 }
 void
-GhnPlcLlcFlow::SetConnId(ConnId connId)
+GhnPlcLlcFlow::SetConnId (ConnId connId)
 {
   m_connId = connId;
 }
@@ -79,7 +82,7 @@ GhnPlcLlcFlow::~GhnPlcLlcFlow ()
 void
 GhnPlcLlcFlow::SetDllMac (Ptr<GhnPlcDllMacCsma> dllMac)
 {
-  NS_LOG_FUNCTION (this << m_connId);
+  NS_LOG_FUNCTION(this << m_connId);
   m_dllMac = dllMac;
 }
 
@@ -92,7 +95,7 @@ GhnPlcLlcFlow::GetDllMac (void)
 void
 GhnPlcLlcFlow::SetDllApc (Ptr<GhnPlcDllApc> dllApc)
 {
-  NS_LOG_FUNCTION (this << m_connId);
+  NS_LOG_FUNCTION(this << m_connId);
   m_dllApc = dllApc;
 }
 
@@ -104,7 +107,7 @@ GhnPlcLlcFlow::GetDllApc (void)
 void
 GhnPlcLlcFlow::SetDllLlc (Ptr<GhnPlcDllLlc> dllLlc)
 {
-  NS_LOG_FUNCTION (this << m_connId);
+  NS_LOG_FUNCTION(this << m_connId);
   m_dllLlc = dllLlc;
 }
 
@@ -117,7 +120,7 @@ GhnPlcLlcFlow::GetDllLlc (void)
 bool
 GhnPlcLlcFlow::SendFrom (Ptr<Packet> packet, ConnId connId, int16_t ttl)
 {
-  NS_LOG_FUNCTION (this << connId << packet->GetSize());
+  NS_LOG_FUNCTION(this << connId << packet->GetSize());
 
   auto dll = m_dllMac->GetDllManagement ();
 
@@ -128,7 +131,7 @@ GhnPlcLlcFlow::SendFrom (Ptr<Packet> packet, ConnId connId, int16_t ttl)
 bool
 GhnPlcLlcFlow::Enqueue (Ptr<Packet> packet, ConnId connId)
 {
-  NS_LOG_FUNCTION (this << connId << packet->GetSize());
+  NS_LOG_FUNCTION(this << connId << packet->GetSize());
   NS_ASSERT_MSG(m_connId == connId, m_connId << " " << connId);
 
   if (m_frameBuffer.size () >= MAX_LLC_QUEUE_LENGTH)
@@ -144,9 +147,9 @@ GhnPlcLlcFlow::Enqueue (Ptr<Packet> packet, ConnId connId)
 GroupEncAckInfo
 GhnPlcLlcFlow::Receive (GhnBuffer buffer, ConnId connId)
 {
-  NS_LOG_FUNCTION (this << connId);
+  NS_LOG_FUNCTION(this << connId);
 
-  NS_ASSERT(buffer.size() > 0);
+  NS_ASSERT(buffer.size () > 0);
   NS_ASSERT_MSG(m_connId == connId, m_connId << " " << connId);
 
   GroupEncAckInfo info;
@@ -181,8 +184,8 @@ GhnPlcLlcFlow::Receive (GhnBuffer buffer, ConnId connId)
   if (!ssns.empty ())
     {
       segmentBuffer.clear ();
-      NS_LOG_DEBUG("Flow " << m_connId << ": " << "Number of continuously acknowledged segments: " << ssns.size()
-              << ", first: " << (*ssns.begin ()) << ", last: " << ssns.at(ssns.size() - 1));
+      NS_LOG_DEBUG(
+              "Flow " << m_connId << ": " << "Number of continuously acknowledged segments: " << ssns.size() << ", first: " << (*ssns.begin ()) << ", last: " << ssns.at(ssns.size() - 1));
       //
       // add segments which were acknowledged earlier but were de-segmented neither partially nor completely
       //
@@ -238,12 +241,12 @@ GhnPlcLlcFlow::CheckCrc (GhnBuffer &buffer)
   NS_LOG_FUNCTION(this);
   GhnPlcLpduHeader header;
   std::deque<SegmentState> state;
-  auto phym = m_dllMac->GetDllManagement ()->GetPhyManagement();
-  for(auto &packet : buffer)
+  auto phym = m_dllMac->GetDllManagement ()->GetPhyManagement ();
+  for (auto &packet : buffer)
     {
-      RemoveCrc(packet);
+      RemoveCrc (packet);
       packet->PeekHeader (header);
-      bool blockSuccess = phym->IsBlockSuccess();
+      bool blockSuccess = phym->IsBlockSuccess ();
       if (blockSuccess)
         {
           NS_LOG_DEBUG("Flow " << m_connId << ": " << "CRC OK. The segment will be sent to the decoder");
@@ -290,8 +293,8 @@ GhnPlcLlcFlow::UpdateRcvdSegments (SegGhnBuffer segmentBuffer)
     {
       Ssn firstInRx = (*m_segmentBuffer.begin ()).ssn;
       Ssn lastInRx = (*((m_segmentBuffer.end ())--)).ssn;
-      NS_LOG_DEBUG("Flow " << m_connId << ": " << "First SSN in m_segmentBuffer: " << firstInRx << ", last SSN in m_segmentBuffer: "
-              << lastInRx << ", m_segmentBuffer size: " << m_segmentBuffer.size());
+      NS_LOG_DEBUG(
+              "Flow " << m_connId << ": " << "First SSN in m_segmentBuffer: " << firstInRx << ", last SSN in m_segmentBuffer: " << lastInRx << ", m_segmentBuffer size: " << m_segmentBuffer.size());
       auto it = segmentBuffer.begin ();
       while (it != segmentBuffer.end ())
         {
@@ -303,13 +306,15 @@ GhnPlcLlcFlow::UpdateRcvdSegments (SegGhnBuffer segmentBuffer)
                 {
                   m_segmentBuffer.erase (m_segmentBuffer.begin () + i, m_segmentBuffer.begin () + i + 1);
                   m_segmentBuffer.insert (m_segmentBuffer.begin () + i, (*it));
-                  NS_LOG_DEBUG("Flow " << m_connId << ": " << "Update segment validity. SSN: " << (*it).ssn << ". Validity: " << (*it).validSeg);
+                  NS_LOG_DEBUG(
+                          "Flow " << m_connId << ": " << "Update segment validity. SSN: " << (*it).ssn << ". Validity: " << (*it).validSeg);
                   found = true;
                 }
             }
           if (!found)
             {
-              NS_LOG_DEBUG("Flow " << m_connId << ": " << "Segment with SSN " << (*it).ssn << " is not in range. Add it at the end of the receive buffer");
+              NS_LOG_DEBUG(
+                      "Flow " << m_connId << ": " << "Segment with SSN " << (*it).ssn << " is not in range. Add it at the end of the receive buffer");
               m_segmentBuffer.push_back (*it);
             }
           it++;
@@ -325,7 +330,8 @@ GhnPlcLlcFlow::UpdateRcvdSegments (SegGhnBuffer segmentBuffer)
 
   for (uint32_t i = 0; i < m_segmentBuffer.size (); i++)
     {
-      NS_LOG_DEBUG("Flow " << m_connId << ": " << "m_segmentBuffer[" << i << "].ssn : " << m_segmentBuffer.at(i).ssn << ", validity: " << m_segmentBuffer.at(i).validSeg);
+      NS_LOG_DEBUG(
+              "Flow " << m_connId << ": " << "m_segmentBuffer[" << i << "].ssn : " << m_segmentBuffer.at(i).ssn << ", validity: " << m_segmentBuffer.at(i).validSeg);
     }
   NS_LOG_DEBUG("Flow " << m_connId << ": " << "Size of the receive buffer: " << m_segmentBuffer.size());
 }
@@ -337,7 +343,8 @@ GhnPlcLlcFlow::AddNotDesegmented (std::deque<Ssn> &ssns, SegGhnBuffer &segmentBu
     {
       if ((*m_segmentBuffer.begin ()).ssn != (*ssns.begin ()))
         {
-          NS_LOG_DEBUG("Flow " << m_connId << ": " << "Adding segment with SSN " << (*m_segmentBuffer.begin ()).ssn << " in receive buffer which is before the first ACK SSN: " << (*ssns.begin ()));
+          NS_LOG_DEBUG(
+                  "Flow " << m_connId << ": " << "Adding segment with SSN " << (*m_segmentBuffer.begin ()).ssn << " in receive buffer which is before the first ACK SSN: " << (*ssns.begin ()));
           segmentBuffer.push_back (*m_segmentBuffer.begin ());
           m_segmentBuffer.pop_front ();
         }
@@ -374,7 +381,8 @@ GhnPlcLlcFlow::AddJustAcknowledged (std::deque<Ssn> &ssns, SegGhnBuffer &segment
           ssns.pop_front ();
         }
       if (ssns.empty ()) break;
-      NS_LOG_DEBUG("Flow " << m_connId << ": " << "Found ssn " << (*m_segmentBuffer.begin()).ssn << " in receive buffer which coincides with the ACK segment: " << (*ssns.begin ()));
+      NS_LOG_DEBUG(
+              "Flow " << m_connId << ": " << "Found ssn " << (*m_segmentBuffer.begin()).ssn << " in receive buffer which coincides with the ACK segment: " << (*ssns.begin ()));
       segmentBuffer.push_back ((*m_segmentBuffer.begin ()));
       ssns.pop_front ();
       m_segmentBuffer.pop_front ();
@@ -392,10 +400,11 @@ GhnPlcLlcFlow::ConvertSegsToLlcFrames (SegGhnBuffer &segmentBuffer)
       if (!(*segmentBuffer.begin ()).validSeg) segmentBuffer.pop_front ();
       while (!segmentBuffer.empty ())
         {
-          NS_ASSERT ((*segmentBuffer.begin ()).validSeg);
+          NS_ASSERT((*segmentBuffer.begin ()).validSeg);
 
           m_segmentBuffer.push_front ((*(segmentBuffer.end () - 1)));
-          NS_LOG_DEBUG("Flow " << m_connId << ": " << "Pushing back the segment with SSN " << (*m_segmentBuffer.begin()).ssn << " in receive buffer");
+          NS_LOG_DEBUG(
+                  "Flow " << m_connId << ": " << "Pushing back the segment with SSN " << (*m_segmentBuffer.begin()).ssn << " in receive buffer");
           segmentBuffer.pop_back ();
         }
     }
@@ -414,7 +423,8 @@ GhnPlcLlcFlow::SaveNotFullyDesegmented (SegGhnBuffer &segmentBuffer)
   m_segmentBuffer.insert (m_segmentBuffer.begin (), segmentBuffer.begin (), segmentBuffer.end ());
   for (uint32_t i = 0; i < segmentBuffer.size (); i++)
     {
-      NS_LOG_DEBUG("Flow " << m_connId << ": " << "Added at start m_segmentBuffer[" << i << "].ssn : " << m_segmentBuffer.at(i).ssn << ", validity: " << m_segmentBuffer.at(i).validSeg);
+      NS_LOG_DEBUG(
+              "Flow " << m_connId << ": " << "Added at start m_segmentBuffer[" << i << "].ssn : " << m_segmentBuffer.at(i).ssn << ", validity: " << m_segmentBuffer.at(i).validSeg);
     }
 }
 void
@@ -427,21 +437,21 @@ GhnPlcLlcFlow::ProcessDeseqmented (GhnBuffer buffer, ConnId connId)
 
   for (auto &packet : buffer)
     {
-      NS_LOG_FUNCTION (this << connId << packet->GetSize());
+      NS_LOG_FUNCTION(this << connId << packet->GetSize());
       packet->RemoveHeader (header);
-      m_llcRcvLogTrace(connId.dst.GetAsInt(), header.GetOrigNodeId(), connId.src.GetAsInt(), header.GetTsmp());
+      m_llcRcvLogTrace (connId.dst.GetAsInt (), header.GetOrigNodeId (), connId.src.GetAsInt (), header.GetTsmp ());
 
       // if not destined to us
       //
-      if(connId.dst != dll->GetAddress())
+      if (connId.dst != dll->GetAddress ())
         {
-          NS_LOG_DEBUG ("Packet is not destined to us");
+          NS_LOG_DEBUG("Packet is not destined to us");
           //          if(connId.dst == dll->GetBroadcast() && !IsNewBcLlcFrame(header.GetTsmp()))return;
-          if(connId.dst == dll->GetBroadcast())
+          if (connId.dst == dll->GetBroadcast ())
             {
-              NS_LOG_DEBUG ("It's a broadcast packet. Forward it up!");
-              m_rxBcSeqNum = header.GetTsmp() + 1;
-              m_dllApc->Receive(packet->Copy(), connId.src, connId.dst);
+              NS_LOG_DEBUG("It's a broadcast packet. Forward it up!");
+              m_rxBcSeqNum = header.GetTsmp () + 1;
+              m_dllApc->Receive (packet->Copy (), connId.src, connId.dst);
             }
           //
           // filter packets with the expired TTL
@@ -451,14 +461,16 @@ GhnPlcLlcFlow::ProcessDeseqmented (GhnBuffer buffer, ConnId connId)
               //              std::cout << "DROP TTL:\t" << header.GetOrigNodeId () << "\t" << (uint32_t) connId.src.GetAsInt () << "\t"
               //              << (uint32_t) dll->GetAddress ().GetAsInt () << "\tTTL: " << header.GetTtl () << "\tPktSize: "
               //              << packet->GetSize () << std::endl;
-              m_llcTtlDroppedLogTrace(connId.dst.GetAsInt(), connId.src.GetAsInt(), dll->GetAddress().GetAsInt(), header.GetTsmp());
-              NS_LOG_DEBUG ("TTL has expired for the broadcast packet. Drop the broadcast packet!");
+              m_llcTtlDroppedLogTrace (connId.dst.GetAsInt (), connId.src.GetAsInt (), dll->GetAddress ().GetAsInt (),
+                      header.GetTsmp ());
+              NS_LOG_DEBUG("TTL has expired for the broadcast packet. Drop the broadcast packet!");
             }
           else
             {
-              m_llcRelayedLogTrace(connId.dst.GetAsInt(), header.GetOrigNodeId(), dll->GetAddress().GetAsInt(), header.GetTsmp());
-              NS_LOG_DEBUG ("Relay the packet. TTL: " << header.GetTtl() - 1);
-              m_dllLlc->SendFrom(packet, dll->GetAddress(), connId.dst, header.GetTtl() - 1);
+              m_llcRelayedLogTrace (connId.dst.GetAsInt (), header.GetOrigNodeId (), dll->GetAddress ().GetAsInt (),
+                      header.GetTsmp ());
+              NS_LOG_DEBUG("Relay the packet. TTL: " << header.GetTtl() - 1);
+              m_dllLlc->SendFrom (packet, dll->GetAddress (), connId.dst, header.GetTtl () - 1);
             }
         }
       //
@@ -467,19 +479,18 @@ GhnPlcLlcFlow::ProcessDeseqmented (GhnBuffer buffer, ConnId connId)
 
       else
         {
-          NS_LOG_DEBUG ("Packet is destined to us. Forward it up!");
-          m_dllApc->Receive(packet, connId.src, connId.dst);
+          NS_LOG_DEBUG("Packet is destined to us. Forward it up!");
+          m_dllApc->Receive (packet, connId.src, connId.dst);
         }
     };;
 }
 bool
 GhnPlcLlcFlow::IsNewBcLlcFrame (NcSeqNum current)
 {
-  NS_LOG_FUNCTION (this << current << m_rxBcSeqNum);
+  NS_LOG_FUNCTION(this << current << m_rxBcSeqNum);
   NcSeqNum old = m_rxBcSeqNum;
   NcSeqNum maxDistance = (1 << (sizeof(NcSeqNum) - 1));
-  return ((current > old && (current - old) < maxDistance) || (current < old && (old - current) < maxDistance) || current
-          == old);
+  return ((current > old && (current - old) < maxDistance) || (current < old && (old - current) < maxDistance) || current == old);
 }
 void
 GhnPlcLlcFlow::RemoveCrc (Ptr<Packet> packet)
@@ -490,7 +501,7 @@ GhnPlcLlcFlow::RemoveCrc (Ptr<Packet> packet)
 void
 GhnPlcLlcFlow::ReceiveAck (GroupEncAckInfo info, ConnId connId)
 {
-  NS_LOG_FUNCTION (this << connId);
+  NS_LOG_FUNCTION(this << connId);
   //  PrintGroupEncAckInfo (info);
 
   m_txArq->MarkAckSegs (info, NO_ACK_COMPRESS);
@@ -514,7 +525,8 @@ GhnPlcLlcFlow::ReceiveAck (GroupEncAckInfo info, ConnId connId)
 
           if ((*ssns.begin ()) == header.GetSsn ())
             {
-              NS_LOG_DEBUG("Flow " << m_connId << ": " << "Found ssn " << header.GetSsn() << " in transmitter buffer which coincides with the ACK segment: " << (*ssns.begin ()));
+              NS_LOG_DEBUG(
+                      "Flow " << m_connId << ": " << "Found ssn " << header.GetSsn() << " in transmitter buffer which coincides with the ACK segment: " << (*ssns.begin ()));
               m_indexedSegs.erase (m_indexedSegs.begin () + i, m_indexedSegs.begin () + i + 1);
               break;
             }
@@ -525,17 +537,17 @@ GhnPlcLlcFlow::ReceiveAck (GroupEncAckInfo info, ConnId connId)
         }
       ssns.pop_front ();
     }
-  NS_ASSERT(bufSize == ssnSize + m_indexedSegs.size() || bufSize < ssnSize);
+  NS_ASSERT(bufSize == ssnSize + m_indexedSegs.size () || bufSize < ssnSize);
 }
 SendTuple
 GhnPlcLlcFlow::SendDown ()
 {
-  NS_LOG_FUNCTION (this << m_connId);
+  NS_LOG_FUNCTION(this << m_connId);
 
   auto dll = m_dllMac->GetDllManagement ();
   auto src = dll->GetAddress ().GetAsInt ();
 
-  NS_ASSERT_MSG(m_connId.src.GetAsInt() == src, m_connId << " " << dll->GetAddress ());
+  NS_ASSERT_MSG(m_connId.src.GetAsInt () == src, m_connId << " " << dll->GetAddress ());
 
   auto dst = m_connId.dst.GetAsInt ();
   auto phy = dll->GetPhyManagement ()->GetPhyPcs ()->GetObject<GhnPlcPhyPcs> ();
@@ -545,13 +557,24 @@ GhnPlcLlcFlow::SendDown ()
 
   VirtSsn freeBufSize = m_txArq->GetFreeTxBufferSize ();
 
-  NS_LOG_DEBUG("Flow " << m_connId << ": " << "BEFORE INDEXING: Free buffer size: " << freeBufSize << ", number of non-indexed segments: " << m_nonindexedSegs.size()
-          << ", number of indexed segments: " << m_indexedSegs.size() << ", not-segmented data: " << m_frameBuffer.size() << ", dataAmount: " << dataAmount);
+  NS_LOG_UNCOND(
+          "Flow " << m_connId << ": " << "BEFORE INDEXING: Free buffer size: " << freeBufSize << ", number of non-indexed segments: " << m_nonindexedSegs.size() << ", number of indexed segments: " << m_indexedSegs.size() << ", not-segmented data: " << m_frameBuffer.size() << ", dataAmount: " << dataAmount);
+
+  uint64_t dataLimit = (dataAmount > (uint64_t) freeBufSize * m_blockSize) ? freeBufSize * m_blockSize : dataAmount;
+  NS_LOG_UNCOND("Flow " << m_connId << ": Using data limit " << dataLimit);
+  //
+  // generate some data
+  //
+  if (!m_genCallback.IsNull ())
+    {
+      auto s = (m_nonindexedSegs.size () + m_indexedSegs.size ()) * m_txSegmenter->GetSegmentSize ();
+      auto f = (dataLimit < s) ? 0 : dataLimit - s;
+      m_genCallback (f);
+    }
 
   //
   // create non-indexed segments
   //
-  uint64_t dataLimit = (dataAmount > (uint64_t) freeBufSize * m_blockSize) ? freeBufSize * m_blockSize : dataAmount;
   if ((m_nonindexedSegs.size ()) * m_blockSize < dataLimit && (!m_frameBuffer.empty ()))
     {
       SegGhnBuffer addNonIndexed = m_txSegmenter->SegmentData (m_frameBuffer);
@@ -560,10 +583,18 @@ GhnPlcLlcFlow::SendDown ()
     }
 
   //
+  // generate some more data
+  //
+  if (!m_genCallback.IsNull ())
+    {
+      m_genCallback (10 * m_txSegmenter->GetSegmentSize ());
+    }
+
+  //
   // index segments
   //
   std::deque<Ssn> newSentSegs;
-  while (freeBufSize != 0 && (!m_nonindexedSegs.empty ()))
+  while (freeBufSize != 0)
     {
       GhnPlcLpduHeader header;
       header.SetLfbo ((*m_nonindexedSegs.begin ()).posLlcFrame);
@@ -575,17 +606,19 @@ GhnPlcLlcFlow::SendDown ()
       m_indexedSegs.push_back ((*m_nonindexedSegs.begin ()).pkt);
       m_nonindexedSegs.pop_front ();
       freeBufSize--;
+      if (m_nonindexedSegs.empty ()) break;
     }
   m_txArq->MarkSentSegs (newSentSegs);
 
-  NS_LOG_DEBUG("Flow " << m_connId << ": " << "AFTER INDEXING: Free buffer size: " << freeBufSize << ", number of non-indexed segments: " << m_nonindexedSegs.size()
-          << ", number of indexed segments: " << m_indexedSegs.size() << ", not-segmented data: " << m_frameBuffer.size());
+  NS_LOG_DEBUG(
+          "Flow " << m_connId << ": " << "AFTER INDEXING: Free buffer size: " << freeBufSize << ", number of non-indexed segments: " << m_nonindexedSegs.size() << ", number of indexed segments: " << m_indexedSegs.size() << ", not-segmented data: " << m_frameBuffer.size());
 
   GhnBuffer toTransmit;
   std::deque<Ssn> ssns = m_txArq->GetMarkedForSend ();
-  NS_ASSERT(newSentSegs.size() <= ssns.size());
+  NS_ASSERT(newSentSegs.size () <= ssns.size ());
   uint64_t pushedData = 0;
-  NS_LOG_DEBUG("Flow " << m_connId << ": " << "Number of SSNs from ARQ mechanism: " << ssns.size() << ", allowed data (bytes): " << dataAmount);
+  NS_LOG_DEBUG(
+          "Flow " << m_connId << ": " << "Number of SSNs from ARQ mechanism: " << ssns.size() << ", allowed data (bytes): " << dataAmount);
 
   //
   // TODO: calculate dataAmount with consideration of overhead from encoder below
@@ -600,8 +633,8 @@ GhnPlcLlcFlow::SendDown ()
           if (header.GetSsn () == *(ssns.begin ()))
             {
               pushedData += ((*it)->GetSize () + GHN_CRC_LENGTH);
-              NS_LOG_DEBUG("Flow " << m_connId << ": " << "Amount of data to be pushed (bytes): " << pushedData
-                      << ", amount of allowed data (bytes): " << dataAmount << ", current SSN: " << (*ssns.begin()));
+              NS_LOG_DEBUG(
+                      "Flow " << m_connId << ": " << "Amount of data to be pushed (bytes): " << pushedData << ", amount of allowed data (bytes): " << dataAmount << ", current SSN: " << (*ssns.begin()));
               if (pushedData >= dataAmount)
                 {
                   break;
@@ -614,11 +647,11 @@ GhnPlcLlcFlow::SendDown ()
       ssns.pop_front ();
     }
 
-  NS_ASSERT_MSG(ssns.empty(), "ssns size: " << ssns.size());
+  NS_ASSERT_MSG(ssns.empty (), "ssns size: " << ssns.size());
 
   NS_ASSERT_MSG(!toTransmit.empty (), "There is nothing to transmit");
 
-  NS_LOG_DEBUG("Flow " << m_connId << ": " << "Segments number to be transmitted: " << toTransmit.size());
+  NS_LOG_UNCOND("Flow " << m_connId << ": " << "Segments number to be transmitted: " << toTransmit.size());
 
   //
   // add CRC
@@ -666,11 +699,11 @@ GhnPlcLlcFlow::ConvertApduToLlcFrame (Ptr<Packet> apdu, ConnId connId, int16_t t
   //
   if (ttl == -1)
     {
-      ttl = (connId.dst == dll->GetBroadcast ()) ? dll->GetRoutingTable ()->GetMaxNumHops (connId.src)
-              : dll->GetRoutingTable ()->GetNumHops (connId.src, connId.dst);
+      ttl = (connId.dst == dll->GetBroadcast ()) ? dll->GetRoutingTable ()->GetMaxNumHops (connId.src) :
+              dll->GetRoutingTable ()->GetNumHops (connId.src, connId.dst);
     }
   header.SetTtl (ttl);
-  header.SetTsmp (m_llcFrameSeqNum++);//TSMP is used not as described in G.hn
+  header.SetTsmp (m_llcFrameSeqNum++);  //TSMP is used not as described in G.hn
 
   //  std::cout << "NEW >>>:\t" << header.GetOrigNodeId () << "\t" << (uint32_t) source.GetAsInt () << "\t"
   //          << (uint32_t) dll->GetAddress ().GetAsInt () << "\tTTL: " << header.GetTtl () << "\tPktSize: " << apdu->GetSize ()
@@ -682,22 +715,28 @@ GhnPlcLlcFlow::ConvertApduToLlcFrame (Ptr<Packet> apdu, ConnId connId, int16_t t
 void
 GhnPlcLlcFlow::CreateLogger ()
 {
-  m_aggr.push_back (CreateObject<FileAggregator> (m_resDir + "llc_rcv_data_" + std::to_string (
-          m_dllMac->GetDllManagement ()->GetAddress ().GetAsInt ()) + ".txt", FileAggregator::FORMATTED));
+  m_aggr.push_back (
+          CreateObject<FileAggregator> (
+                  m_resDir + "llc_rcv_data_" + std::to_string (m_dllMac->GetDllManagement ()->GetAddress ().GetAsInt ())
+                          + ".txt", FileAggregator::FORMATTED));
   auto aggr = *(m_aggr.end () - 1);
   aggr->Set4dFormat ("%.0f\t%.0f\t%.0f\t%.0f");
   aggr->Enable ();
   TraceConnect ("LlcRcvLog", "LlcRcvLogContext", MakeCallback (&FileAggregator::Write4d, aggr));
 
-  m_aggr.push_back (CreateObject<FileAggregator> (m_resDir + "llc_relayed_data_" + std::to_string (
-          m_dllMac->GetDllManagement ()->GetAddress ().GetAsInt ()) + ".txt", FileAggregator::FORMATTED));
+  m_aggr.push_back (
+          CreateObject<FileAggregator> (
+                  m_resDir + "llc_relayed_data_" + std::to_string (m_dllMac->GetDllManagement ()->GetAddress ().GetAsInt ())
+                          + ".txt", FileAggregator::FORMATTED));
   aggr = *(m_aggr.end () - 1);
   aggr->Set4dFormat ("%.0f\t%.0f\t%.0f\t%.0f");
   aggr->Enable ();
   TraceConnect ("LlcRelayLog", "LlcRelayLogContext", MakeCallback (&FileAggregator::Write4d, aggr));
 
-  m_aggr.push_back (CreateObject<FileAggregator> (m_resDir + "llc_dropped_ttl_" + std::to_string (
-          m_dllMac->GetDllManagement ()->GetAddress ().GetAsInt ()) + ".txt", FileAggregator::FORMATTED));
+  m_aggr.push_back (
+          CreateObject<FileAggregator> (
+                  m_resDir + "llc_dropped_ttl_" + std::to_string (m_dllMac->GetDllManagement ()->GetAddress ().GetAsInt ())
+                          + ".txt", FileAggregator::FORMATTED));
   aggr = *(m_aggr.end () - 1);
   aggr->Set4dFormat ("%.0f\t%.0f\t%.0f\t%.0f");
   aggr->Enable ();

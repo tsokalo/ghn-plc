@@ -33,6 +33,11 @@ public:
 
   uint64_t GetPaddingAmount();
 
+  uint16_t GetSegmentSize()
+  {
+    return m_segSize;
+  }
+
 private:
 
   uint16_t m_segSize;

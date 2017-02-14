@@ -61,6 +61,7 @@ public:
   static PbMapping
   get_val (double per)
   {
+
     assert(ncr::geq(per, MIN_PER_VAL));
     assert(ncr::leq(per, MAX_PER_VAL));
 

@@ -122,16 +122,22 @@ uint32_t
 GhnPlcBitLoading::GetDataAmount (Time txTime, uint8_t src_id, uint8_t dst_id)
 {
   NS_LOG_FUNCTION(this << txTime << (uint32_t)src_id << (uint32_t)dst_id);
-  NS_ASSERT_MSG(m_bitsPerSymbol.find (src_id) != m_bitsPerSymbol.end(), src_id);
-  NS_ASSERT_MSG(m_bitsPerSymbol[src_id].find (dst_id) != m_bitsPerSymbol[src_id].end(), dst_id);
+
+  NS_ASSERT_MSG(m_bitsPerSymbol.find (src_id) != m_bitsPerSymbol.end (), src_id);
+  NS_ASSERT_MSG(m_bitsPerSymbol[src_id].find (dst_id) != m_bitsPerSymbol[src_id].end (), dst_id);
+
+  NS_ASSERT(m_mcs.size () > src_id);
+  NS_ASSERT(m_mcs.at (src_id).size () > dst_id);
 
   Time headerSymbDuration = PLC_Phy::GetHeaderSymbolDuration ();
   Time symbolDuration = PLC_Phy::GetSymbolDuration ();
   double payloadSymbols = (txTime.GetInteger () - headerSymbDuration.GetInteger () - PLC_Preamble::GetDuration ().GetInteger ())
           / symbolDuration.GetInteger ();
+
   NS_LOG_UNCOND(
-          headerSymbDuration << " / " << PLC_Preamble::GetDuration () << " / " << (txTime.GetInteger () - headerSymbDuration.GetInteger () - PLC_Preamble::GetDuration ().GetInteger ()) << " / " << payloadSymbols << " / " << m_capacityPerSymbol[src_id][dst_id]);
-  return payloadSymbols * m_bitsPerSymbol[src_id][dst_id] / 8;
+          headerSymbDuration << " / " << PLC_Preamble::GetDuration () << " / " << (txTime.GetInteger () - headerSymbDuration.GetInteger () - PLC_Preamble::GetDuration ().GetInteger ()) << " / " << payloadSymbols << " / " << m_bitsPerSymbol[src_id][dst_id]);
+
+  return payloadSymbols * m_bitsPerSymbol[src_id][dst_id] / 8 * ModToDouble(m_mcs.at (src_id).at(dst_id).ct);
 }
 Ptr<PLC_ChannelTransferImpl>
 GhnPlcBitLoading::GetChannalTransferImpl (uint16_t src_id, uint16_t dst_id)
@@ -166,6 +172,29 @@ GhnPlcBitLoading::CreateLogger ()
   m_aggr->Set3dFormat ("%.0f\t%.0f\t%.0f");
   m_aggr->Enable ();
   TraceConnect ("CapacityLog", "CapacityLogContext", MakeCallback (&FileAggregator::Write3d, m_aggr));
+}
+double
+GhnPlcBitLoading::ModToDouble (CodingType cr)
+{
+  switch (cr)
+    {
+  case CODING_RATE_1_4:
+    return 1.0 / 4.0;
+  case CODING_RATE_1_2:
+    return 1.0 / 2.0;
+  case CODING_RATE_2_3:
+    return 2.0 / 3.0;
+  case CODING_RATE_16_21:
+    return 16.0 / 21.0;
+  case CODING_RATE_5_6:
+    return 5.0 / 6.0;
+  case CODING_RATE_16_18:
+    return 16.0 / 18.0;
+  case CODING_RATE_20_21:
+    return 20.0 / 21.0;
+  default:
+    NS_ASSERT(0);
+    };
 }
 void
 GhnPlcBitLoading::PrintCapacity ()
@@ -333,7 +362,8 @@ NcBlVarTxPsd::CalcModulationAndCodingScheme ()
                       NS_LOG_DEBUG(
                               "Between " << src_id << " and " << dst_id << " " << mcs << ", capacity per symbol: " << capacityPerSymbol);
                       m_capacityPerSymbol[src_id][dst_id] = capacityPerSymbol;
-                      m_bitsPerSymbol[src_id][dst_id] = modulation * m_sinr[src_id][dst_id]->GetSpectrumModel()->GetNumBands();
+                      m_bitsPerSymbol[src_id][dst_id] = modulation
+                              * m_sinr[src_id][dst_id]->GetSpectrumModel ()->GetNumBands ();
                       m_mcs[src_id][dst_id].mt = ModulationType (modulation);
                       m_mcs[src_id][dst_id].ct = ConvertGhnRateToPlcRate (FecRateType (codingRate));
                     }
@@ -352,7 +382,7 @@ NcBlVarTxPsd::CalcModulationAndCodingScheme ()
       m_mcs[src_id][dst_id].mt = BPSK;
       m_mcs[src_id][dst_id].ct = CODING_RATE_1_2;
 
-      m_bitsPerSymbol[src_id][dst_id] = BPSK * m_txEnvelope->GetSpectrumModel()->GetNumBands();
+      m_bitsPerSymbol[src_id][dst_id] = BPSK * m_txEnvelope->GetSpectrumModel ()->GetNumBands ();
       m_capacityPerSymbol[src_id][dst_id] = GetNumEffBits (m_mcs[src_id][dst_id], *m_txEnvelope / *m_noiseEnvelope);
     }
 }
@@ -476,7 +506,7 @@ NcBlVarBatMap::CalcModulationAndCodingScheme ()
           std::cout << "Projected BER " << pbm.ber << std::endl;
           m_mcs[src_id][dst_id].bat = CalculateBat (pbm.ber, *m_sinr[src_id][dst_id]);
           m_mcs[src_id][dst_id].ct = pbm.ct;
-          m_bitsPerSymbol[src_id][dst_id] = CalcBitsPerSymbol(m_mcs[src_id][dst_id].bat);
+          m_bitsPerSymbol[src_id][dst_id] = CalcBitsPerSymbol (m_mcs[src_id][dst_id].bat);
           m_capacityPerSymbol[src_id][dst_id] = GetNumEffBits (m_mcs[src_id][dst_id], *m_sinr[src_id][dst_id]);
         }
     }
@@ -491,7 +521,7 @@ NcBlVarBatMap::CalcModulationAndCodingScheme ()
       m_mcs[src_id][dst_id].mt = BPSK;
       m_mcs[src_id][dst_id].ct = CODING_RATE_1_2;
 
-      m_bitsPerSymbol[src_id][dst_id] = BPSK * m_txEnvelope->GetSpectrumModel()->GetNumBands();
+      m_bitsPerSymbol[src_id][dst_id] = BPSK * m_txEnvelope->GetSpectrumModel ()->GetNumBands ();
       m_capacityPerSymbol[src_id][dst_id] = GetNumEffBits (m_mcs[src_id][dst_id], *m_txEnvelope / *m_noiseEnvelope);
     }
 }

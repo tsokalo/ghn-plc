@@ -83,6 +83,7 @@ protected:
 
 	void CreateLogger();
 	void PrintCapacity();
+	double ModToDouble(CodingType cr);
 
 	Ptr<PLC_ChannelTransferImpl> GetChannalTransferImpl(uint16_t src_id, uint16_t dst_id);
 

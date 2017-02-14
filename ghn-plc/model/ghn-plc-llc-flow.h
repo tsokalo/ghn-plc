@@ -26,6 +26,8 @@ class GhnPlcDllApc;
 
 class GhnPlcLlcFlow : public Object
 {
+  typedef Callback<void,uint32_t> GenCallback;
+
 public:
   static TypeId
   GetTypeId (void);
@@ -66,6 +68,10 @@ public:
   SetResDirectory (std::string resDir)
   {
     m_resDir = resDir;
+  }
+  void SetGenCallback(GenCallback cb)
+  {
+    m_genCallback = cb;
   }
 
 protected:
@@ -133,6 +139,8 @@ protected:
   Ptr<GhnPlcDllMacCsma> m_dllMac;
   Ptr<GhnPlcDllApc> m_dllApc;
   Ptr<GhnPlcDllLlc> m_dllLlc;
+
+  GenCallback m_genCallback;
 
   std::vector<Ptr<FileAggregator> > m_aggr;
   //

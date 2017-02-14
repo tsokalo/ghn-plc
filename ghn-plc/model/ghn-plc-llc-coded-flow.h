@@ -13,6 +13,7 @@
 
 #include "ghn-plc-llc-flow.h"
 #include "ghn-plc-utilities.h"
+#include "ghn-plc-data-rate-calculator.h"
 
 #include "header.h"
 #include "nc-routing-rules.h"
@@ -30,7 +31,7 @@ class GhnPlcLlcCodedFlow: public GhnPlcLlcFlow {
 	typedef std::shared_ptr<ncr::NcRoutingRules> routing_rules_ptr;
 	typedef std::shared_ptr<ncr::encoder_queue> encoder_queue_ptr;
 	typedef std::shared_ptr<ncr::decoder_queue> decoder_queue_ptr;
-	typedef Callback<void,uint32_t> GenCallback;
+
 	typedef std::function<void(ncr::LogItem item, ncr::UanAddress node_id)> add_log_func;
 
 public:
@@ -40,7 +41,7 @@ public:
 	virtual
 	~GhnPlcLlcCodedFlow();
 
-	void Configure(ncr::NodeType type, ncr::UanAddress dst, ncr::SimParameters sp, GenCallback cb);
+	void Configure(ncr::NodeType type, ncr::UanAddress dst, ncr::SimParameters sp);
 	void NotifyRcvUp(ncr::GenId genId);
 	SendTuple SendDown ();
 	GroupEncAckInfo Receive (GhnBuffer buffer, ConnId connId);
@@ -71,9 +72,9 @@ private:
 	ncr::SimParameters m_sp;
 	ncr::symb_ssn_t m_ssn;
 	ncr::FeedbackInfo m_feedback;
+	DataRateCalculator m_drCalc;
 
 	ncr::get_rank_func m_getRank;
-	GenCallback m_genCallback;
 	add_log_func m_addLog;
 };
 }

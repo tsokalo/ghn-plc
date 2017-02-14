@@ -48,8 +48,6 @@ GhnPlcHelper::GhnPlcHelper (Ptr<const SpectrumModel> sm, Ptr<SpectrumValue> txPs
   // Create ns3::Node for this NetDevice by default
   m_create_nodes = true;
   m_allowCooperation = false;
-
-  std::cout << "Mutual LLC and PHY coding: " << (m_sp.mutualPhyLlcCoding ? "ACTIVE" : "NOT ACTIVE") << std::endl;
 }
 GhnPlcHelper::GhnPlcHelper (BandPlanType bandplan)
 {
@@ -73,7 +71,6 @@ GhnPlcHelper::GhnPlcHelper (BandPlanType bandplan)
   // Create ns3::Node for this NetDevice by default
   m_create_nodes = true;
   m_allowCooperation = false;
-  std::cout << "Mutual LLC and PHY coding: " << (m_sp.mutualPhyLlcCoding ? "ACTIVE" : "NOT ACTIVE") << std::endl;
 }
 
 AddressMap
@@ -100,7 +97,8 @@ GhnPlcHelper::Setup (void)
     }
 
   m_logger = logger_ptr (new ncr::Logger (m_resDir));
-  if (m_sp.mutualPhyLlcCoding) assert(m_allowCooperation);
+  if (!m_allowCooperation) m_sp.mutualPhyLlcCoding = false;
+  std::cout << "Mutual LLC and PHY coding: " << (m_sp.mutualPhyLlcCoding ? "ACTIVE" : "NOT ACTIVE") << std::endl;
 
   ObjectFactory netdeviceFactory;
   netdeviceFactory.SetTypeId (GhnPlcNetDevice::GetTypeId ());
@@ -417,8 +415,9 @@ GhnPlcHelper::CreateBitLoadingTable ()
       for (nit = m_node_list.begin (); nit != m_node_list.end (); nit++)
         {
           m_bitLoadingTable->GetObject<NcBlVarBatMap> ()->SetPer ((*nit)->GetVertexId (),
-                  m_sp.mutualPhyLlcCoding ? m_sp.per : 0.001);
-          std::cout << "Setting PER " << (m_sp.mutualPhyLlcCoding ? m_sp.per : 0.001) << " for node " << (*nit)->GetVertexId () << std::endl;
+                  m_sp.mutualPhyLlcCoding ? m_sp.per : 0.01);
+          std::cout << "Setting PER " << (m_sp.mutualPhyLlcCoding ? m_sp.per : 0.01) << " for node " << (*nit)->GetVertexId ()
+                  << std::endl;
         }
     }
 
@@ -562,10 +561,47 @@ GhnPlcHelper::PrintCostTable (uint32_t dst_id)
 FlowInterface
 GhnPlcHelper::CreateFlow (ConnId connId, Ptr<GhnPlcDllMacCsma> mac, Ptr<GhnPlcDllApc> apc, Ptr<GhnPlcDllLlc> llc)
 {
+  //
+  // configure callback to the application layer (greedy traffic generator)
+  //
+  Callback<void, uint32_t> cb;
+  cb.Nullify ();
+  auto own_addr = mac->GetDllManagement ()->GetAddress ();
+  ncr::NodeType type;
+  if (own_addr == connId.src && connId.dst != UanAddress::GetBroadcast ())
+    {
+      type = ncr::SOURCE_NODE_TYPE;
+    }
+  else
+    {
+      type = (own_addr == connId.dst) ? ncr::DESTINATION_NODE_TYPE : ncr::RELAY_NODE_TYPE;
+    }
+
+  if (connId.dst != mac->GetDllManagement ()->GetBroadcast () && connId.flowId != MANAGMENT_CONN_ID)
+    {
+      auto app = m_appMap.find (own_addr);
+      if (m_allowCooperation)
+        {
+          if (type == ncr::SOURCE_NODE_TYPE)
+            {
+              assert(app != m_appMap.end ());
+              cb = MakeCallback (&GhnPlcGreedyUdpClient::SendBatch, app->second->GetObject<GhnPlcGreedyUdpClient> ());
+            }
+        }
+      else
+        {
+          if (app != m_appMap.end ()) cb = MakeCallback (&GhnPlcGreedyUdpClient::SendBatch,
+                  app->second->GetObject<GhnPlcGreedyUdpClient> ());
+        }
+    }
+
+  //
+  // create the flow
+  //
   ObjectFactory factory;
   if (m_allowCooperation && connId.dst != mac->GetDllManagement ()->GetBroadcast () && connId.flowId != MANAGMENT_CONN_ID)
     {
-      auto own_addr = mac->GetDllManagement ()->GetAddress ();
+
       factory.SetTypeId (GhnPlcLlcCodedFlow::GetTypeId ());
       auto flow_o = factory.Create<GhnPlcLlcCodedFlow> ();
       flow_o->SetConnId (connId);
@@ -573,31 +609,15 @@ GhnPlcHelper::CreateFlow (ConnId connId, Ptr<GhnPlcDllMacCsma> mac, Ptr<GhnPlcDl
       flow_o->SetDllApc (apc);
       flow_o->SetDllLlc (llc);
       flow_o->SetResDirectory (m_resDir);
-      flow_o->SetLogCallback(std::bind(&ncr::Logger::AddLog, m_logger, std::placeholders::_1, std::placeholders::_2));
+      flow_o->SetLogCallback (std::bind (&ncr::Logger::AddLog, m_logger, std::placeholders::_1, std::placeholders::_2));
 
       FlowInterface flow_i (MakeCallback (&GhnPlcLlcCodedFlow::SendFrom, flow_o),
               MakeCallback (&GhnPlcLlcCodedFlow::Receive, flow_o), MakeCallback (&GhnPlcLlcCodedFlow::ReceiveAck, flow_o),
               MakeCallback (&GhnPlcLlcCodedFlow::IsQueueEmpty, flow_o), MakeCallback (&GhnPlcLlcCodedFlow::SendDown, flow_o));
 
-      ncr::NodeType type;
-      if (own_addr == connId.src && connId.dst != UanAddress::GetBroadcast ())
-        {
-          type = ncr::SOURCE_NODE_TYPE;
-        }
-      else
-        {
-          type = (own_addr == connId.dst) ? ncr::DESTINATION_NODE_TYPE : ncr::RELAY_NODE_TYPE;
-        }
-
-      auto app = m_appMap.find (own_addr);
-      if (type == ncr::SOURCE_NODE_TYPE) assert(app != m_appMap.end ());
-      Callback<void, uint32_t> cb;
-      cb.Nullify ();
-      if (type == ncr::SOURCE_NODE_TYPE) cb = MakeCallback (&GhnPlcGreedyUdpClient::SendBatch,
-              app->second->GetObject<GhnPlcGreedyUdpClient> ());
-
       m_sp.sendRate = 5000;
-      flow_o->Configure (type, connId.dst.GetAsInt (), m_sp, cb);
+      flow_o->SetGenCallback (cb);
+      flow_o->Configure (type, connId.dst.GetAsInt (), m_sp);
 
       m_flowStack.push_back (flow_o);
 
@@ -616,6 +636,8 @@ GhnPlcHelper::CreateFlow (ConnId connId, Ptr<GhnPlcDllMacCsma> mac, Ptr<GhnPlcDl
       FlowInterface flow_i (MakeCallback (&GhnPlcLlcFlow::SendFrom, flow_o), MakeCallback (&GhnPlcLlcFlow::Receive, flow_o),
               MakeCallback (&GhnPlcLlcFlow::ReceiveAck, flow_o), MakeCallback (&GhnPlcLlcFlow::IsQueueEmpty, flow_o),
               MakeCallback (&GhnPlcLlcFlow::SendDown, flow_o));
+
+      flow_o->SetGenCallback (cb);
 
       m_flowStack.push_back (flow_o);
 

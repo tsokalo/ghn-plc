@@ -225,7 +225,7 @@ GhnPlcDllLlc::SendDown ()
           return f.SendDown ();
         }
     }
-  NS_ASSERT(0);
+  NS_ASSERT_MSG(0, "Node " << m_dllMac->GetDllManagement ()->GetAddress () << ": have NO data to send");
 }
 bool
 GhnPlcDllLlc::IsQueueEmpty ()
@@ -235,7 +235,11 @@ GhnPlcDllLlc::IsQueueEmpty ()
   for (uint32_t i = 0; i < m_flowMap.size (); i++)
     {
       auto f = m_flowMap.at (i).second;
-      if (!f.IsQueueEmpty ()) return false;
+      if (!f.IsQueueEmpty ())
+        {
+          NS_LOG_UNCOND("Node " << m_dllMac->GetDllManagement ()->GetAddress () << ": have NON-empty queue");
+          return false;
+        }
     }
 
   return true;

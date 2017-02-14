@@ -32,11 +32,12 @@ GhnPlcLlcCodedFlow::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::GhnPlcLlcCodedFlow").SetParent<GhnPlcLlcFlow> ().AddConstructor<GhnPlcLlcCodedFlow> ();
   return tid;
 }
-
 GhnPlcLlcCodedFlow::GhnPlcLlcCodedFlow ()
 {
   m_rxSegmenter = NULL;
   m_txSegmenter = NULL;
+
+  std::cout << "Creating coded LLC flow" << std::endl;
 }
 GhnPlcLlcCodedFlow::~GhnPlcLlcCodedFlow ()
 {
@@ -44,9 +45,8 @@ GhnPlcLlcCodedFlow::~GhnPlcLlcCodedFlow ()
   DELETE_PTR(m_txSegmenter);
 }
 void
-GhnPlcLlcCodedFlow::Configure (NodeType type, ncr::UanAddress dst, SimParameters sp, GenCallback cb)
+GhnPlcLlcCodedFlow::Configure (NodeType type, ncr::UanAddress dst, SimParameters sp)
 {
-  m_genCallback = cb;
   m_sp = sp;
   m_nodeType = type;
   m_id = m_dllMac->GetDllManagement ()->GetAddress ().GetAsInt ();
@@ -123,7 +123,7 @@ GhnPlcLlcCodedFlow::SendDown ()
       m_brr->SetSendingRate (bt->GetNumEffBits (src, nh));
       auto dataAmount = bt->GetDataAmount (Seconds (GHN_CYCLE_MAX), src, nh);
       uint32_t pushedPkts = 0, maxPkts = floor ((double) dataAmount / (double) m_blockSize);
-      SIM_LOG(COMM_NODE_LOG,
+      NS_LOG_UNCOND(
               "Node " << m_id << ", Flow " << connId << ": " << "dataAmount: " << dataAmount << ", m_blockSize: " << m_blockSize);
       assert(maxPkts > 0);
 
@@ -211,7 +211,7 @@ GhnPlcLlcCodedFlow::SendDown ()
       toTransmit.insert (toTransmit.begin (), hBuf.begin (), hBuf.end ());
     }
 
-  NS_LOG_DEBUG("Flow " << connId << ": " << "Segments number to be transmitted: " << toTransmit.size());
+  NS_LOG_UNCOND("Flow " << connId << ": " << "Segments number to be transmitted: " << toTransmit.size());
 
   //
   // add CRC
@@ -222,6 +222,8 @@ GhnPlcLlcCodedFlow::SendDown ()
       (*it)->AddPaddingAtEnd (GHN_CRC_LENGTH);
       it++;
     }
+
+  m_drCalc.Update (toTransmit.size () * m_blockSize * 8);
 
   SIM_LOG(COMM_NODE_LOG, "Node " << m_id << " Tx buffer size: " << toTransmit.size());
 
@@ -292,7 +294,6 @@ GhnPlcLlcCodedFlow::ConvertBrrHeaderToPkt (TxPlan plan)
 
   auto padding_length = n_bs * bs - pkt->GetSize ();
   NS_LOG_UNCOND("Adding " << (uint16_t)n_bs << " BRR header blocks");
-
 
   if (padding_length != 0) pkt->AddPaddingAtEnd (padding_length);
 
@@ -409,7 +410,11 @@ GhnPlcLlcCodedFlow::IsQueueEmpty ()
 
   if (m_feedback.updated) return false;
 
-  if (!m_brr->MaySendData ()) return true;
+  double dr = m_drCalc.Get ();
+  double rel_dr = dr * PLC_Phy::GetSymbolDuration ().GetSeconds ();
+  NS_LOG_UNCOND("Data rate: " << dr << " bps, relative data rate: " << rel_dr << " bits");
+
+  if (!m_brr->MaySendData (rel_dr)) return true;
 
   return (m_brr->GetAmountTxData () == 0);
 }

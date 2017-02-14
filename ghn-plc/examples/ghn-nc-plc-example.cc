@@ -71,8 +71,8 @@ main (int argc, char *argv[])
   //
   TopologyType topologyType = LINE_TOPOLOGY_TYPE;
   std::vector<uint32_t> distance;
-  uint32_t distance_ptp = 100;
-  uint16_t num_modems = 2;
+  uint32_t distance_ptp = 1000;
+  uint16_t num_modems = 3;
   if (argc > 1)
     {
       num_modems = atoi (argv[1]);
@@ -91,7 +91,7 @@ main (int argc, char *argv[])
       maxCwSize = atoi (argv[2]);
     }
   BandPlanType bandplan = GDOTHN_BANDPLAN_25MHZ;
-  GhnPlcDllMacProtocol macMode = CSMA_CA;
+  GhnPlcDllMacProtocol macMode = CSMA_CD;
   if (argc > 3)
     {
       macMode = GhnPlcDllMacProtocol (atoi (argv[3]));
@@ -285,8 +285,10 @@ main (int argc, char *argv[])
 
   std::cout << "Finished the simulation" << std::endl;
 
+  std::cout << "Start evaluation for the file: " << resDir + "app_data_" + std::to_string(num_modems - 1) + logID + ".txt" << std::endl;
+
   rv_t data, loss, latency, iat, jitter;
-  ReadFileContents (resDir + "app_data_0" + logID + ".txt", data, loss, latency, iat);
+  ReadFileContents (resDir + "app_data_" + std::to_string(num_modems - 1) + logID + ".txt", data, loss, latency, iat);
   jitter = GetJitter (latency);
   std::cout << std::setprecision (5);
   FlatterIats (iat);
