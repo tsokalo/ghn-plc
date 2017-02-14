@@ -577,6 +577,8 @@ GhnPlcHelper::CreateFlow (ConnId connId, Ptr<GhnPlcDllMacCsma> mac, Ptr<GhnPlcDl
       type = (own_addr == connId.dst) ? ncr::DESTINATION_NODE_TYPE : ncr::RELAY_NODE_TYPE;
     }
 
+  auto b = m_allowCooperation && connId.dst != mac->GetDllManagement ()->GetBroadcast () && connId.flowId != MANAGMENT_CONN_ID;
+
   if (connId.dst != mac->GetDllManagement ()->GetBroadcast () && connId.flowId != MANAGMENT_CONN_ID)
     {
       auto app = m_appMap.find (own_addr);
@@ -584,6 +586,7 @@ GhnPlcHelper::CreateFlow (ConnId connId, Ptr<GhnPlcDllMacCsma> mac, Ptr<GhnPlcDl
         {
           if (type == ncr::SOURCE_NODE_TYPE)
             {
+              std::cout << own_addr << "\t" << connId << "\t" << type << "\t" << b << std::endl;
               assert(app != m_appMap.end ());
               cb = MakeCallback (&GhnPlcGreedyUdpClient::SendBatch, app->second->GetObject<GhnPlcGreedyUdpClient> ());
             }
@@ -601,13 +604,12 @@ GhnPlcHelper::CreateFlow (ConnId connId, Ptr<GhnPlcDllMacCsma> mac, Ptr<GhnPlcDl
   ObjectFactory factory;
   if (m_allowCooperation && connId.dst != mac->GetDllManagement ()->GetBroadcast () && connId.flowId != MANAGMENT_CONN_ID)
     {
-
       factory.SetTypeId (GhnPlcLlcCodedFlow::GetTypeId ());
       auto flow_o = factory.Create<GhnPlcLlcCodedFlow> ();
-      flow_o->SetConnId (connId);
       flow_o->SetDllMac (mac);
       flow_o->SetDllApc (apc);
       flow_o->SetDllLlc (llc);
+      flow_o->SetConnId (connId);
       flow_o->SetResDirectory (m_resDir);
       flow_o->SetLogCallback (std::bind (&ncr::Logger::AddLog, m_logger, std::placeholders::_1, std::placeholders::_2));
 
@@ -627,10 +629,10 @@ GhnPlcHelper::CreateFlow (ConnId connId, Ptr<GhnPlcDllMacCsma> mac, Ptr<GhnPlcDl
     {
       factory.SetTypeId (GhnPlcLlcFlow::GetTypeId ());
       auto flow_o = factory.Create<GhnPlcLlcFlow> ();
-      flow_o->SetConnId (connId);
       flow_o->SetDllMac (mac);
       flow_o->SetDllApc (apc);
       flow_o->SetDllLlc (llc);
+      flow_o->SetConnId (connId);
       flow_o->SetResDirectory (m_resDir);
 
       FlowInterface flow_i (MakeCallback (&GhnPlcLlcFlow::SendFrom, flow_o), MakeCallback (&GhnPlcLlcFlow::Receive, flow_o),

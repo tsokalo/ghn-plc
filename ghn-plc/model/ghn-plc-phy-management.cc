@@ -423,10 +423,10 @@ GhnPlcPhyManagement::IsBlockSuccess ()
   uint32_t gathered_bits_rand = m_binomDistr (m_gen);
 
 
-//  NS_LOG_UNCOND(
-//          "Frame size: " << frame_size << ", FEC rate: " << fc << ", Sent bits: " << sent_bits << ", Gathered bits: " << gathered_bits);
-//  NS_LOG_UNCOND(
-//          "BER: " << ber << ", BS: " << bs << ", Gathered rand bits: " << gathered_bits_rand << ", ret: " << (gathered_bits_rand >= bs));
+  NS_LOG_UNCOND(
+          "Frame size: " << frame_size << ", FEC rate: " << fc << ", Sent bits: " << sent_bits << ", Gathered bits: " << gathered_bits);
+  NS_LOG_UNCOND(
+          "BER: " << ber << ", BS: " << bs << ", Gathered rand bits: " << gathered_bits_rand << ", ret: " << (gathered_bits_rand >= bs));
 
   return (gathered_bits_rand >= bs);
 }

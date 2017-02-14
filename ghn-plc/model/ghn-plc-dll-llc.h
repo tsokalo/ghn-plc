@@ -168,8 +168,8 @@ private:
       {
         auto l = m_flows.at (i).first;
 
-        if (!m_allowCooperation || connId.dst == UanAddress::GetBroadcast () || connId.flowId == MANAGMENT_CONN_ID)
-          {
+//        if (!m_allowCooperation || connId.dst == UanAddress::GetBroadcast () || connId.flowId == MANAGMENT_CONN_ID)
+//          {
             if (connId.flowId == -1 || l.flowId == -1)
               {
                 if (connId.src == l.src && connId.dst == l.dst) return i;
@@ -178,18 +178,18 @@ private:
               {
                 if (connId.src == l.src && connId.dst == l.dst && connId.flowId == l.flowId) return i;
               }
-          }
-        else
-          {
-            if (connId.flowId == -1 || l.flowId == -1)
-              {
-                if (connId.dst == l.dst) return i;
-              }
-            else
-              {
-                if (connId.dst == l.dst && connId.flowId == l.flowId) return i;
-              }
-          }
+//          }
+//        else
+//          {
+//            if (connId.flowId == -1 || l.flowId == -1)
+//              {
+//                if (connId.dst == l.dst) return i;
+//              }
+//            else
+//              {
+//                if (connId.dst == l.dst && connId.flowId == l.flowId) return i;
+//              }
+//          }
       }
     return m_flows.size ();
   }

@@ -6,10 +6,8 @@
  */
 #include "ns3/log.h"
 #include "ns3/ghn-plc-lpdu-header.h"
-
 #include "ghn-plc-llc-coded-flow.h"
 #include "header-value.h"
-
 NS_LOG_COMPONENT_DEFINE("GhnPlcLlcCodedFlow");
 
 namespace ns3
@@ -37,7 +35,7 @@ GhnPlcLlcCodedFlow::GhnPlcLlcCodedFlow ()
   m_rxSegmenter = NULL;
   m_txSegmenter = NULL;
 
-  std::cout << "Creating coded LLC flow" << std::endl;
+  NS_LOG_UNCOND("Creating coded G.hn LLC flow");
 }
 GhnPlcLlcCodedFlow::~GhnPlcLlcCodedFlow ()
 {
@@ -73,11 +71,10 @@ GhnPlcLlcCodedFlow::Configure (NodeType type, ncr::UanAddress dst, SimParameters
       m_encQueue->set_notify_callback (std::bind (&GhnPlcLlcCodedFlow::NotifyRcvUp, this, std::placeholders::_1));
       m_getRank = std::bind (&encoder_queue::rank, m_encQueue, std::placeholders::_1);
       m_brr->SetGetRankCallback (m_getRank);
-      m_brr->SetCoderHelpInfoCallback (
-              std::bind (&encoder_queue::get_help_info, m_encQueue, std::placeholders::_1, std::placeholders::_2,
-                      std::placeholders::_3));
+      m_brr->SetCoderHelpInfoCallback (std::bind (&encoder_queue::get_help_info, m_encQueue, std::placeholders::_1,
+              std::placeholders::_2, std::placeholders::_3));
 
-      SIM_LOG(COMM_NODE_LOG, "Node " << m_id << " type " << m_nodeType);
+      SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " type " << m_nodeType);
     }
   else
     {
@@ -86,11 +83,10 @@ GhnPlcLlcCodedFlow::Configure (NodeType type, ncr::UanAddress dst, SimParameters
       m_brr->SetGetRankCallback (m_getRank);
       m_brr->SetGetCodingMatrixCallback (std::bind (&decoder_queue::get_coding_matrix, m_decQueue, std::placeholders::_1));
       m_brr->SetGetCoderInfoCallback (std::bind (&decoder_queue::get_coder_info, m_decQueue, std::placeholders::_1));
-      m_brr->SetCoderHelpInfoCallback (
-              std::bind (&decoder_queue::get_help_info, m_decQueue, std::placeholders::_1, std::placeholders::_2,
-                      std::placeholders::_3));
+      m_brr->SetCoderHelpInfoCallback (std::bind (&decoder_queue::get_help_info, m_decQueue, std::placeholders::_1,
+              std::placeholders::_2, std::placeholders::_3));
 
-      SIM_LOG(COMM_NODE_LOG, "Node " << m_id << " type " << m_nodeType);
+      SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " type " << m_nodeType);
     }
 }
 
@@ -127,11 +123,11 @@ GhnPlcLlcCodedFlow::SendDown ()
               "Node " << m_id << ", Flow " << connId << ": " << "dataAmount: " << dataAmount << ", m_blockSize: " << m_blockSize);
       assert(maxPkts > 0);
 
-      PrepareForSend (dataAmount);
+      PrepareForSend ( dataAmount);
 
       if (m_nodeType == SOURCE_NODE_TYPE)
         {
-          auto maxBuf = m_brr->GetMaxAmountTxData ();
+auto          maxBuf = m_brr->GetMaxAmountTxData ();
           assert(maxBuf >= maxPkts);
           assert(!m_genCallback.IsNull ());
           //
@@ -323,7 +319,7 @@ GhnPlcLlcCodedFlow::ConvertPktToBrrHeader (GhnBuffer &buffer, std::deque<Segment
   pkt->RemoveAtStart (1);
 
   for (uint16_t i = 1; i < n_bs; i++)
-    pkt->AddAtEnd (*(buffer.begin () + i));
+  pkt->AddAtEnd (*(buffer.begin () + i));
 
   buffer.erase (buffer.begin (), buffer.begin () + n_bs);
 
@@ -346,6 +342,8 @@ GroupEncAckInfo
 GhnPlcLlcCodedFlow::Receive (GhnBuffer buffer, ConnId connId)
 {
   NS_LOG_FUNCTION(this << connId);
+
+  NS_LOG_UNCOND("Connection " << connId << " receive!");
 
   NS_ASSERT(buffer.size () > 0);
   NS_ASSERT_MSG(m_connId == connId, m_connId << " " << connId);
@@ -412,7 +410,7 @@ GhnPlcLlcCodedFlow::IsQueueEmpty ()
 
   double dr = m_drCalc.Get ();
   double rel_dr = dr * PLC_Phy::GetSymbolDuration ().GetSeconds ();
-  NS_LOG_UNCOND("Data rate: " << dr << " bps, relative data rate: " << rel_dr << " bits");
+  NS_LOG_UNCOND("Connection: " << m_connId << ", time: " << Simulator::Now() << ", data rate: " << dr << " bps, relative data rate: " << rel_dr << " bits");
 
   if (!m_brr->MaySendData (rel_dr)) return true;
 
@@ -427,6 +425,11 @@ GhnPlcLlcCodedFlow::SetLogCallback (add_log_func addLog)
 void
 GhnPlcLlcCodedFlow::ProcessDecoded (GhnBuffer buffer, ConnId connId)
 {
+  //
+  // drop decoded packets if I am not the destination
+  //
+  if(connId.dst != m_dllMac->GetDllManagement()->GetAddress())return;
+
   std::deque<SegmentState> state (buffer.size (), DONE_SEGMENT_STATE);
   //
   // remove LPDU header
@@ -439,14 +442,14 @@ GhnPlcLlcCodedFlow::ProcessDecoded (GhnBuffer buffer, ConnId connId)
   //
   UpdateRcvdSegments (segmentBuffer);
 
-//  //
-//  // mark the received segments by ARQ
-//  //
-//  m_rxArq->MarkRcvSegs (ssns, state);
-//  //
-//  // get SSNs of all continuously correctly received segments, which are still present in the confirmed window
-//  //
-//  ssns = m_rxArq->GetAckSsns ();
+  //  //
+  //  // mark the received segments by ARQ
+  //  //
+  //  m_rxArq->MarkRcvSegs (ssns, state);
+  //  //
+  //  // get SSNs of all continuously correctly received segments, which are still present in the confirmed window
+  //  //
+  //  ssns = m_rxArq->GetAckSsns ();
 
   //
   // De-segment the segments with such ssns
@@ -490,8 +493,8 @@ GhnPlcLlcCodedFlow::ProcessDecoded (GhnBuffer buffer, ConnId connId)
       NS_LOG_DEBUG("Flow " << m_connId << ": " << "Number of continuously acknowledged segments: " << ssns.size());
     }
 
-//  GroupEncAckInfo info;
-//  m_rxArq->GetAck (info);
+  //  GroupEncAckInfo info;
+  //  m_rxArq->GetAck (info);
   if (m_connId.dst == UanAddress::GetBroadcast ())
     {
       //
@@ -508,7 +511,7 @@ GhnPlcLlcCodedFlow::ProcessDecoded (GhnBuffer buffer, ConnId connId)
 
 void
 GhnPlcLlcCodedFlow::ProcessRcvdPacket (std::vector<uint8_t> vec, bool crc, ncr::UanAddress addr, TxPlan::iterator item,
-        ConnId connId)
+      ConnId connId)
 {
   GenId genId = item->first;
 

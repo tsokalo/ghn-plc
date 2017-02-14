@@ -62,12 +62,13 @@ GhnPlcLlcFlow::GhnPlcLlcFlow ()
   m_rxSegmenter = new GhnPlcSegmenter (m_blockSize - header.GetSerializedSize () - GHN_CRC_LENGTH);
   m_txSegmenter = new GhnPlcSegmenter (m_blockSize - header.GetSerializedSize () - GHN_CRC_LENGTH);
 
-  std::cout << "Creating original G.hn LLC flow" << std::endl;
+  NS_LOG_UNCOND("Creating original G.hn LLC flow");
 }
 void
 GhnPlcLlcFlow::SetConnId (ConnId connId)
 {
   m_connId = connId;
+  NS_LOG_UNCOND("Node " << (uint16_t) m_dllMac->GetDllManagement()->GetAddress().GetAsInt() << ": Setting LLC flow ID " << connId);
 }
 
 GhnPlcLlcFlow::~GhnPlcLlcFlow ()
