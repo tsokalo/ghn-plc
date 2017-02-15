@@ -106,6 +106,7 @@ public:
   uint32_t GetDatarate (uint8_t sourceId, uint8_t destinationId);//return datarate in bps
 
   bool IsBlockSuccess();
+  double GetActualBer();
 
   void SetFrameSizeCallback(FrameSizeCallback cb){m_frameSizeCallback = cb;}
   void SetGatheredInfBitsCallback(GatheredInfBitsCallback cb){m_gatheredInfBitsCallback = cb;}
@@ -116,6 +117,10 @@ public:
   Ptr<PLC_RxInterface> GetRxInterface(){NS_ASSERT(!m_rxInterfaceCallback.IsNull());return m_rxInterfaceCallback();}
 
 private:
+
+  uint32_t
+  GetLoadedBits (uint32_t uncoded_bits);
+
   Ptr<GhnPlcPhyPcs> m_ghnPhyPcs;
   Ptr<GhnPlcPhyPma> m_ghnPhyPma;
 

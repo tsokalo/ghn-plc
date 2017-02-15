@@ -123,8 +123,8 @@ GhnPlcBitLoading::GetDataAmount (Time txTime, uint8_t src_id, uint8_t dst_id)
 {
   NS_LOG_FUNCTION(this << txTime << (uint32_t)src_id << (uint32_t)dst_id);
 
-  NS_ASSERT_MSG(m_bitsPerSymbol.find (src_id) != m_bitsPerSymbol.end (), src_id);
-  NS_ASSERT_MSG(m_bitsPerSymbol[src_id].find (dst_id) != m_bitsPerSymbol[src_id].end (), dst_id);
+  NS_ASSERT_MSG(m_bitsPerSymbol.find (src_id) != m_bitsPerSymbol.end (), (uint16_t)src_id << " and " << (uint16_t)dst_id);
+  NS_ASSERT_MSG(m_bitsPerSymbol[src_id].find (dst_id) != m_bitsPerSymbol[src_id].end (), (uint16_t)src_id << " and " << (uint16_t)dst_id);
 
   NS_ASSERT(m_mcs.size () > src_id);
   NS_ASSERT(m_mcs.at (src_id).size () > dst_id);
@@ -503,7 +503,7 @@ NcBlVarBatMap::CalcModulationAndCodingScheme ()
           m_mcs[src_id][dst_id].mt = NOMOD;
           assert(m_desiredPer[src_id] > 0.00001);
           PbMapping pbm = PbMappingList::get_val (m_desiredPer[src_id]);
-          std::cout << "Projected BER " << pbm.ber << std::endl;
+          std::cout << "Projected BER " << pbm.ber << " between " << (uint16_t)src_id << " and " << (uint16_t)dst_id << std::endl;
           m_mcs[src_id][dst_id].bat = CalculateBat (pbm.ber, *m_sinr[src_id][dst_id]);
           m_mcs[src_id][dst_id].ct = pbm.ct;
           m_bitsPerSymbol[src_id][dst_id] = CalcBitsPerSymbol (m_mcs[src_id][dst_id].bat);

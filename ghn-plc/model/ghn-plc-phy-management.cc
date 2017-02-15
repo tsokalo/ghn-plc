@@ -11,6 +11,7 @@
 #include "ns3/log.h"
 
 #include "ghn-plc-phy-management.h"
+#include "ghn-plc-utilities.h"
 
 NS_LOG_COMPONENT_DEFINE("GhnPlcPhyManagement");
 
@@ -354,7 +355,7 @@ GhnPlcPhyManagement::GetTxTime (uint32_t mpduLength, uint8_t sourceId, uint8_t d
 {
   uint32_t payloadUncodedBits = mpduLength * 8;
   uint16_t fecBlockSize = GetTxFecBlockSizeFromHeader ();
-  uint32_t kFecPayloadBlocks = payloadUncodedBits / fecBlockSize;
+  uint32_t kFecPayloadBlocks = ceil ((double) payloadUncodedBits / (double) fecBlockSize);
   uint8_t repetitionsNumber = GetTxRepetitionsNumberFromHeader ();
   uint32_t payloadEncodedBits = m_ghnPhyPma->GetPayloadEncodedBits (fecBlockSize, kFecPayloadBlocks, m_txPayloadFecRate,
           repetitionsNumber);
@@ -407,28 +408,54 @@ bool
 GhnPlcPhyManagement::IsBlockSuccess ()
 {
   NS_ASSERT (!m_frameSizeCallback.IsNull () && !m_gatheredInfBitsCallback.IsNull ());
-  std::array<double, 2> block_size =
-    { 120, 540 };
-  uint32_t bs = block_size.at (m_txFecBlockSize) * 8;
 
-  std::array<double, 7> fec_rate =
-    { 1, 1.0 / 2.0, 2.0 / 3.0, 5.0 / 6.0, 16.0 / 18.0, 16.0 / 21.0, 20.0 / 21.0 };
-  double fc = fec_rate.at (m_txPayloadFecRate);
+  uint32_t bs = GetTxFecBlockSizeFromHeader (); // in bits
+  auto ct = m_ghnPhyPma->GetCodingType();
+  double fc = ConvertCodingTypeToDouble(ct);
 
   uint32_t frame_size = m_frameSizeCallback ();
   uint32_t gathered_bits = m_gatheredInfBitsCallback ();
-  uint32_t sent_bits = (double) frame_size / fc;
+  uint32_t sent_bits = GetLoadedBits (frame_size);
   double ber = (gathered_bits > sent_bits) ? 0 : (double) (sent_bits - gathered_bits) / (double) sent_bits;
   std::binomial_distribution<uint32_t> m_binomDistr (bs / fc, 1 - ber);
   uint32_t gathered_bits_rand = m_binomDistr (m_gen);
 
-
-  NS_LOG_UNCOND(
+  NS_LOG_LOGIC(
           "Frame size: " << frame_size << ", FEC rate: " << fc << ", Sent bits: " << sent_bits << ", Gathered bits: " << gathered_bits);
-  NS_LOG_UNCOND(
+  NS_LOG_LOGIC(
           "BER: " << ber << ", BS: " << bs << ", Gathered rand bits: " << gathered_bits_rand << ", ret: " << (gathered_bits_rand >= bs));
 
   return (gathered_bits_rand >= bs);
+}
+double
+GhnPlcPhyManagement::GetActualBer ()
+{
+  NS_ASSERT (!m_frameSizeCallback.IsNull () && !m_gatheredInfBitsCallback.IsNull ());
+
+  auto ct = m_ghnPhyPma->GetCodingType();
+  double fc = ConvertCodingTypeToDouble(ct);
+
+  uint32_t frame_size = m_frameSizeCallback ();
+  uint32_t gathered_bits = m_gatheredInfBitsCallback ();
+  uint32_t sent_bits = GetLoadedBits (frame_size);
+
+  return (gathered_bits > sent_bits) ? 0 : (double) (sent_bits - gathered_bits) / (double) sent_bits;
+}
+uint32_t
+GhnPlcPhyManagement::GetLoadedBits (uint32_t uncoded_bits)
+{
+  auto ct = m_ghnPhyPma->GetCodingType();
+  double fc = ConvertCodingTypeToDouble(ct);
+
+  auto fecBlockSize = GetTxFecBlockSizeFromHeader (); // in bits
+  auto kFecPayloadBlocks = ceil ((double) uncoded_bits / (double) fecBlockSize);
+  auto payloadEncodedBits = (double) fecBlockSize * (double) kFecPayloadBlocks / fc;
+  auto payloadSymbols = ceil ((double) payloadEncodedBits / (double) m_ghnPhyPma->GetBitsPerSymbol ());
+
+  NS_LOG_UNCOND(
+          fecBlockSize << " / " <<kFecPayloadBlocks << " / " << fc << " / " <<payloadEncodedBits << " / " << payloadSymbols);
+
+  return payloadSymbols * m_ghnPhyPma->GetBitsPerSymbol ();
 }
 }
 } // namespace ns3

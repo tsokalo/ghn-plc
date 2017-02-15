@@ -262,6 +262,16 @@ ConvertGhnRateToPlcRate (FecRateType rate)
   assert(0);
 }
 
+double
+ConvertCodingTypeToDouble(CodingType ct)
+{
+  std::array<double, 8> fec_rate =
+    {1.0 / 4.0, 1.0 / 2.0, 2.0 / 3.0, 16.0 / 21.0, 5.0 / 6.0, 16.0 / 18.0, 20.0 / 21.0, 0};
+
+  assert(ct - 1 < fec_rate.size());
+  return fec_rate.at (ct - 1);
+}
+
 void
 GetDirListing (FileList& result, const std::string& dirpath)
 {

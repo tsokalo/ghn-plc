@@ -388,6 +388,7 @@ GhnPlcDllMacCsma::EndTx (void)
   NS_LOG_FUNCTION (this);
   NS_LOG_DEBUG ("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
 
+  NS_LOG_UNCOND("Simulation time: " << Simulator::Now () << ", Node " << (uint16_t)GetDllManagement()->GetAddress().GetAsInt() << " end TX");
   if (!m_dllMan->GetDllLlc ()->IsQueueEmpty ())
     {
       //increase backoff if not acknowledged
@@ -406,6 +407,7 @@ GhnPlcDllMacCsma::EndTxFailure (void)
   NS_LOG_FUNCTION (this);
   NS_LOG_DEBUG ("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
 
+  NS_LOG_UNCOND("Simulation time: " << Simulator::Now () << ", Node " << (uint16_t)GetDllManagement()->GetAddress().GetAsInt() << " end TX failure");
   if (!m_dllMan->GetDllLlc ()->IsQueueEmpty () || m_transPacket != 0)
     {
       //increase backoff if not acknowledged

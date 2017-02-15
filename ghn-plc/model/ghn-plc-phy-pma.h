@@ -53,6 +53,13 @@ public:
   void SetBandPlanType(BandPlanType bp){m_bandPlan = bp;}
   void SetSendCallback(SendCallback cb){m_sendCallback = cb;}
   void SetGetPmcScheme(GetPmcScheme cb){m_getPmcScheme = cb;}
+  //
+  // including the padding bits for the last OFDM symbol
+  //
+  uint32_t GetLoadedBits();
+
+
+  CodingType GetCodingType(){return m_getPmcScheme().ct;}
 
 private:
   uint8_t GetFecConcatenationFactorHFromHeader (uint8_t fecConcatenationFactor);

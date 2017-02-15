@@ -17,6 +17,8 @@
 #include "ghn-plc-utilities.h"
 #include "ghn-plc-header.h"
 
+#include "bit-set.h"
+
 NS_LOG_COMPONENT_DEFINE("GhnPlcLlcFlow");
 
 namespace ns3
@@ -243,11 +245,14 @@ GhnPlcLlcFlow::CheckCrc (GhnBuffer &buffer)
   GhnPlcLpduHeader header;
   std::deque<SegmentState> state;
   auto phym = m_dllMac->GetDllManagement ()->GetPhyManagement ();
+
+  ncr::bitset crc;
   for (auto &packet : buffer)
     {
       RemoveCrc (packet);
       packet->PeekHeader (header);
       bool blockSuccess = phym->IsBlockSuccess ();
+      crc.add(blockSuccess);
       if (blockSuccess)
         {
           NS_LOG_DEBUG("Flow " << m_connId << ": " << "CRC OK. The segment will be sent to the decoder");
@@ -259,6 +264,7 @@ GhnPlcLlcFlow::CheckCrc (GhnBuffer &buffer)
           state.push_back (WAIT_RETRANSMISSION_SEG_STATE);
         }
     };;
+  NS_LOG_UNCOND("CRC status (PER: " << 1 - crc.get_ratio() << ", BER: " << phym->GetActualBer() << "): " << crc.to_full_string());
   return state;
 }
 std::deque<Ssn>
@@ -554,7 +560,9 @@ GhnPlcLlcFlow::SendDown ()
   auto phy = dll->GetPhyManagement ()->GetPhyPcs ()->GetObject<GhnPlcPhyPcs> ();
   auto rt = dll->GetRoutingTable ();
   auto bt = dll->GetBitLoadingTable ();
-  auto dataAmount = bt->GetDataAmount (Seconds (GHN_CYCLE_MAX), src, rt->GetNextHopAddress (src, dst).GetAsInt ());
+  auto nh = rt->GetNextHopAddress (src, dst).GetAsInt ();
+  NS_ASSERT(src != nh);
+  auto dataAmount = bt->GetDataAmount (Seconds (GHN_CYCLE_MAX), src, nh);
 
   VirtSsn freeBufSize = m_txArq->GetFreeTxBufferSize ();
 

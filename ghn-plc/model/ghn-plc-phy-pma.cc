@@ -77,26 +77,26 @@ GhnPlcPhyPma::StartTx (Ptr<Packet> txPhyFrame, GhnPlcPhyFrameType frameType)
   case PHY_FRAME_MAP_RMAP:
     m_fecBlockSize = m_ghnPhyManagement->GetTxFecBlockSizeFromHeader ();
     m_payloadUncodedBits = m_ghnPhyManagement->GetTxPacketSize () * 8;
-    m_kFecPayloadBlocks = m_payloadUncodedBits / m_fecBlockSize;
+    m_kFecPayloadBlocks = ceil((double)m_payloadUncodedBits / (double)m_fecBlockSize);
     m_payloadFecRate = FEC_RATE_1_2;
     m_repetitionsNumber = m_ghnPhyManagement->GetTxRepetitionsNumberFromHeader ();
     //    m_fecConcatenationFactorH = GetFecConcatenationFactorHFromHeader (header201.GetFecConcatenationFactor ());
     //    m_fecConcatenationFactorZ = GetFecConcatenationFactorZFromHeader (header201.GetFecConcatenationFactor ());
     m_payloadEncodedBits = GetPayloadEncodedBits (m_fecBlockSize, m_kFecPayloadBlocks, m_payloadFecRate, m_repetitionsNumber);
-    m_payloadSymbols = ceil ((double) m_payloadEncodedBits / GetBitsPerSymbol ());
+    m_payloadSymbols = ceil ((double) m_payloadEncodedBits /  (double)GetBitsPerSymbol ());
     NS_LOG_LOGIC ("MAP_RMAP Payload symbols: " << m_payloadSymbols);
     break;
   case PHY_FRAME_MSG:
     m_fecBlockSize = m_ghnPhyManagement->GetTxFecBlockSizeFromHeader ();
     m_payloadUncodedBits = m_ghnPhyManagement->GetTxPacketSize () * 8;
-    m_kFecPayloadBlocks = m_payloadUncodedBits / m_fecBlockSize;
+    m_kFecPayloadBlocks = ceil((double)m_payloadUncodedBits / (double)m_fecBlockSize);
     m_payloadFecRate = m_ghnPhyManagement->GetTxPayloadFecRate ();
     m_repetitionsNumber = m_ghnPhyManagement->GetTxRepetitionsNumberFromHeader ();
     //    m_fecConcatenationFactorH = GetFecConcatenationFactorHFromHeader (header202.GetFecConcatenationFactor ());
     //    m_fecConcatenationFactorZ = GetFecConcatenationFactorZFromHeader (header202.GetFecConcatenationFactor ());
     m_payloadEncodedBits = GetPayloadEncodedBits (m_fecBlockSize, m_kFecPayloadBlocks, m_payloadFecRate, m_repetitionsNumber);
-    m_payloadSymbols = ceil ((double) m_payloadEncodedBits / GetBitsPerSymbol ());
-    NS_LOG_LOGIC ("MSG Payload symbols: " << m_payloadSymbols);
+    m_payloadSymbols = ceil ((double) m_payloadEncodedBits /  (double)GetBitsPerSymbol ());
+    NS_LOG_UNCOND ("MSG Payload symbols: " << m_payloadSymbols);
     break;
   case PHY_FRAME_ACK:
   case PHY_FRAME_RTS:

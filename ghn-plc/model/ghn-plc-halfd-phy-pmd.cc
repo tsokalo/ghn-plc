@@ -143,32 +143,46 @@ GhnPlcPhyPmdHalfD::Send (Ptr<Packet> txPhyFrame, GhnPlcPhyFrameType frameType, u
 
   // Create meta information object
   Ptr<PLC_TrxMetaInfo> metaInfo = Create<PLC_TrxMetaInfo> ();
+
+
   metaInfo->SetMessage (txPhyFrame);
-  metaInfo->SetFrame (txPhyFrame); //or SetMessage() ?
-  metaInfo->SetHeaderDuration (NanoSeconds (GetHeaderSymbolDuration ().GetNanoSeconds () * headerSymbols));
-
-  //set symbol duration for header and payload in the scratch file
-  if (payloadSymbols <= 2)
-    metaInfo->SetPayloadDuration (NanoSeconds (GetHeaderSymbolDuration ().GetNanoSeconds () * payloadSymbols));
-  else
-    metaInfo->SetPayloadDuration (NanoSeconds (GetHeaderSymbolDuration ().GetNanoSeconds () * 2
-            + GetSymbolDuration ().GetNanoSeconds () * (payloadSymbols - 2)));
-  //  if (payloadSymbols >= 2)
-  //    metaInfo->SetPayloadDuration (Time::FromInteger((uint64_t) ((m_ofdmParameters[m_bandplan].m_subcarriersNumber +
-  //          m_ofdmParameters[m_bandplan].m_payloadDefaultGuardInterval) *
-  //          m_ofdmParameters[m_bandplan].m_sampleDuration * 2 +
-  //          (m_ofdmParameters[m_bandplan].m_subcarriersNumber +
-  //           m_ofdmParameters[m_bandplan].m_payloadDefaultGuardInterval) *
-  //           m_ofdmParameters[m_bandplan].m_sampleDuration * (payloadSymbols - 2)), Time::NS));
-  //  else if (payloadSymbols == 1)
-  //    metaInfo->SetPayloadDuration (Time::FromInteger((uint64_t) ((m_ofdmParameters[m_bandplan].m_subcarriersNumber +
-  //          m_ofdmParameters[m_bandplan].m_payloadDefaultGuardInterval) *
-  //          m_ofdmParameters[m_bandplan].m_sampleDuration), Time::NS));
-  //  else
-  //    metaInfo->SetPayloadDuration (Time::FromInteger((uint64_t) (0), Time::NS));
-
+  metaInfo->SetFrame (txPhyFrame);
+  metaInfo->SetHeaderDuration (PLC_Phy::GetHeaderSymbolDuration () * headerSymbols);
+  metaInfo->SetPayloadDuration (PLC_Phy::GetSymbolDuration () * payloadSymbols);
   metaInfo->SetHeaderMcs (GetHeaderModulationAndCodingScheme ());
   metaInfo->SetPayloadMcs (GetPayloadModulationAndCodingScheme ());
+
+  Time tx_duration = metaInfo->GetHeaderDuration () + metaInfo->GetPayloadDuration () + PLC_Preamble::GetDuration ();
+//
+//
+//  metaInfo->SetMessage (txPhyFrame);
+//  metaInfo->SetFrame (txPhyFrame); //or SetMessage() ?
+//  metaInfo->SetHeaderDuration (NanoSeconds (GetHeaderSymbolDuration ().GetNanoSeconds () * headerSymbols));
+//
+//  //set symbol duration for header and payload in the scratch file
+//  if (payloadSymbols <= 2)
+//    metaInfo->SetPayloadDuration (NanoSeconds (GetHeaderSymbolDuration ().GetNanoSeconds () * payloadSymbols));
+//  else
+//    metaInfo->SetPayloadDuration (NanoSeconds (GetHeaderSymbolDuration ().GetNanoSeconds () * 2
+//            + GetSymbolDuration ().GetNanoSeconds () * (payloadSymbols - 2)));
+//  //  if (payloadSymbols >= 2)
+//  //    metaInfo->SetPayloadDuration (Time::FromInteger((uint64_t) ((m_ofdmParameters[m_bandplan].m_subcarriersNumber +
+//  //          m_ofdmParameters[m_bandplan].m_payloadDefaultGuardInterval) *
+//  //          m_ofdmParameters[m_bandplan].m_sampleDuration * 2 +
+//  //          (m_ofdmParameters[m_bandplan].m_subcarriersNumber +
+//  //           m_ofdmParameters[m_bandplan].m_payloadDefaultGuardInterval) *
+//  //           m_ofdmParameters[m_bandplan].m_sampleDuration * (payloadSymbols - 2)), Time::NS));
+//  //  else if (payloadSymbols == 1)
+//  //    metaInfo->SetPayloadDuration (Time::FromInteger((uint64_t) ((m_ofdmParameters[m_bandplan].m_subcarriersNumber +
+//  //          m_ofdmParameters[m_bandplan].m_payloadDefaultGuardInterval) *
+//  //          m_ofdmParameters[m_bandplan].m_sampleDuration), Time::NS));
+//  //  else
+//  //    metaInfo->SetPayloadDuration (Time::FromInteger((uint64_t) (0), Time::NS));
+//
+//  metaInfo->SetHeaderMcs (GetHeaderModulationAndCodingScheme ());
+//  metaInfo->SetPayloadMcs (GetPayloadModulationAndCodingScheme ());
+
+
 
   // Start sending
   if (GetState () == IDLE)
@@ -178,7 +192,6 @@ GhnPlcPhyPmdHalfD::Send (Ptr<Packet> txPhyFrame, GhnPlcPhyFrameType frameType, u
       NS_ASSERT_MSG (m_txInterface, "Phy has no tx interface");
       NS_ASSERT (metaInfo && metaInfo->GetFrame ());
 
-      Time tx_duration = metaInfo->GetHeaderDuration () + metaInfo->GetPayloadDuration () + PLC_Preamble::GetDuration ();
       NS_LOG_LOGIC ("header_duration: " << metaInfo->GetHeaderDuration ().GetNanoSeconds ());
       NS_LOG_LOGIC ("payload_duration: " << metaInfo->GetPayloadDuration ().GetNanoSeconds ());
       NS_LOG_LOGIC ("preamble_duration: " << PLC_Preamble::GetDuration ().GetNanoSeconds ());
@@ -199,6 +212,7 @@ GhnPlcPhyPmdHalfD::Send (Ptr<Packet> txPhyFrame, GhnPlcPhyFrameType frameType, u
 
   return false;
 }
+
 
 void
 GhnPlcPhyPmdHalfD::SetPhyPma (Ptr<GhnPlcPhyPma> gdothnPhyPma)

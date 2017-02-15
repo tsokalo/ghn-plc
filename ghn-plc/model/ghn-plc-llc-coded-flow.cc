@@ -71,10 +71,11 @@ GhnPlcLlcCodedFlow::Configure (NodeType type, ncr::UanAddress dst, SimParameters
       m_encQueue->set_notify_callback (std::bind (&GhnPlcLlcCodedFlow::NotifyRcvUp, this, std::placeholders::_1));
       m_getRank = std::bind (&encoder_queue::rank, m_encQueue, std::placeholders::_1);
       m_brr->SetGetRankCallback (m_getRank);
-      m_brr->SetCoderHelpInfoCallback (std::bind (&encoder_queue::get_help_info, m_encQueue, std::placeholders::_1,
-              std::placeholders::_2, std::placeholders::_3));
+      m_brr->SetCoderHelpInfoCallback (
+              std::bind (&encoder_queue::get_help_info, m_encQueue, std::placeholders::_1, std::placeholders::_2,
+                      std::placeholders::_3));
 
-      SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " type " << m_nodeType);
+      SIM_LOG(COMM_NODE_LOG, "Node " << m_id << " type " << m_nodeType);
     }
   else
     {
@@ -83,10 +84,11 @@ GhnPlcLlcCodedFlow::Configure (NodeType type, ncr::UanAddress dst, SimParameters
       m_brr->SetGetRankCallback (m_getRank);
       m_brr->SetGetCodingMatrixCallback (std::bind (&decoder_queue::get_coding_matrix, m_decQueue, std::placeholders::_1));
       m_brr->SetGetCoderInfoCallback (std::bind (&decoder_queue::get_coder_info, m_decQueue, std::placeholders::_1));
-      m_brr->SetCoderHelpInfoCallback (std::bind (&decoder_queue::get_help_info, m_decQueue, std::placeholders::_1,
-              std::placeholders::_2, std::placeholders::_3));
+      m_brr->SetCoderHelpInfoCallback (
+              std::bind (&decoder_queue::get_help_info, m_decQueue, std::placeholders::_1, std::placeholders::_2,
+                      std::placeholders::_3));
 
-      SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " type " << m_nodeType);
+      SIM_LOG(COMM_NODE_LOG, "Node " << m_id << " type " << m_nodeType);
     }
 }
 
@@ -110,12 +112,16 @@ GhnPlcLlcCodedFlow::SendDown ()
 
   if (m_nodeType != DESTINATION_NODE_TYPE)
     {
+      NS_LOG_UNCOND(
+              "Node " << (uint16_t)m_dllMac->GetDllManagement()->GetAddress().GetAsInt() << ", Connection " << connId << " SEND!");
+
       auto dst = connId.dst.GetAsInt ();
       auto phy = dll->GetPhyManagement ()->GetPhyPcs ()->GetObject<GhnPlcPhyPcs> ();
       auto rt = dll->GetRoutingTable ();
       auto bt = dll->GetBitLoadingTable ();
       auto nh = (m_sp.mutualPhyLlcCoding) ? m_brr->GetSinkVertex () : rt->GetNextHopAddress (src, dst).GetAsInt ();
       if (nh == -1) nh = rt->GetNextHopAddress (src, dst).GetAsInt ();
+      NS_ASSERT(src != nh);
       m_brr->SetSendingRate (bt->GetNumEffBits (src, nh));
       auto dataAmount = bt->GetDataAmount (Seconds (GHN_CYCLE_MAX), src, nh);
       uint32_t pushedPkts = 0, maxPkts = floor ((double) dataAmount / (double) m_blockSize);
@@ -123,11 +129,11 @@ GhnPlcLlcCodedFlow::SendDown ()
               "Node " << m_id << ", Flow " << connId << ": " << "dataAmount: " << dataAmount << ", m_blockSize: " << m_blockSize);
       assert(maxPkts > 0);
 
-      PrepareForSend ( dataAmount);
+      PrepareForSend (dataAmount);
 
       if (m_nodeType == SOURCE_NODE_TYPE)
         {
-auto          maxBuf = m_brr->GetMaxAmountTxData ();
+          auto maxBuf = m_brr->GetMaxAmountTxData ();
           assert(maxBuf >= maxPkts);
           assert(!m_genCallback.IsNull ());
           //
@@ -182,7 +188,7 @@ auto          maxBuf = m_brr->GetMaxAmountTxData ();
               i++;
               if (pushedPkts == maxPkts) break;
             }
-          m_brr->UpdateSent (genId, i);
+          m_brr->UpdateSent (genId, i, true);
           planI[genId].num_all = i;
           planI[genId].all_prev_acked = p_it->second.all_prev_acked;
           if (pushedPkts == maxPkts) break;
@@ -225,7 +231,6 @@ auto          maxBuf = m_brr->GetMaxAmountTxData ();
 
   return SendTuple (toTransmit, connId);
 }
-
 void
 GhnPlcLlcCodedFlow::PrepareForSend (uint64_t dataAmount)
 {
@@ -319,7 +324,7 @@ GhnPlcLlcCodedFlow::ConvertPktToBrrHeader (GhnBuffer &buffer, std::deque<Segment
   pkt->RemoveAtStart (1);
 
   for (uint16_t i = 1; i < n_bs; i++)
-  pkt->AddAtEnd (*(buffer.begin () + i));
+    pkt->AddAtEnd (*(buffer.begin () + i));
 
   buffer.erase (buffer.begin (), buffer.begin () + n_bs);
 
@@ -343,7 +348,8 @@ GhnPlcLlcCodedFlow::Receive (GhnBuffer buffer, ConnId connId)
 {
   NS_LOG_FUNCTION(this << connId);
 
-  NS_LOG_UNCOND("Connection " << connId << " receive!");
+  NS_LOG_UNCOND(
+          "Node " << (uint16_t)m_dllMac->GetDllManagement()->GetAddress().GetAsInt() << ", Connection " << connId << " RECEIVE!");
 
   NS_ASSERT(buffer.size () > 0);
   NS_ASSERT_MSG(m_connId == connId, m_connId << " " << connId);
@@ -410,7 +416,8 @@ GhnPlcLlcCodedFlow::IsQueueEmpty ()
 
   double dr = m_drCalc.Get ();
   double rel_dr = dr * PLC_Phy::GetSymbolDuration ().GetSeconds ();
-  NS_LOG_UNCOND("Connection: " << m_connId << ", time: " << Simulator::Now() << ", data rate: " << dr << " bps, relative data rate: " << rel_dr << " bits");
+  NS_LOG_UNCOND(
+          "Connection: " << m_connId << ", time: " << Simulator::Now() << ", data rate: " << dr << " bps, relative data rate: " << rel_dr << " bits");
 
   if (!m_brr->MaySendData (rel_dr)) return true;
 
@@ -428,7 +435,7 @@ GhnPlcLlcCodedFlow::ProcessDecoded (GhnBuffer buffer, ConnId connId)
   //
   // drop decoded packets if I am not the destination
   //
-  if(connId.dst != m_dllMac->GetDllManagement()->GetAddress())return;
+  if (connId.dst != m_dllMac->GetDllManagement ()->GetAddress ()) return;
 
   std::deque<SegmentState> state (buffer.size (), DONE_SEGMENT_STATE);
   //
@@ -511,7 +518,7 @@ GhnPlcLlcCodedFlow::ProcessDecoded (GhnBuffer buffer, ConnId connId)
 
 void
 GhnPlcLlcCodedFlow::ProcessRcvdPacket (std::vector<uint8_t> vec, bool crc, ncr::UanAddress addr, TxPlan::iterator item,
-      ConnId connId)
+        ConnId connId)
 {
   GenId genId = item->first;
 

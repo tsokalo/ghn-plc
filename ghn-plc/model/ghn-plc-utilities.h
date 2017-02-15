@@ -41,6 +41,8 @@ FecRateType
 ConvertPlcRateToGhnRate (CodingType rate);
 CodingType
 ConvertGhnRateToPlcRate (FecRateType rate);
+double
+ConvertCodingTypeToDouble(CodingType t);
 
 void
 GetDirListing (FileList& result, const std::string& dirpath);
