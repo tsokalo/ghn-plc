@@ -452,7 +452,7 @@ GhnPlcPhyManagement::GetLoadedBits (uint32_t uncoded_bits)
   auto payloadEncodedBits = (double) fecBlockSize * (double) kFecPayloadBlocks / fc;
   auto payloadSymbols = ceil ((double) payloadEncodedBits / (double) m_ghnPhyPma->GetBitsPerSymbol ());
 
-  NS_LOG_UNCOND(
+  NS_LOG_LOGIC(
           fecBlockSize << " / " <<kFecPayloadBlocks << " / " << fc << " / " <<payloadEncodedBits << " / " << payloadSymbols);
 
   return payloadSymbols * m_ghnPhyPma->GetBitsPerSymbol ();

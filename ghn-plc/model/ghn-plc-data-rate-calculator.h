@@ -8,7 +8,10 @@
 #ifndef SRC_GHN_PLC_MODEL_GHN_PLC_DATA_RATE_CALCULATOR_H_
 #define SRC_GHN_PLC_MODEL_GHN_PLC_DATA_RATE_CALCULATOR_H_
 
+#include <iostream>
+
 #include "ns3/nstime.h"
+#include "ns3/log.h"
 
 namespace ns3
 {
@@ -31,8 +34,7 @@ public:
   Get ()
   {
     Time duration = Simulator::Now () - m_last;
-
-    return (duration == Seconds (0.0) ? 0 : (m_bits / duration.GetSeconds ()));
+    return (duration == Seconds (0.0) ? 0 : ((double)m_bits / (double)duration.GetSeconds ()));
   }
   void
   Update (uint32_t bits)

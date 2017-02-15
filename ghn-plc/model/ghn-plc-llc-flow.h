@@ -79,7 +79,7 @@ protected:
   bool
   Enqueue (Ptr<Packet> packet, ConnId connId);
   std::deque<SegmentState>
-  CheckCrc (GhnBuffer &buffer);
+  CheckCrc (GhnBuffer &buffer, ConnId connId);
   std::deque<Ssn>
   RemoveLpduHeaders (GhnBuffer &buffer, std::deque<SegmentState> &state, SegGhnBuffer &segmentBuffer);
   void

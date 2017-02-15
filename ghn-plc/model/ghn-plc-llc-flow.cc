@@ -159,7 +159,7 @@ GhnPlcLlcFlow::Receive (GhnBuffer buffer, ConnId connId)
   //
   // remove and check CRC
   //
-  std::deque<SegmentState> state = CheckCrc (buffer);
+  std::deque<SegmentState> state = CheckCrc (buffer, connId);
 
   //
   // remove LPDU header
@@ -239,7 +239,7 @@ GhnPlcLlcFlow::Receive (GhnBuffer buffer, ConnId connId)
   return info;
 }
 std::deque<SegmentState>
-GhnPlcLlcFlow::CheckCrc (GhnBuffer &buffer)
+GhnPlcLlcFlow::CheckCrc (GhnBuffer &buffer, ConnId connId)
 {
   NS_LOG_FUNCTION(this);
   GhnPlcLpduHeader header;
@@ -251,7 +251,10 @@ GhnPlcLlcFlow::CheckCrc (GhnBuffer &buffer)
     {
       RemoveCrc (packet);
       packet->PeekHeader (header);
-      bool blockSuccess = phym->IsBlockSuccess ();
+      //
+      // assume that the management messages are coded good enough to have no bit errors after PHY decoding
+      //
+      bool blockSuccess = (connId.flowId == MANAGMENT_CONN_ID) ? 1 : phym->IsBlockSuccess ();
       crc.add(blockSuccess);
       if (blockSuccess)
         {
