@@ -39,7 +39,8 @@ typedef struct stat Stat;
 
 namespace ns3
 {
-namespace ghn {
+namespace ghn
+{
 NS_LOG_COMPONENT_DEFINE("NC_Utilities");
 void
 CreateLineTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, Ptr<const SpectrumModel> sm, std::vector<uint32_t> distance)
@@ -53,12 +54,12 @@ CreateLineTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, Ptr<const Spe
   //
   for (uint16_t i = 0; i < num_modems; i++)
     {
-      NS_LOG_DEBUG ("Creating a modem " << i);
+      NS_LOG_DEBUG("Creating a modem " << i);
       node_list.at (i) = CreateObject<PLC_Node> ();
       node_list.at (i)->SetName (std::string ("Node ") + std::to_string (i + 1));
     }
 
-  NS_ASSERT(distance.size() + 1 == node_list.size());
+  NS_ASSERT(distance.size () + 1 == node_list.size ());
 
   //
   // Connect node_list with cable
@@ -66,8 +67,8 @@ CreateLineTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, Ptr<const Spe
   node_list.at (0)->SetPosition (0, 0, 0);
   for (uint16_t i = 1; i < node_list.size (); i++)
     {
-      std::cout << "Set position of node " << i << " at distance of " << node_list.at (i - 1)->GetPosition ().x + distance.at (
-              i - 1) << " from the node 0" << std::endl;
+      std::cout << "Set position of node " << i << " at distance of "
+              << node_list.at (i - 1)->GetPosition ().x + distance.at (i - 1) << " from the node 0" << std::endl;
       node_list.at (i)->SetPosition (node_list.at (i - 1)->GetPosition ().x + distance.at (i - 1), 0, 0);
       CreateObject<PLC_Line> (cable, node_list.at (i - 1), node_list.at (i));
     }
@@ -84,12 +85,12 @@ CreateStarTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, Ptr<const Spe
   //
   for (uint16_t i = 0; i < num_modems; i++)
     {
-      NS_LOG_DEBUG ("Creating a modem " << i);
+      NS_LOG_DEBUG("Creating a modem " << i);
       node_list.at (i) = CreateObject<PLC_Node> ();
       node_list.at (i)->SetName (std::string ("Node ") + std::to_string (i + 1));
     }
 
-  NS_ASSERT(distance.size() + 1 == node_list.size());
+  NS_ASSERT(distance.size () + 1 == node_list.size ());
 
   //
   // Connect node_list with cable
@@ -114,7 +115,7 @@ GroupEncAckInfoToPkt (GroupEncAckInfo info)
 {
   std::stringstream ss;
   ss << info.details.size () << DELIMITER;
-  for(auto d :info.details)
+  for (auto d : info.details)
     {
       ss << d << DELIMITER;
     };;
@@ -123,7 +124,7 @@ GroupEncAckInfoToPkt (GroupEncAckInfo info)
   ss << info.invalid << DELIMITER;
 
   ss << info.ncAckInfo.size () << DELIMITER;
-  for(auto inf :info.ncAckInfo)
+  for (auto inf : info.ncAckInfo)
     {
       ss << inf.groupId << DELIMITER;
       ss << inf.rcv << DELIMITER;
@@ -131,17 +132,17 @@ GroupEncAckInfoToPkt (GroupEncAckInfo info)
     };;
 
   Ptr<Packet> ack = Create<Packet> ((uint8_t const*) ss.str ().c_str (), (uint32_t) ss.str ().length ());
-  uint32_t remainder = fmod(ack->GetSize (), GHN_BLKSZ_540);
-  if(remainder > 0) ack->AddPaddingAtEnd (GHN_BLKSZ_540 - remainder);
+  uint32_t remainder = fmod (ack->GetSize (), GHN_BLKSZ_540);
+  if (remainder > 0) ack->AddPaddingAtEnd (GHN_BLKSZ_540 - remainder);
   return ack;
 }
 GroupEncAckInfo
 PktToGroupEncAckInfo (Ptr<Packet> packet)
 {
-  NS_ASSERT (fmod(packet->GetSize (), GHN_BLKSZ_540) == 0);
+  NS_ASSERT(fmod(packet->GetSize (), GHN_BLKSZ_540) == 0);
   uint8_t *buffer = new uint8_t[packet->GetSize ()];
   int32_t copied = packet->CopyData (buffer, packet->GetSize ());
-  assert(copied == packet->GetSize());
+  assert(copied == packet->GetSize ());
   std::stringstream ss (std::string ((char*) buffer, copied));
 
   GroupEncAckInfo info;
@@ -177,15 +178,15 @@ PrintGroupEncAckInfo (GroupEncAckInfo info)
 {
   std::cout << "ACK INFO -------------------->>> " << std::endl;
   std::cout << "Details: ";
-  for(auto d : info.details)
+  for (auto d : info.details)
     {
-      std::cout << (uint32_t)d << " ";
+      std::cout << (uint32_t) d << " ";
     }
   std::cout << std::endl;
   std::cout << "Win start: " << info.winStart << std::endl;
   std::cout << "Number of received symbols: " << info.numRcvSym << std::endl;
   std::cout << "ACK info item: ";
-  for(auto i : info.ncAckInfo)
+  for (auto i : info.ncAckInfo)
     {
       std::cout << i.groupId << " " << i.rcv << DELIMITER << i.use << DELIMITER << std::endl;
     };;
@@ -263,12 +264,12 @@ ConvertGhnRateToPlcRate (FecRateType rate)
 }
 
 double
-ConvertCodingTypeToDouble(CodingType ct)
+ConvertCodingTypeToDouble (CodingType ct)
 {
   std::array<double, 8> fec_rate =
-    {1.0 / 4.0, 1.0 / 2.0, 2.0 / 3.0, 16.0 / 21.0, 5.0 / 6.0, 16.0 / 18.0, 20.0 / 21.0, 0};
+    { 1.0 / 4.0, 1.0 / 2.0, 2.0 / 3.0, 16.0 / 21.0, 5.0 / 6.0, 16.0 / 18.0, 20.0 / 21.0, 0 };
 
-  assert(ct - 1 < fec_rate.size());
+  assert(ct - 1 < fec_rate.size ());
   return fec_rate.at (ct - 1);
 }
 
@@ -301,7 +302,7 @@ CreateDirectory (std::string path)
   if (stat (path.c_str (), &st) != 0)
     {
       /* Directory does not exist. EEXIST for race condition */
-      if (mkdir (path.c_str (), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != 0 && errno != EEXIST) status = -1;//, mode
+      if (mkdir (path.c_str (), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != 0 && errno != EEXIST) status = -1;  //, mode
     }
   else if (!S_ISDIR(st.st_mode))
     {
@@ -337,7 +338,7 @@ RemoveDirectory (std::string folderPath)
         }
       struct stat st_buf;
       stat (fullPath.c_str (), &st_buf);
-      if (S_ISDIR (st_buf.st_mode))
+      if (S_ISDIR(st_buf.st_mode))
         {
           RemoveDirectory (fullPath);
         }
@@ -353,7 +354,8 @@ std::string
 GetLogIdent (std::vector<double> vals)
 {
   std::stringstream ss;
-  for(auto v : vals)ss << "_" << v;
+  for (auto v : vals)
+    ss << "_" << v;
   return ss.str ();
 }
 
@@ -523,8 +525,8 @@ CopyBits (int start_data, int end_data, uint8_t data, int start_target, unsigned
 VirtSsn
 RotateVarFwrd (VirtSsn toRotate, VirtSsn howFar, VirtSsn cycleSize)
 {
-  NS_ASSERT_MSG (toRotate < cycleSize, "to rotate:" << toRotate << ", cycle size: " << cycleSize);
-  NS_ASSERT (howFar <= cycleSize);
+  NS_ASSERT_MSG(toRotate < cycleSize, "to rotate:" << toRotate << ", cycle size: " << cycleSize);
+  NS_ASSERT(howFar <= cycleSize);
 
   if (toRotate + howFar < cycleSize)
     return (toRotate + howFar);
@@ -534,8 +536,8 @@ RotateVarFwrd (VirtSsn toRotate, VirtSsn howFar, VirtSsn cycleSize)
 VirtSsn
 RotateVarBck (VirtSsn toRotate, VirtSsn howFar, VirtSsn cycleSize)
 {
-  NS_ASSERT (toRotate < cycleSize);
-  NS_ASSERT (howFar <= cycleSize);
+  NS_ASSERT(toRotate < cycleSize);
+  NS_ASSERT(howFar <= cycleSize);
 
   if (toRotate >= howFar)
     return (toRotate - howFar);
@@ -543,21 +545,32 @@ RotateVarBck (VirtSsn toRotate, VirtSsn howFar, VirtSsn cycleSize)
     return (cycleSize + toRotate - howFar);
 }
 
-Ptr<Packet> ConvertVecToPacket(std::vector<uint8_t> vec)
+Ptr<Packet>
+ConvertVecToPacket (std::vector<uint8_t> vec)
 {
-  return Create<Packet>(vec.data(), vec.size());
+  return Create<Packet> (vec.data (), vec.size ());
 }
-std::vector<uint8_t> ConvertPacketToVec(Ptr<Packet> pkt)
+std::vector<uint8_t>
+ConvertPacketToVec (Ptr<Packet> pkt)
 {
-  std::vector<uint8_t> v(pkt->GetSize());
-  pkt->CopyData(v.data(), pkt->GetSize());
+  std::vector<uint8_t> v (pkt->GetSize ());
+  pkt->CopyData (v.data (), pkt->GetSize ());
   return v;
 }
-GhnBuffer ConvertVecsToBuffer(std::vector<std::vector<uint8_t> > vecs)
+GhnBuffer
+ConvertVecsToBuffer (std::vector<std::vector<uint8_t> > vecs)
 {
   GhnBuffer buf;
-  for(auto vec : vecs)buf.push_back(ConvertVecToPacket(vec));
+  for (auto vec : vecs)
+    buf.push_back (ConvertVecToPacket (vec));
   return buf;
+}
+void
+ThrowToFile (std::string line, std::string path)
+{
+  std::ofstream f (path, std::ios_base::out|std::ios_base::app);
+  f << line << std::endl;
+  f.close ();
 }
 
 }

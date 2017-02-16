@@ -15,7 +15,7 @@
 #include "comparison.h"
 
 //#define PER_BER_MAP_SIZE        500
-#define MIN_PER_VAL     0.01
+#define MIN_PER_VAL     0.00001
 #define MAX_PER_VAL     0.99
 
 namespace ns3

@@ -13,6 +13,7 @@
 #include "ns3/ghn-plc-helper.h"
 //#include "ns3/ghn-plc-module.h"
 #include "ns3/ghn-plc-greedy-udp-client.h"
+#include "ns3/ghn-plc-bit-loading-data.h"
 
 namespace ns3
 {
@@ -415,8 +416,8 @@ GhnPlcHelper::CreateBitLoadingTable ()
       for (nit = m_node_list.begin (); nit != m_node_list.end (); nit++)
         {
           m_bitLoadingTable->GetObject<NcBlVarBatMap> ()->SetPer ((*nit)->GetVertexId (),
-                  m_sp.mutualPhyLlcCoding ? m_sp.per : 0.01);
-          std::cout << "Setting PER " << (m_sp.mutualPhyLlcCoding ? m_sp.per : 0.01) << " for node " << (*nit)->GetVertexId ()
+                  m_sp.mutualPhyLlcCoding ? m_sp.per : MIN_PER_VAL);
+          std::cout << "Setting PER " << (m_sp.mutualPhyLlcCoding ? m_sp.per : MIN_PER_VAL) << " for node " << (*nit)->GetVertexId ()
                   << std::endl;
         }
     }

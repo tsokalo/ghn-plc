@@ -255,6 +255,8 @@ GhnPlcPhyPmdHalfD::EndRxHeader (uint32_t txId, Ptr<const SpectrumValue> rxPsd, P
   ModulationAndCodingScheme payload_mcs = metaInfo->GetPayloadMcs ();
   Time payload_duration = metaInfo->GetPayloadDuration ();
 
+  NS_LOG_LOGIC ("Payload duration: " << payload_duration);
+
   SetPayloadModulationAndCodingScheme (payload_mcs);
 
   if (m_information_rate_model->EndRx ())
@@ -344,7 +346,7 @@ GhnPlcPhyPmdHalfD::EndRxHeader (uint32_t txId, Ptr<const SpectrumValue> rxPsd, P
               == PHY_FRAME_FTE)) uncoded_payload_bits = 0;
 
       NS_LOG_LOGIC ("Starting payload reception: " << payload_duration << payload_mcs << uncoded_payload_bits);
-//      NS_LOG_UNCOND ("Starting payload reception: " << payload_duration << payload_mcs << uncoded_payload_bits);
+//      NS_LOG_LOGIC ("Starting payload reception: " << payload_duration << payload_mcs << uncoded_payload_bits);
 
       m_incoming_frame->AddHeader (header3);
 

@@ -81,6 +81,8 @@ RotateVarBck (VirtSsn toRotate, VirtSsn howFar, VirtSsn cycleSize);
 Ptr<Packet> ConvertVecToPacket(std::vector<uint8_t> vec);
 std::vector<uint8_t> ConvertPacketToVec(Ptr<Packet> pkt);
 GhnBuffer ConvertVecsToBuffer(std::vector<std::vector<uint8_t> > vec);
+
+void ThrowToFile(std::string line, std::string path);
 }
 }
 #endif /* GHN_PLC_UTILIITES_H_ */

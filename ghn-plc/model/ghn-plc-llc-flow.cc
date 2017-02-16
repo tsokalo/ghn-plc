@@ -70,7 +70,8 @@ void
 GhnPlcLlcFlow::SetConnId (ConnId connId)
 {
   m_connId = connId;
-  NS_LOG_UNCOND("Node " << (uint16_t) m_dllMac->GetDllManagement()->GetAddress().GetAsInt() << ": Setting LLC flow ID " << connId);
+  NS_LOG_UNCOND(
+          "Node " << (uint16_t) m_dllMac->GetDllManagement()->GetAddress().GetAsInt() << ": Setting LLC flow ID " << connId);
 }
 
 GhnPlcLlcFlow::~GhnPlcLlcFlow ()
@@ -255,7 +256,7 @@ GhnPlcLlcFlow::CheckCrc (GhnBuffer &buffer, ConnId connId)
       // assume that the management messages are coded good enough to have no bit errors after PHY decoding
       //
       bool blockSuccess = (connId.flowId == MANAGMENT_CONN_ID) ? 1 : phym->IsBlockSuccess ();
-      crc.add(blockSuccess);
+      crc.add (blockSuccess);
       if (blockSuccess)
         {
           NS_LOG_DEBUG("Flow " << m_connId << ": " << "CRC OK. The segment will be sent to the decoder");
@@ -267,7 +268,11 @@ GhnPlcLlcFlow::CheckCrc (GhnBuffer &buffer, ConnId connId)
           state.push_back (WAIT_RETRANSMISSION_SEG_STATE);
         }
     };;
-  NS_LOG_UNCOND("CRC status (PER: " << 1 - crc.get_ratio() << ", BER: " << phym->GetActualBer() << "): " << crc.to_full_string());
+  auto per = 1 - crc.get_ratio ();
+  auto ber = phym->GetActualBer ();
+  auto path = "/home/tsokalo/workspace/ns-allinone-3.25/ns-3.25/data.txt";
+  if (buffer.size () > 20) ThrowToFile (std::to_string (per) + "\t" + std::to_string (ber), path);
+  NS_LOG_UNCOND("CRC status (PER: " << per << ", BER: " << ber << "): " << crc.to_full_string());
   return state;
 }
 std::deque<Ssn>

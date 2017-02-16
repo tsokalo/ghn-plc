@@ -16,6 +16,9 @@
 #include "ns3/ghn-plc-utilities.h"
 #include "ns3/ghn-plc-bit-loading-data.h"
 #include "ghn-plc-net-device.h"
+
+#include "comparison.h"
+
 NS_LOG_COMPONENT_DEFINE("GhnPlcBitLoading");
 
 namespace ns3
@@ -501,7 +504,7 @@ NcBlVarBatMap::CalcModulationAndCodingScheme ()
 
           m_mcs[src_id][dst_id].use_bat = true;
           m_mcs[src_id][dst_id].mt = NOMOD;
-          assert(m_desiredPer[src_id] > 0.00001);
+          assert(ncr::geq(m_desiredPer[src_id],MIN_PER_VAL));
           PbMapping pbm = PbMappingList::get_val (m_desiredPer[src_id]);
           std::cout << "Projected BER " << pbm.ber << " between " << (uint16_t)src_id << " and " << (uint16_t)dst_id << std::endl;
           m_mcs[src_id][dst_id].bat = CalculateBat (pbm.ber, *m_sinr[src_id][dst_id]);
