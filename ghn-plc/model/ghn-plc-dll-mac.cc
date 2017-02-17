@@ -26,7 +26,7 @@ GhnPlcDllMac::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::GhnPlcDllMac") .SetParent<Object> ()
 
-  .AddTraceSource ("MpduBitsLog", "Number of bits received in the MPDU", MakeTraceSourceAccessor (&GhnPlcDllMac::m_mpduBits),
+  .AddTraceSource ("MpduBitsLog", "Number of bits received in the MPDU", MakeTraceSourceAccessor (&GhnPlcDllMac::m_mpduBytes),
           "ns3::MpduBitsLog::TracedCallback");
   return tid;
 }
@@ -519,13 +519,13 @@ GhnPlcDllMacCsma::DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, c
         }
       else
         {
-          auto get_bits = [](GhnBuffer buffer)->uint32_t
+          auto get_bytes = [](GhnBuffer buffer)->uint32_t
             {
               uint32_t s = 0;
               for(auto p : buffer) s += p->GetSize();
               return s;
             };;
-          m_mpduBits (Simulator::Now ().GetMicroSeconds (), source.GetAsInt (), dest.GetAsInt (), flowId, get_bits (buffer));
+          m_mpduBytes (Simulator::Now ().GetMicroSeconds (), source.GetAsInt (), dest.GetAsInt (), flowId, get_bytes (buffer));
           //
           // the LLC layer decides if the ACK should be sent
           //

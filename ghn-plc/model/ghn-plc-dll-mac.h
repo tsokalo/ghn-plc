@@ -170,9 +170,9 @@ protected:
 
   std::vector<Ptr<FileAggregator> > m_aggr;
   //
-  // <double time in us> <destination ID> <source ID> <flow ID> <bits in MPDU>
+  // <double time in us> <destination ID> <source ID> <flow ID> <bytes in MPDU>
   //
-  TracedCallback<double, double, double, double, double> m_mpduBits;
+  TracedCallback<double, double, double, double, double> m_mpduBytes;
 
   std::string m_resDir;
 

@@ -41,7 +41,10 @@ GhnPlcLlcFlow::GetTypeId (void)
           MakeTraceSourceAccessor (&GhnPlcLlcFlow::m_llcRelayedLogTrace), "ns3::LlcRelayLog::TracedCallback")
 
   .AddTraceSource ("LlcTtlDroppedLog", "Received data by LLC but dropped because TTL expires",
-          MakeTraceSourceAccessor (&GhnPlcLlcFlow::m_llcTtlDroppedLogTrace), "ns3::LlcTtlDroppedLog::TracedCallback");
+          MakeTraceSourceAccessor (&GhnPlcLlcFlow::m_llcTtlDroppedLogTrace), "ns3::LlcTtlDroppedLog::TracedCallback")
+
+  .AddTraceSource ("LlcUncondedLog", "Uncoded symbols", MakeTraceSourceAccessor (&GhnPlcLlcFlow::m_llcUncondedLogTrace),
+          "ns3::LlcUncondedLog::TracedCallback");
   return tid;
 }
 
@@ -49,20 +52,18 @@ GhnPlcLlcFlow::GhnPlcLlcFlow ()
 {
   NS_LOG_FUNCTION(this);
 
-  uint8_t lssN = LSS_N_MAX;
   m_blockSize = GHN_BLKSZ_540;
   m_winConfSize = GHN_ACK_MAX_WINDOW_SIZE_DATA(m_blockSize);
   Time blockLifeTime = Seconds (1.0);
-  AckCompressType compType = NO_ACK_COMPRESS;
   m_llcFrameSeqNum = 0;
   m_rxBcSeqNum = 0;
 
-  m_txArq = new GhnPlcTxAckInfo (lssN, m_blockSize, m_winConfSize, blockLifeTime);
-  m_rxArq = new GhnPlcRxAckInfo (lssN, m_blockSize, m_winConfSize, compType, blockLifeTime);
+  m_txArq = tx_ack_ptr (new GhnPlcTxAckInfo (LSS_N_MAX, m_blockSize, m_winConfSize, blockLifeTime));
+  m_rxArq = rx_ack_ptr (new GhnPlcRxAckInfo (LSS_N_MAX, m_blockSize, m_winConfSize, NO_ACK_COMPRESS, blockLifeTime));
 
   GhnPlcLpduHeader header;
-  m_rxSegmenter = new GhnPlcSegmenter (m_blockSize - header.GetSerializedSize () - GHN_CRC_LENGTH);
-  m_txSegmenter = new GhnPlcSegmenter (m_blockSize - header.GetSerializedSize () - GHN_CRC_LENGTH);
+  m_rxSegmenter = segmenter_ptr (new GhnPlcSegmenter (m_blockSize - header.GetSerializedSize () - GHN_CRC_LENGTH));
+  m_txSegmenter = segmenter_ptr (new GhnPlcSegmenter (m_blockSize - header.GetSerializedSize () - GHN_CRC_LENGTH));
 
   NS_LOG_UNCOND("Creating original G.hn LLC flow");
 }
@@ -77,10 +78,6 @@ GhnPlcLlcFlow::SetConnId (ConnId connId)
 GhnPlcLlcFlow::~GhnPlcLlcFlow ()
 {
   NS_LOG_FUNCTION_NOARGS ();
-  DELETE_PTR(m_txArq);
-  DELETE_PTR(m_rxArq);
-  DELETE_PTR(m_rxSegmenter);
-  DELETE_PTR(m_txSegmenter);
 }
 
 void
@@ -758,6 +755,16 @@ GhnPlcLlcFlow::CreateLogger ()
   aggr->Set4dFormat ("%.0f\t%.0f\t%.0f\t%.0f");
   aggr->Enable ();
   TraceConnect ("LlcTtlDroppedLog", "LlcTtlDroppedLogContext", MakeCallback (&FileAggregator::Write4d, aggr));
+
+  m_aggr.push_back (
+          CreateObject<FileAggregator> (
+                  m_resDir + "llc_uncoded_" + std::to_string (m_dllMac->GetDllManagement ()->GetAddress ().GetAsInt ())
+                          + ".txt", FileAggregator::FORMATTED));
+  aggr = *(m_aggr.end () - 1);
+  aggr->Set3dFormat ("%.0f\t%.0f\t%.0f");
+  aggr->Enable ();
+  TraceConnect ("LlcUncondedLog", "LlcUncondedLogContext", MakeCallback (&FileAggregator::Write3d, aggr));
+
 }
 }
 } // namespace ns3

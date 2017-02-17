@@ -9,6 +9,8 @@
 #ifndef GHN_PLC_DLL_LLC_FLOW_H_
 #define GHN_PLC_DLL_LLC_FLOW_H_
 
+#include <memory>
+
 #include "ns3/object.h"
 #include "ns3/stats-module.h"
 
@@ -29,6 +31,11 @@ class GhnPlcLlcFlow : public Object
   typedef Callback<void,uint32_t> GenCallback;
 
 public:
+
+  typedef std::shared_ptr<GhnPlcRxAckInfo> rx_ack_ptr;
+  typedef std::shared_ptr<GhnPlcTxAckInfo> tx_ack_ptr;
+  typedef std::shared_ptr<GhnPlcSegmenter> segmenter_ptr;
+
   static TypeId
   GetTypeId (void);
   GhnPlcLlcFlow ();
@@ -123,11 +130,11 @@ protected:
   //
   SegGhnBuffer m_segmentBuffer;
 
-  GhnPlcTxAckInfo *m_txArq;
-  GhnPlcRxAckInfo *m_rxArq;
+  tx_ack_ptr m_txArq;
+  rx_ack_ptr m_rxArq;
 
-  GhnPlcSegmenter *m_rxSegmenter;
-  GhnPlcSegmenter *m_txSegmenter;
+  segmenter_ptr m_rxSegmenter;
+  segmenter_ptr m_txSegmenter;
 
   uint16_t m_blockSize;
   VirtSsn m_winConfSize;
@@ -155,6 +162,10 @@ protected:
   // <destination ID> <received from ID> <my ID> <LLC frame index>
   //
   TracedCallback<double, double, double, double> m_llcTtlDroppedLogTrace;
+  //
+  // <destination ID> <source ID> <LPDU index>
+  //
+  TracedCallback<double, double, double> m_llcUncondedLogTrace;
 
   std::string m_resDir;
 

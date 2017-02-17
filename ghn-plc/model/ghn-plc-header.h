@@ -555,7 +555,8 @@ typedef Callback<void, Callback<void, GhnBuffer, ConnIdentifier> , Callback<void
         void, GhnBuffer, ConnIdentifier> , Callback<void, GroupEncAckInfo, ConnIdentifier> , Callback<void, uint64_t> >
         ExternArqInputs;
 
-#define LSS_N_MAX       12
+#define LSS_N_MAX       15
+#define LSS_MAX         (1 << LSS_N_MAX)
 
 struct LlcLogs
 {

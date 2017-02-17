@@ -19,17 +19,18 @@ def configure(cfg):
     cfg.env.append_value("LINKFLAGS", ['-lClp', '-lClpSolver', '-lCoinUtils', '-lOsi', '-lOsiClp', '-lOsiCommonTests', '-L/home/tsokalo/workspace/coin-Clp/lib'])        
     cfg.env.append_value("LINKFLAGS", ['-lcpuid', '-lfifi', '-lfifi_no_dispatch', '-lgauge', '-lgtest', '-lsak', '-ltables', '-L/home/tsokalo/workspace/new-kodo-rlnc/kodo-rlnc/kodo_build'])      
     
+    cfg.env.append_value("LINKFLAGS", ['-lutils', '-L/home/tsokalo/workspace/SimpleNetSim/build/utils/utils/'])
+    cfg.env.append_value("LINKFLAGS", ['-lgalois-field', '-lgalois-field-element','-lgalois-field-polynomial', '-L/home/tsokalo/workspace/SimpleNetSim/build/galois-field/galois-field/'])
+    cfg.env.append_value("LINKFLAGS", ['-lccack', '-lmatrix-echelon','-lmatrix-operations', '-L/home/tsokalo/workspace/SimpleNetSim/build/ccack/ccack/'])
     cfg.env.append_value("LINKFLAGS", ['-lgraph','-llp-solver', '-L/home/tsokalo/workspace/SimpleNetSim/build/lp-solver/lp-solver/'])
     cfg.env.append_value("LINKFLAGS", ['-lcomm-net','-lcomm-node', '-L/home/tsokalo/workspace/SimpleNetSim/build/network/network/'])
-    cfg.env.append_value("LINKFLAGS", ['-lutils', '-L/home/tsokalo/workspace/SimpleNetSim/build/utils/utils/'])
     cfg.env.append_value("LINKFLAGS", ['-ltraffic-generator', '-L/home/tsokalo/workspace/SimpleNetSim/build/traffic/traffic/'])            
     cfg.env.append_value("LINKFLAGS", ['-lgod-view-routing-rules','-lnc-routing-rules', '-L/home/tsokalo/workspace/SimpleNetSim/build/routing-rules/routing-rules/'])
-    cfg.env.append_value("LINKFLAGS", ['-lccack', '-lmatrix-echelon','-lmatrix-operations', '-L/home/tsokalo/workspace/SimpleNetSim/build/ccack/ccack/'])
-    cfg.env.append_value("LINKFLAGS", ['-lgalois-field', '-lgalois-field-element','-lgalois-field-polynomial', '-L/home/tsokalo/workspace/SimpleNetSim/build/galois-field/galois-field/'])    
+
            
     cfg.env.append_value("LIB", ['Clp', 'ClpSolver', 'CoinUtils', 'Osi', 'OsiClp', 'OsiCommonTests'])
     cfg.env.append_value("LIB", ['cpuid', 'fifi', 'fifi_no_dispatch', 'gauge', 'gtest', 'sak', 'tables'])
-    cfg.env.append_value("LIB", ['graph','lp-solver','comm-net','comm-node','utils','traffic-generator','god-view-routing-rules','nc-routing-rules','ccack', 'matrix-echelon','matrix-operations','galois-field', 'galois-field-element','galois-field-polynomial'])  
+    cfg.env.append_value("LIB", ['utils','galois-field', 'galois-field-element','galois-field-polynomial','ccack', 'matrix-echelon','matrix-operations','graph','lp-solver','comm-net','comm-node','traffic-generator','god-view-routing-rules','nc-routing-rules'])  
    
     cfg.env.append_value('INCLUDES', ['/home/tsokalo/workspace/new-kodo-rlnc/kodo-rlnc/src',
     '/home/tsokalo/workspace/new-kodo-rlnc/kodo-rlnc/bundle_dependencies/allocate-7c9f51/1.0.0/src',
