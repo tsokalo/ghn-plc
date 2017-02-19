@@ -137,7 +137,7 @@ GhnPlcBitLoading::GetDataAmount (Time txTime, uint8_t src_id, uint8_t dst_id)
   double payloadSymbols = (txTime.GetInteger () - headerSymbDuration.GetInteger () - PLC_Preamble::GetDuration ().GetInteger ())
           / symbolDuration.GetInteger ();
 
-  NS_LOG_UNCOND(
+  NS_LOG_LOGIC(
           headerSymbDuration << " / " << PLC_Preamble::GetDuration () << " / " << (txTime.GetInteger () - headerSymbDuration.GetInteger () - PLC_Preamble::GetDuration ().GetInteger ()) << " / " << payloadSymbols << " / " << m_bitsPerSymbol[src_id][dst_id]);
 
   return payloadSymbols * m_bitsPerSymbol[src_id][dst_id] / 8 * ModToDouble(m_mcs.at (src_id).at(dst_id).ct);
@@ -616,13 +616,13 @@ NcBlVarBatMap::CalculateBat (double P_t, SpectrumValue sinr)
     }
 
   SpectrumValue CapacityPerHertz = GetCapacity (sinr_db, bat);
-//  NS_LOG_UNCOND ("(GHN module) BAT: " << bat);
+//  NS_LOG_LOGIC ("(GHN module) BAT: " << bat);
 //  std::cout << std::endl;
 //  std::cout << std::endl;
 //  std::cout << std::endl;
-//  NS_LOG_UNCOND ("(GHN module) Capacity per hertz: " << CapacityPerHertz);
+//  NS_LOG_LOGIC ("(GHN module) Capacity per hertz: " << CapacityPerHertz);
 
-  if (1)
+  if (0)
     {
       double projected = 0, loaded = 0;
 //      std::cout << "Tone Map: ";

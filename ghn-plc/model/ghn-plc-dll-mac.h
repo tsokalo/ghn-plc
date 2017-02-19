@@ -136,7 +136,7 @@ protected:
   GhnBuffer
   DisassembleMpdu (Ptr<Packet> mpdu);
   virtual void
-  ConfigurePhy (ConnId connId) = 0;
+  ConfigurePhy (SendTuple st) = 0;
   void
   SetState (GhnPlcCsmaNodeState s);
   GhnPlcCsmaNodeState
@@ -261,7 +261,7 @@ protected:
   void
   StartBackoff (void);
   void
-  ConfigurePhy (ConnId connId);
+  ConfigurePhy (SendTuple st);
 
   GhnPlcCcaRequestCallback m_ccaRequest;
   GhnPlcCcaCancelCallback m_ccaCancel;

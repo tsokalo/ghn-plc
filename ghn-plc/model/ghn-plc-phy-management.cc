@@ -420,7 +420,7 @@ GhnPlcPhyManagement::IsBlockSuccess ()
   std::binomial_distribution<uint32_t> m_binomDistr (bs / fc, 1 - ber);
   uint32_t gathered_bits_rand = m_binomDistr (m_gen);
 
-  NS_LOG_LOGIC(
+  NS_LOG_UNCOND(
           "Frame size: " << frame_size << ", FEC rate: " << fc << ", Sent bits: " << sent_bits << ", Gathered bits: " << gathered_bits);
   NS_LOG_LOGIC(
           "BER: " << ber << ", BS: " << bs << ", Gathered rand bits: " << gathered_bits_rand << ", ret: " << (gathered_bits_rand >= bs));

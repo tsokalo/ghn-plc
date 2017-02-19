@@ -220,7 +220,7 @@ GhnPlcTxAckInfo::MarkAckSegs (GroupEncAckInfo ackInfo, AckCompressType compType)
   m_lastContAck.clear ();
   while (m_rWinStart != ackInfo.winStart)
     {
-      NS_LOG_DEBUG("Segment with SSN: " << m_rWinStart << " and virt SSN: " << m_winStart << " belongs to continuously acknowledged");
+    NS_LOG_DEBUG("Segment with SSN: " << m_rWinStart << " and virt SSN: " << m_winStart << " belongs to continuously acknowledged");
       if (m_segs.at (m_winStart) != DONE_SEGMENT_STATE) numAcks++;
       m_segs.at (m_winStart) = DONE_SEGMENT_STATE;
       m_lastContAck.push_back (m_rWinStart);
@@ -233,13 +233,13 @@ GhnPlcTxAckInfo::MarkAckSegs (GroupEncAckInfo ackInfo, AckCompressType compType)
     {
       if (*ackInfo.details.begin ())
         {
-          NS_LOG_DEBUG("Segment with real SSN: " << VirtToRealSsn(virtSsn) << " and virt SSN: " << virtSsn << " is DONE");
+        NS_LOG_DEBUG("Segment with real SSN: " << VirtToRealSsn(virtSsn) << " and virt SSN: " << virtSsn << " is DONE");
           if (m_segs.at (virtSsn) != DONE_SEGMENT_STATE) numAcks++;
           m_segs.at (virtSsn) = DONE_SEGMENT_STATE;
         }
       else
         {
-          NS_LOG_DEBUG("Segment with real SSN: " << VirtToRealSsn(virtSsn) << " and virt SSN: " << virtSsn << " WAITS FOR ACK");
+        NS_LOG_DEBUG("Segment with real SSN: " << VirtToRealSsn(virtSsn) << " and virt SSN: " << virtSsn << " WAITS FOR ACK");
           m_segs.at (virtSsn) = WAIT_ACK_SEGMENT_STATE;
         }
       ackInfo.details.pop_front ();
@@ -253,6 +253,7 @@ GhnPlcTxAckInfo::MarkAckSegs (GroupEncAckInfo ackInfo, AckCompressType compType)
 
   return numAcks;
 }
+
 bool
 GhnPlcTxAckInfo::IsInRange (Ssn segindex)
 {
@@ -385,7 +386,7 @@ GhnPlcRxAckInfo::MarkRcvSegs (std::deque<Ssn> segsIndex, std::deque<SegmentState
         }
       else
         {
-          NS_LOG_DEBUG("Win start: " << m_winStart << ", real ssn: " << segsIndex.at (i) << ", virtual ssn: " << virtSsn << ": set to WAIT_RETRANSMISSION_SEG_STATE");
+        NS_LOG_DEBUG("Win start: " << m_winStart << ", real ssn: " << segsIndex.at (i) << ", virtual ssn: " << virtSsn << ": set to WAIT_RETRANSMISSION_SEG_STATE");
           m_segs.at (virtSsn) = WAIT_RETRANSMISSION_SEG_STATE;
         }
 

@@ -18,7 +18,8 @@
 
 namespace ns3
 {
-namespace ghn {
+namespace ghn
+{
 /*
  * *************************************************************
  *                 VERSIONS
@@ -523,10 +524,32 @@ struct GroupEncAckInfo
 {
   GroupEncAckInfo ()
   {
+    winStart = 0;
+    groupSize = 1;
+    numRcvSym = 0;
+    invalid = false;
+    details.clear ();
+    ncAckInfo.clear ();
   }
   GroupEncAckInfo (bool inv)
   {
     invalid = !inv;
+    winStart = 0;
+    groupSize = 1;
+    numRcvSym = 0;
+    details.clear ();
+    ncAckInfo.clear ();
+  }
+  GroupEncAckInfo (const GroupEncAckInfo &arg)
+  {
+    details.clear ();
+    details.insert (details.begin (), arg.details.begin (), arg.details.end ());
+    winStart = arg.winStart;
+    groupSize = arg.groupSize;
+    numRcvSym = arg.numRcvSym;
+    ncAckInfo.clear ();
+    ncAckInfo.insert (ncAckInfo.begin (), arg.ncAckInfo.begin (), arg.ncAckInfo.end ());
+    invalid = false;
   }
   GroupEncAckInfo&
   operator= (GroupEncAckInfo arg)
@@ -537,6 +560,15 @@ struct GroupEncAckInfo
     numRcvSym = arg.numRcvSym;
     ncAckInfo.swap (arg.ncAckInfo);
     return *this;
+  }
+
+  friend std::ostream&
+  operator<< (std::ostream& o, GroupEncAckInfo& m)
+  {
+    o << "[" << m.winStart << " / " << m.groupSize << " / " << m.numRcvSym << " / ";
+    for(auto a : m.details) o << a << " ";
+    o << "]";
+    return o;
   }
 
   bool invalid;
@@ -658,14 +690,7 @@ struct LlcLogs
 
 enum GhnPlcCsmaNodeState
 {
-  READY = 0,
-  BACKOFF = 1,
-  CCA = 2,
-  TX = 3,
-  RX = 4,
-  SEND_ACK = 5,
-  WAIT_ACK = 6,
-  GAP = 7
+  READY = 0, BACKOFF = 1, CCA = 2, TX = 3, RX = 4, SEND_ACK = 5, WAIT_ACK = 6, GAP = 7
 };
 }
 }

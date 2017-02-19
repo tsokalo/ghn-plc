@@ -117,7 +117,7 @@ GhnPlcDllMac::SendAck (ConnId connId)
 
   NS_ASSERT(!m_setMcsCallback.IsNull() && !m_setTxPsdCallback.IsNull());
 
-  NS_LOG_LOGIC ("ACK packet size: " << m_transPacket->GetSize () << ", connId: " << connId);
+  NS_LOG_UNCOND ("ACK packet size: " << m_transPacket->GetSize () << ", connId: " << connId);
 
   m_sentAck = true;
   SetState (SEND_ACK);
@@ -155,7 +155,7 @@ GhnPlcDllMac::StartTx (void)
   NS_LOG_FUNCTION (this);
   NS_LOG_DEBUG ("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
 
-  m_setTimeCallback(Simulator::Now ().GetMilliSeconds());
+  m_setTimeCallback (Simulator::Now ().GetMilliSeconds ());
 
   return DoStartTx ();
 }
@@ -334,14 +334,12 @@ GhnPlcDllMacCsma::DoNotifyTransmissionEnd (void)
 
   if (m_sentAck)
     {
-      assert(!m_allowCooperation);
       SetState (GAP);
       m_sentAck = false;
       m_lastEndTxEvent = Simulator::Schedule (MicroSeconds (GDOTHN_MIN_TIFG_DURATION), &GhnPlcDllMacCsma::EndTx, this);
     }
   else if (m_askedForAck)
     {
-      assert(!m_allowCooperation);
       SetState (WAIT_ACK);
       //      m_askedForAck = false;
       NS_LOG_DEBUG ("Wait for ACK");
@@ -363,13 +361,11 @@ GhnPlcDllMacCsma::DoNotifyTransmissionFailure (void)
   NS_LOG_DEBUG ("Flags: <sentAck> " << m_sentAck << " / <askedForAck> " << m_askedForAck << " / <isPacketZero> " << (m_transPacket == 0));
   if (m_sentAck)
     {
-      assert(!m_allowCooperation);
       NS_LOG_DEBUG ("No Ack retransmission after transmission failure");
       m_sentAck = false;
     }
   else if (m_askedForAck)
     {
-      assert(!m_allowCooperation);
       NS_LOG_DEBUG ("No Ack is waited after transmission failure");
       m_askedForAck = false;
     }
@@ -388,7 +384,7 @@ GhnPlcDllMacCsma::EndTx (void)
   NS_LOG_FUNCTION (this);
   NS_LOG_DEBUG ("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
 
-  NS_LOG_UNCOND("Simulation time: " << Simulator::Now () << ", Node " << (uint16_t)GetDllManagement()->GetAddress().GetAsInt() << " end TX");
+  NS_LOG_DEBUG("Simulation time: " << Simulator::Now () << ", Node " << (uint16_t)GetDllManagement()->GetAddress().GetAsInt() << " end TX");
   if (!m_dllMan->GetDllLlc ()->IsQueueEmpty ())
     {
       //increase backoff if not acknowledged
@@ -472,7 +468,7 @@ GhnPlcDllMacCsma::StartBackoff (void)
     {
       m_lastBackoffTime = m_backoff->GetBackoffTime ();
     }
-  NS_LOG_LOGIC (Simulator::Now() << " -> Start contention, backing off for " << m_lastBackoffTime);
+  NS_LOG_UNCOND (Simulator::Now() << " -> Start contention, backing off for " << m_lastBackoffTime);
   m_lastBackoffEvent = Simulator::Schedule (m_lastBackoffTime, &GhnPlcDllMacCsma::CcaRequest, this);
   NS_LOG_LOGIC ("Schedule backoff event with event id:" << m_lastBackoffEvent.GetUid ());
 }
@@ -537,7 +533,6 @@ GhnPlcDllMacCsma::DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, c
             }
           else
             {
-              assert(!m_allowCooperation);
               if (info.invalid == false)
                 {
                   m_transPacket = GroupEncAckInfoToPkt (info);
@@ -556,17 +551,16 @@ GhnPlcDllMacCsma::DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, c
     }
   case PHY_FRAME_ACK:
     {
-      assert(!m_allowCooperation);
       if (dest == m_dllMan->GetAddress ())
         {
           m_transPacket = 0;
           m_askedForAck = false;
-          NS_LOG_LOGIC ("GhnPlcDllMacCsma: Received my ACK.");
+          NS_LOG_UNCOND ("GhnPlcDllMacCsma: Received my ACK.");
           m_ncDllLlc->ReceiveAck (PktToGroupEncAckInfo (packet), connId);
         }
       else
         {
-          NS_LOG_LOGIC ("GhnPlcDllMacCsma: Received not my ACK.");
+          NS_LOG_UNCOND ("GhnPlcDllMacCsma: Received not my ACK.");
         }
       DoNotifyReceiptionEnd (MicroSeconds (GDOTHN_MIN_TIFG_DURATION));
       break;
@@ -600,7 +594,8 @@ GhnPlcDllMacCsma::DoStartTx (void)
     {
       m_sendTuple = m_ncDllLlc->SendDown ();
 
-      NS_LOG_DEBUG("Got buffer with size: " << m_sendTuple.get_buffer().size() << ", connId: " << m_sendTuple.get_conn_id());
+      NS_LOG_UNCOND("Node " << m_dllMan->GetAddress() << " TX buffer size: " << m_sendTuple.get_buffer().size()
+              << ", connId: " << m_sendTuple.get_conn_id() << ", next hop: " << m_sendTuple.GetNextHopAddress());
 
       m_transPacket = AssembleMpdu (m_sendTuple.get_buffer ());
 
@@ -613,12 +608,13 @@ GhnPlcDllMacCsma::DoStartTx (void)
       NS_ASSERT(m_sendTuple.get_buffer().size() != 0);
     }
   uint16_t fecBlockSize = m_phyMan->GetTxFecBlockSizeFromHeader () / 8;
+  ConnId connId = m_sendTuple.get_conn_id ();
 
-  if (m_sendTuple.get_conn_id ().dst != UanAddress::GetBroadcast ())
+  if (connId.dst != UanAddress::GetBroadcast ())
     {
       m_lastTxMulticastIndication = 0;
 
-      if (!m_allowCooperation)
+      if (!m_allowCooperation || connId.flowId == MANAGMENT_CONN_ID)
         {
           m_askedForAck = true;
           m_lastTxReplyRequired = 1;
@@ -638,16 +634,11 @@ GhnPlcDllMacCsma::DoStartTx (void)
       m_askedForAck = false;
       m_lastTxReplyRequired = 0;
       NS_LOG_LOGIC ("Send broadcast packet");
-    }auto rt = m_dllMan->GetRoutingTable ();
-  auto ba = UanAddress::GetBroadcast ();
-
-  m_lastTxSourceId = rt->GetIdByAddress (m_sendTuple.get_conn_id ().src);
-  m_destinationId = (m_sendTuple.get_conn_id ().dst == ba) ? ba.GetAsInt () : rt->GetIdByAddress (
-          m_sendTuple.get_conn_id ().dst);
+    }
 
   m_backoff->RecalculateCw (m_lastBackoffTime);
 
-  ConfigurePhy (m_sendTuple.get_conn_id ());
+  ConfigurePhy (m_sendTuple);
 
   return m_forwardDown (PHY_FRAME_MSG, m_transPacket);
 }
@@ -667,9 +658,17 @@ GhnPlcDllMacCsma::TriggerSend ()
     }
 }
 void
-GhnPlcDllMacCsma::ConfigurePhy (ConnId connId)
+GhnPlcDllMacCsma::ConfigurePhy (SendTuple st)
 {
   NS_ASSERT(!m_setMcsCallback.IsNull() && !m_setTxPsdCallback.IsNull());
+
+  auto connId = st.get_conn_id();
+  auto rt = m_dllMan->GetRoutingTable ();
+  auto bl = m_dllMan->GetBitLoadingTable ();
+  auto nh = st.GetNextHopAddress();
+
+  m_lastTxSourceId = rt->GetIdByAddress (connId.src);
+  m_destinationId = rt->GetIdByAddress (connId.dst);
 
   m_phyMan->SetTxMulticastIndication (m_lastTxMulticastIndication);
   m_phyMan->SetTxReplyRequired (m_lastTxReplyRequired);
@@ -678,22 +677,17 @@ GhnPlcDllMacCsma::ConfigurePhy (ConnId connId)
   m_phyMan->SetTxDestinationId (m_destinationId);
   m_phyMan->SetTxConnectionIdentifier (connId.flowId);
   m_phyMan->SetMcAckSlotsNumber (m_mpduSeqNum++);
-  auto bl = m_dllMan->GetBitLoadingTable ();
-  auto rt = m_dllMan->GetRoutingTable ();
-  uint32_t lId = m_destinationId;
-  uint32_t sId = m_lastTxSourceId;
-  uint32_t nextId = (lId == UanAddress::GetBroadcast ().GetAsInt ()) ? lId : rt->GetIdByAddress (rt->GetNextHopAddress (sId,
-          lId));
-  ModulationAndCodingScheme mcs (bl->GetModulationAndCodingScheme (sId, nextId));
+
+  uint32_t nextId = rt->GetIdByAddress (nh);
+  ModulationAndCodingScheme mcs (bl->GetModulationAndCodingScheme (m_lastTxSourceId, nextId));
   m_setMcsCallback (mcs);
 
-  NS_LOG_DEBUG("Setting MCS: " << mcs);
+  NS_LOG_UNCOND("Setting MCS: " << mcs);
   m_phyMan->SetTxPayloadFecRate (ConvertPlcRateToGhnRate (mcs.ct));
   m_phyMan->SetTxRepetitionsNumber (ENCODING_REPETITIONS_1);
 
-  m_dllMan->SetTxPsd (bl->GetTxPsd (sId, nextId));
-
-  m_setTxPsdCallback (bl->GetTxPsd (sId, nextId));
+  m_dllMan->SetTxPsd (bl->GetTxPsd (m_lastTxSourceId, nextId));
+  m_setTxPsdCallback (bl->GetTxPsd (m_lastTxSourceId, nextId));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

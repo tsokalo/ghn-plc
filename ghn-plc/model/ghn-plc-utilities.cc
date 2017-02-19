@@ -114,14 +114,16 @@ Ptr<Packet>
 GroupEncAckInfoToPkt (GroupEncAckInfo info)
 {
   std::stringstream ss;
-  ss << info.details.size () << DELIMITER;
-  for (auto d : info.details)
-    {
-      ss << d << DELIMITER;
-    };;
+
   ss << info.winStart << DELIMITER;
   ss << info.numRcvSym << DELIMITER;
   ss << info.invalid << DELIMITER;
+
+  ss << info.details.size () << DELIMITER;
+  for (auto d : info.details)
+    {
+      ss << (uint8_t)d << DELIMITER;
+    };;
 
   ss << info.ncAckInfo.size () << DELIMITER;
   for (auto inf : info.ncAckInfo)
@@ -131,21 +133,25 @@ GroupEncAckInfoToPkt (GroupEncAckInfo info)
       ss << inf.use << DELIMITER;
     };;
 
-  Ptr<Packet> ack = Create<Packet> ((uint8_t const*) ss.str ().c_str (), (uint32_t) ss.str ().length ());
-  uint32_t remainder = fmod (ack->GetSize (), GHN_BLKSZ_540);
-  if (remainder > 0) ack->AddPaddingAtEnd (GHN_BLKSZ_540 - remainder);
+  std::string str = ss.str ();
+  Ptr<Packet> ack = Create<Packet> ((uint8_t const*) str.c_str (), (uint32_t) str.size());
+  uint16_t num_blocks = ceil((double) ack->GetSize() / (double)GHN_BLKSZ_540);
+  ack->AddPaddingAtEnd (GHN_BLKSZ_540 * num_blocks - ack->GetSize ());
   return ack;
 }
 GroupEncAckInfo
 PktToGroupEncAckInfo (Ptr<Packet> packet)
 {
-  NS_ASSERT(fmod(packet->GetSize (), GHN_BLKSZ_540) == 0);
-  uint8_t *buffer = new uint8_t[packet->GetSize ()];
+  uint8_t *buffer = new uint8_t[packet->GetSize () + 1];
   int32_t copied = packet->CopyData (buffer, packet->GetSize ());
   assert(copied == packet->GetSize ());
   std::stringstream ss (std::string ((char*) buffer, copied));
 
   GroupEncAckInfo info;
+
+  ss >> info.winStart;
+  ss >> info.numRcvSym;
+  ss >> info.invalid;
 
   int16_t s = 0;
   ss >> s;
@@ -155,9 +161,6 @@ PktToGroupEncAckInfo (Ptr<Packet> packet)
       ss >> d;
       info.details.push_back ((bool) d);
     }
-  ss >> info.winStart;
-  ss >> info.numRcvSym;
-  ss >> info.invalid;
 
   ss >> s;
   while (s-- > 0)

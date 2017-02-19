@@ -99,6 +99,8 @@ public:
   }
   uint32_t GetIdByAddress(UanAddress address)
   {
+    if(address == UanAddress::GetBroadcast())return UanAddress::GetBroadcast().GetAsInt();
+
     NS_ASSERT_MSG(m_idByAddressMap.size() > address.GetAsInt(), m_idByAddressMap.size() << " " << (uint32_t)address.GetAsInt());
     return m_idByAddressMap[address];
   }

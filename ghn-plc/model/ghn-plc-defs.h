@@ -23,7 +23,8 @@
 
 namespace ns3
 {
-namespace ghn {
+namespace ghn
+{
 enum TopologyType
 {
   LINE_TOPOLOGY_TYPE, INHOME_TOPOLOGY_TYPE, STAR_TOPOLOGY_TYPE
@@ -176,17 +177,22 @@ public:
 
   }
 
-  SendTuple (GhnBuffer b, ConnId c) :
+  SendTuple (GhnBuffer b, ConnId c, UanAddress nextHopNode) :
     connId (c)
   {
     b.swap (this->b);
+    this->nextHopNode = nextHopNode;
   }
 
   SendTuple&
-  operator= (SendTuple arg)
+  operator= (SendTuple other)
   {
-    arg.get_buffer ().swap (b);
-    connId = arg.connId;
+    if (this != &other)
+      {
+        other.get_buffer ().swap (b);
+        connId = other.connId;
+        nextHopNode = other.nextHopNode;
+      }
     return *this;
   }
 
@@ -200,10 +206,15 @@ public:
   {
     return connId;
   }
+  UanAddress GetNextHopAddress()
+  {
+    return nextHopNode;
+  }
 private:
 
   GhnBuffer b;
   ConnId connId;
+  UanAddress nextHopNode;
 };
 }
 }

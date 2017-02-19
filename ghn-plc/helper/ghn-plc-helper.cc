@@ -415,9 +415,10 @@ GhnPlcHelper::CreateBitLoadingTable ()
     {
       for (nit = m_node_list.begin (); nit != m_node_list.end (); nit++)
         {
-          m_bitLoadingTable->GetObject<NcBlVarBatMap> ()->SetPer ((*nit)->GetVertexId (),
-                  m_sp.mutualPhyLlcCoding ? m_sp.per : MIN_PER_VAL);
-          std::cout << "Setting PER " << (m_sp.mutualPhyLlcCoding ? m_sp.per : MIN_PER_VAL) << " for node " << (*nit)->GetVertexId ()
+
+        auto per = m_sp.mutualPhyLlcCoding ? m_sp.per : MIN_PER_VAL;
+          m_bitLoadingTable->GetObject<NcBlVarBatMap> ()->SetPer ((*nit)->GetVertexId (), per);
+          std::cout << "Setting PER " << per << " for node " << (*nit)->GetVertexId ()
                   << std::endl;
         }
     }
@@ -428,7 +429,6 @@ GhnPlcHelper::CreateBitLoadingTable ()
 
   for (auto p : m_netdeviceMap)
     p.second->GetDllManagement ()->SetBitLoadingTable (m_bitLoadingTable);
-  ;
 
   m_bitLoadingTable->PrintBitLoadingTable ();
 }

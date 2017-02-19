@@ -5,20 +5,15 @@
  *  Created on: 25.08.2015
  *      Author: Stanislav Mudriievskyi <stanislav.mudriievskyi@tu-dresden.de>
  */
-
 #include <iostream>
-
 #include "ns3/log.h"
-
 #include "ghn-plc-llc-flow.h"
 #include "ghn-plc-llc-frame-header.h"
 #include "ghn-plc-lpdu-header.h"
 #include "ghn-plc-utilities.h"
 #include "ghn-plc-utilities.h"
 #include "ghn-plc-header.h"
-
 #include "bit-set.h"
-
 NS_LOG_COMPONENT_DEFINE("GhnPlcLlcFlow");
 
 namespace ns3
@@ -37,11 +32,11 @@ GhnPlcLlcFlow::GetTypeId (void)
   .AddTraceSource ("LlcRcvLog", "Received data by LLC counting only those packets destined to this node",
           MakeTraceSourceAccessor (&GhnPlcLlcFlow::m_llcRcvLogTrace), "ns3::LlcRcvLog::TracedCallback")
 
-  .AddTraceSource ("LlcRelayLog", "Received data by LLC, which is relayed",
-          MakeTraceSourceAccessor (&GhnPlcLlcFlow::m_llcRelayedLogTrace), "ns3::LlcRelayLog::TracedCallback")
+  .AddTraceSource ("LlcRelayLog", "Received data by LLC, which is relayed", MakeTraceSourceAccessor (
+          &GhnPlcLlcFlow::m_llcRelayedLogTrace), "ns3::LlcRelayLog::TracedCallback")
 
-  .AddTraceSource ("LlcTtlDroppedLog", "Received data by LLC but dropped because TTL expires",
-          MakeTraceSourceAccessor (&GhnPlcLlcFlow::m_llcTtlDroppedLogTrace), "ns3::LlcTtlDroppedLog::TracedCallback")
+  .AddTraceSource ("LlcTtlDroppedLog", "Received data by LLC but dropped because TTL expires", MakeTraceSourceAccessor (
+          &GhnPlcLlcFlow::m_llcTtlDroppedLogTrace), "ns3::LlcTtlDroppedLog::TracedCallback")
 
   .AddTraceSource ("LlcUncondedLog", "Uncoded symbols", MakeTraceSourceAccessor (&GhnPlcLlcFlow::m_llcUncondedLogTrace),
           "ns3::LlcUncondedLog::TracedCallback");
@@ -222,6 +217,8 @@ GhnPlcLlcFlow::Receive (GhnBuffer buffer, ConnId connId)
     }
 
   m_rxArq->GetAck (info);
+  NS_LOG_UNCOND("Flow " << m_connId << ": " << "Sent ACK: " << info);
+
   if (m_connId.dst == UanAddress::GetBroadcast ())
     {
       //
@@ -264,8 +261,7 @@ GhnPlcLlcFlow::CheckCrc (GhnBuffer &buffer, ConnId connId)
           NS_LOG_DEBUG("Flow " << m_connId << ": " << "CRC error. The segment is ignored: " << blockSuccess);
           state.push_back (WAIT_RETRANSMISSION_SEG_STATE);
         }
-    };;
-  auto per = 1 - crc.get_ratio ();
+    };; auto per = 1 - crc.get_ratio ();
   auto ber = phym->GetActualBer ();
   auto path = "/home/tsokalo/workspace/ns-allinone-3.25/ns-3.25/data.txt";
   if (buffer.size () > 20) ThrowToFile (std::to_string (per) + "\t" + std::to_string (ber), path);
@@ -502,7 +498,8 @@ GhnPlcLlcFlow::IsNewBcLlcFrame (NcSeqNum current)
   NS_LOG_FUNCTION(this << current << m_rxBcSeqNum);
   NcSeqNum old = m_rxBcSeqNum;
   NcSeqNum maxDistance = (1 << (sizeof(NcSeqNum) - 1));
-  return ((current > old && (current - old) < maxDistance) || (current < old && (old - current) < maxDistance) || current == old);
+  return ((current > old && (current - old) < maxDistance) || (current < old && (old - current) < maxDistance) || current
+          == old);
 }
 void
 GhnPlcLlcFlow::RemoveCrc (Ptr<Packet> packet)
@@ -514,7 +511,7 @@ void
 GhnPlcLlcFlow::ReceiveAck (GroupEncAckInfo info, ConnId connId)
 {
   NS_LOG_FUNCTION(this << connId);
-  //  PrintGroupEncAckInfo (info);
+  NS_LOG_UNCOND("Flow " << m_connId << ": " << "Received ACK: " << info);
 
   m_txArq->MarkAckSegs (info, NO_ACK_COMPRESS);
 
@@ -522,7 +519,7 @@ GhnPlcLlcFlow::ReceiveAck (GroupEncAckInfo info, ConnId connId)
   // get SSNs of all continuously correctly received segments, which are still present in the confirmed window
   //
   std::deque<Ssn> ssns = m_txArq->GetAckSsns ();
-  NS_LOG_DEBUG("Flow " << m_connId << ": " << "Number of continuously acknowledged segments: " << ssns.size());
+  NS_LOG_UNCOND("Flow " << m_connId << ": " << "Number of continuously acknowledged segments: " << ssns.size());
   //
   // form received buffer
   //
@@ -556,7 +553,7 @@ GhnPlcLlcFlow::SendDown ()
 {
   NS_LOG_FUNCTION(this << m_connId);
 
-  auto dll = m_dllMac->GetDllManagement ();
+auto  dll = m_dllMac->GetDllManagement ();
   auto src = dll->GetAddress ().GetAsInt ();
 
   NS_ASSERT_MSG(m_connId.src.GetAsInt () == src, m_connId << " " << dll->GetAddress ());
@@ -589,7 +586,7 @@ GhnPlcLlcFlow::SendDown ()
   //
   // create non-indexed segments
   //
-  if ((m_nonindexedSegs.size ()) * m_blockSize < dataLimit && (!m_frameBuffer.empty ()))
+  if ((m_nonindexedSegs.size () * m_blockSize < dataLimit) && (!m_frameBuffer.empty ()))
     {
       SegGhnBuffer addNonIndexed = m_txSegmenter->SegmentData (m_frameBuffer);
       m_nonindexedSegs.insert (m_nonindexedSegs.end (), addNonIndexed.begin (), addNonIndexed.end ());
@@ -608,7 +605,7 @@ GhnPlcLlcFlow::SendDown ()
   // index segments
   //
   std::deque<Ssn> newSentSegs;
-  while (freeBufSize != 0)
+  while (!(freeBufSize == 0 || m_nonindexedSegs.empty ()))
     {
       GhnPlcLpduHeader header;
       header.SetLfbo ((*m_nonindexedSegs.begin ()).posLlcFrame);
@@ -631,13 +628,13 @@ GhnPlcLlcFlow::SendDown ()
   std::deque<Ssn> ssns = m_txArq->GetMarkedForSend ();
   NS_ASSERT(newSentSegs.size () <= ssns.size ());
   uint64_t pushedData = 0;
-  NS_LOG_DEBUG(
+  NS_LOG_UNCOND(
           "Flow " << m_connId << ": " << "Number of SSNs from ARQ mechanism: " << ssns.size() << ", allowed data (bytes): " << dataAmount);
 
   //
   // TODO: calculate dataAmount with consideration of overhead from encoder below
   //
-  while (!ssns.empty () && pushedData < dataAmount)
+  while (!ssns.empty () && pushedData < dataAmount && (!m_indexedSegs.empty()))
     {
       GhnBuffer::iterator it = m_indexedSegs.begin ();
       while (it != m_indexedSegs.end ())
@@ -688,12 +685,12 @@ GhnPlcLlcFlow::SendDown ()
       m_nonindexedSegs.clear ();
       m_indexedSegs.clear ();
     }
-  return SendTuple (toTransmit, m_connId);
+  return SendTuple (toTransmit, m_connId, UanAddress(nh));
 }
 bool
 GhnPlcLlcFlow::IsQueueEmpty ()
 {
-  return m_frameBuffer.empty ();
+  return m_frameBuffer.empty () && m_nonindexedSegs.empty() && m_indexedSegs.empty();
 }
 
 Ptr<Packet>
@@ -714,10 +711,10 @@ GhnPlcLlcFlow::ConvertApduToLlcFrame (Ptr<Packet> apdu, ConnId connId, int16_t t
   if (ttl == -1)
     {
       ttl = (connId.dst == dll->GetBroadcast ()) ? dll->GetRoutingTable ()->GetMaxNumHops (connId.src) :
-              dll->GetRoutingTable ()->GetNumHops (connId.src, connId.dst);
+      dll->GetRoutingTable ()->GetNumHops (connId.src, connId.dst);
     }
   header.SetTtl (ttl);
-  header.SetTsmp (m_llcFrameSeqNum++);  //TSMP is used not as described in G.hn
+  header.SetTsmp (m_llcFrameSeqNum++); //TSMP is used not as described in G.hn
 
   //  std::cout << "NEW >>>:\t" << header.GetOrigNodeId () << "\t" << (uint32_t) source.GetAsInt () << "\t"
   //          << (uint32_t) dll->GetAddress ().GetAsInt () << "\tTTL: " << header.GetTtl () << "\tPktSize: " << apdu->GetSize ()
@@ -732,7 +729,7 @@ GhnPlcLlcFlow::CreateLogger ()
   m_aggr.push_back (
           CreateObject<FileAggregator> (
                   m_resDir + "llc_rcv_data_" + std::to_string (m_dllMac->GetDllManagement ()->GetAddress ().GetAsInt ())
-                          + ".txt", FileAggregator::FORMATTED));
+                  + ".txt", FileAggregator::FORMATTED));
   auto aggr = *(m_aggr.end () - 1);
   aggr->Set4dFormat ("%.0f\t%.0f\t%.0f\t%.0f");
   aggr->Enable ();
@@ -741,7 +738,7 @@ GhnPlcLlcFlow::CreateLogger ()
   m_aggr.push_back (
           CreateObject<FileAggregator> (
                   m_resDir + "llc_relayed_data_" + std::to_string (m_dllMac->GetDllManagement ()->GetAddress ().GetAsInt ())
-                          + ".txt", FileAggregator::FORMATTED));
+                  + ".txt", FileAggregator::FORMATTED));
   aggr = *(m_aggr.end () - 1);
   aggr->Set4dFormat ("%.0f\t%.0f\t%.0f\t%.0f");
   aggr->Enable ();
@@ -750,7 +747,7 @@ GhnPlcLlcFlow::CreateLogger ()
   m_aggr.push_back (
           CreateObject<FileAggregator> (
                   m_resDir + "llc_dropped_ttl_" + std::to_string (m_dllMac->GetDllManagement ()->GetAddress ().GetAsInt ())
-                          + ".txt", FileAggregator::FORMATTED));
+                  + ".txt", FileAggregator::FORMATTED));
   aggr = *(m_aggr.end () - 1);
   aggr->Set4dFormat ("%.0f\t%.0f\t%.0f\t%.0f");
   aggr->Enable ();
@@ -759,7 +756,7 @@ GhnPlcLlcFlow::CreateLogger ()
   m_aggr.push_back (
           CreateObject<FileAggregator> (
                   m_resDir + "llc_uncoded_" + std::to_string (m_dllMac->GetDllManagement ()->GetAddress ().GetAsInt ())
-                          + ".txt", FileAggregator::FORMATTED));
+                  + ".txt", FileAggregator::FORMATTED));
   aggr = *(m_aggr.end () - 1);
   aggr->Set3dFormat ("%.0f\t%.0f\t%.0f");
   aggr->Enable ();
