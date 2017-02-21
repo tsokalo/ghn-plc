@@ -38,6 +38,7 @@ GhnPlcLlcCodedFlow::~GhnPlcLlcCodedFlow ()
 {
 
 }
+
 void
 GhnPlcLlcCodedFlow::Configure (ncr::NodeType type, ncr::UanAddress dst, ncr::SimParameters sp)
 {
@@ -50,10 +51,10 @@ GhnPlcLlcCodedFlow::Configure (ncr::NodeType type, ncr::UanAddress dst, ncr::Sim
   auto coding_header_size = ncr::coder_overhead::get (m_sp.genSize);
   GhnPlcLpduHeader header;
   NS_LOG_UNCOND("LLC headers sizes: " << header.GetSerializedSize () << "\t" << GHN_CRC_LENGTH << "\t" << coding_header_size);
-  m_rxSegmenter = segmenter_ptr (new GhnPlcSegmenter (m_blockSize - header.GetSerializedSize () - GHN_CRC_LENGTH
-          - coding_header_size));
-  m_txSegmenter = segmenter_ptr (new GhnPlcSegmenter (m_blockSize - header.GetSerializedSize () - GHN_CRC_LENGTH
-          - coding_header_size));
+  m_rxSegmenter = segmenter_ptr (
+          new GhnPlcSegmenter (m_blockSize - header.GetSerializedSize () - GHN_CRC_LENGTH - coding_header_size));
+  m_txSegmenter = segmenter_ptr (
+          new GhnPlcSegmenter (m_blockSize - header.GetSerializedSize () - GHN_CRC_LENGTH - coding_header_size));
   m_sp.symbolSize = m_blockSize - GHN_CRC_LENGTH - coding_header_size;
   m_sp.numGen = (m_nodeType == ncr::SOURCE_NODE_TYPE) ? 2 * m_sp.numGen : m_sp.numGen;
 
@@ -72,8 +73,9 @@ GhnPlcLlcCodedFlow::Configure (ncr::NodeType type, ncr::UanAddress dst, ncr::Sim
       m_encQueue->set_notify_callback (std::bind (&GhnPlcLlcCodedFlow::NotifyRcvUp, this, std::placeholders::_1));
       m_getRank = std::bind (&ncr::encoder_queue::rank, m_encQueue, std::placeholders::_1);
       m_brr->SetGetRankCallback (m_getRank);
-      m_brr->SetCoderHelpInfoCallback (std::bind (&ncr::encoder_queue::get_help_info, m_encQueue, std::placeholders::_1,
-              std::placeholders::_2, std::placeholders::_3));
+      m_brr->SetCoderHelpInfoCallback (
+              std::bind (&ncr::encoder_queue::get_help_info, m_encQueue, std::placeholders::_1, std::placeholders::_2,
+                      std::placeholders::_3));
 
       SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " type " << m_nodeType);
     }
@@ -84,13 +86,18 @@ GhnPlcLlcCodedFlow::Configure (ncr::NodeType type, ncr::UanAddress dst, ncr::Sim
       m_brr->SetGetRankCallback (m_getRank);
       m_brr->SetGetCodingMatrixCallback (std::bind (&ncr::decoder_queue::get_coding_matrix, m_decQueue, std::placeholders::_1));
       m_brr->SetGetCoderInfoCallback (std::bind (&ncr::decoder_queue::get_coder_info, m_decQueue, std::placeholders::_1));
-      m_brr->SetCoderHelpInfoCallback (std::bind (&ncr::decoder_queue::get_help_info, m_decQueue, std::placeholders::_1,
-              std::placeholders::_2, std::placeholders::_3));
+      m_brr->SetCoderHelpInfoCallback (
+              std::bind (&ncr::decoder_queue::get_help_info, m_decQueue, std::placeholders::_1, std::placeholders::_2,
+                      std::placeholders::_3));
 
       SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " type " << m_nodeType);
     }
 }
-
+void
+GhnPlcLlcCodedFlow::SetNextHopVertex (UanAddress addr)
+{
+  m_brr->AddToCoalition (addr.GetAsInt ());
+}
 void
 GhnPlcLlcCodedFlow::NotifyRcvUp (ncr::GenId genId)
 {
@@ -116,7 +123,7 @@ GhnPlcLlcCodedFlow::SendDown ()
 
   if (m_nodeType != ncr::DESTINATION_NODE_TYPE)
     {
-      NS_LOG_UNCOND( "Node " << (uint16_t)src << ", Connection " << m_connId << " SEND!");
+      NS_LOG_UNCOND("Node " << (uint16_t)src << ", Connection " << m_connId << " SEND!");
 
       if (nh == -1) nh = rt->GetNextHopAddress (src, dst).GetAsInt ();
       NS_ASSERT(src != nh);
@@ -125,16 +132,16 @@ GhnPlcLlcCodedFlow::SendDown ()
       uint32_t pushedPkts = 0, maxPkts = floor ((double) dataAmount / (double) m_blockSize);
       assert(maxPkts > 0);
 
-      std::cout << "Using ANChOR next hop selecter: " << (m_sp.mutualPhyLlcCoding ? "TRUE" : "FALSE") << " -> "
-              << (uint16_t) nh << std::endl;
+      std::cout << "Using ANChOR next hop selecter: " << (m_sp.mutualPhyLlcCoding ? "TRUE" : "FALSE") << " -> " << (uint16_t) nh
+              << std::endl;
       NS_LOG_UNCOND(
               "Node " << m_id << ", Flow " << m_connId << ": " << "dataAmount: " << dataAmount << ", m_blockSize: " << m_blockSize);
 
-      PrepareForSend ( dataAmount);
+      PrepareForSend (dataAmount);
 
       if (m_nodeType == ncr::SOURCE_NODE_TYPE)
         {
-auto          maxBuf = m_brr->GetMaxAmountTxData ();
+          auto maxBuf = m_brr->GetMaxAmountTxData ();
           assert(maxBuf >= maxPkts);
           assert(!m_genCallback.IsNull ());
           //
@@ -151,17 +158,19 @@ auto          maxBuf = m_brr->GetMaxAmountTxData ();
           auto fspace = m_brr->GetAmountTxData ();
           while (fspace < maxPkts + m_sp.genSize)
             {
-              SIM_LOG(COMM_NODE_LOG,
-                      "Flow " << m_connId << ": generate more data, busy space: " << fspace << ", max pkts: " << maxPkts << ", frame buffer size: " << m_frameBuffer.size());
-              SIM_LOG(COMM_NODE_LOG,
+              SIM_LOG (COMM_NODE_LOG,
+                      "Flow " << m_connId << ": generate more data, busy space: " << fspace << ", max pkts: " << maxPkts
+                              << ", frame buffer size: " << m_frameBuffer.size ());
+              SIM_LOG (COMM_NODE_LOG,
                       "Flow " << m_connId << ": amount (bytes) " << (maxPkts + m_sp.genSize - fspace) * m_sp.symbolSize);
               m_genCallback ((maxPkts + m_sp.genSize - fspace) * m_sp.symbolSize);
               PrepareForSend (dataAmount);
               auto fspace_prev = fspace;
               fspace = m_brr->GetAmountTxData ();
             }
-          SIM_LOG(1,
-                  "Flow " << m_connId << ": busy space: " << fspace << ", max pkts: " << maxPkts << ", frame buffer size: " << m_frameBuffer.size());
+          SIM_LOG (1,
+                  "Flow " << m_connId << ": busy space: " << fspace << ", max pkts: " << maxPkts << ", frame buffer size: "
+                          << m_frameBuffer.size ());
         }
 
       assert(m_nodeType != ncr::DESTINATION_NODE_TYPE);
@@ -170,7 +179,7 @@ auto          maxBuf = m_brr->GetMaxAmountTxData ();
 
       if (plan.empty ())
         {
-          SIM_LOG(COMM_NODE_LOG, "Flow " << m_connId << ": " << "Sending the message with feedback only");
+          SIM_LOG (COMM_NODE_LOG, "Flow " << m_connId << ": " << "Sending the message with feedback only");
         }
 
       auto p_it = plan.begin_orig_order ();
@@ -182,7 +191,7 @@ auto          maxBuf = m_brr->GetMaxAmountTxData ();
           for (; i < n;)
             {
               auto contents =
-              (m_nodeType == ncr::SOURCE_NODE_TYPE) ? m_encQueue->get_coded (genId) : m_decQueue->get_coded (genId);
+                      (m_nodeType == ncr::SOURCE_NODE_TYPE) ? m_encQueue->get_coded (genId) : m_decQueue->get_coded (genId);
               //          header_value<local_msg_type>::append(contents, (local_msg_type)DATA_MSG_TYPE);
               auto pkt = Create<Packet> ((uint8_t const*) contents.data (), contents.size ());
               toTransmit.push_back (pkt);
@@ -201,7 +210,7 @@ auto          maxBuf = m_brr->GetMaxAmountTxData ();
         {
           if (pushedPkts != maxPkts)
             {
-              SIM_LOG(COMM_NODE_LOG, "Node " << m_id << " pushed pkts: " << pushedPkts << ", max pkts: " << maxPkts);
+              SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " pushed pkts: " << pushedPkts << ", max pkts: " << maxPkts);
             }
         }
 
@@ -210,9 +219,9 @@ auto          maxBuf = m_brr->GetMaxAmountTxData ();
     }
   else
     {
-      SIM_LOG(1, "Flow " << m_connId << ": " << "I am the destination. I can send the feedback only");
+      SIM_LOG (1, "Flow " << m_connId << ": " << "I am the destination. I can send the feedback only");
       nh = rt->GetNextHopAddress (src, m_connId.src).GetAsInt ();
-      m_brr->SetSendingRate (bt->GetNumEffBits (src, m_connId.src.GetAsInt()));
+      m_brr->SetSendingRate (bt->GetNumEffBits (src, m_connId.src.GetAsInt ()));
 
       auto hBuf = ConvertBrrHeaderToPkt (ncr::TxPlan ());
       toTransmit.insert (toTransmit.begin (), hBuf.begin (), hBuf.end ());
@@ -232,9 +241,9 @@ auto          maxBuf = m_brr->GetMaxAmountTxData ();
 
   m_drCalc.Update (toTransmit.size () * m_blockSize * 8);
 
-  SIM_LOG(COMM_NODE_LOG, "Node " << m_id << " Tx buffer size: " << toTransmit.size());
+  SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " Tx buffer size: " << toTransmit.size ());
 
-  return SendTuple (toTransmit, m_connId, UanAddress(nh));
+  return SendTuple (toTransmit, m_connId, UanAddress (nh));
 }
 void
 GhnPlcLlcCodedFlow::PrepareForSend (uint64_t dataAmount)
@@ -329,7 +338,7 @@ GhnPlcLlcCodedFlow::ConvertPktToBrrHeader (GhnBuffer &buffer, std::deque<Segment
   pkt->RemoveAtStart (1);
 
   for (uint16_t i = 1; i < n_bs; i++)
-  pkt->AddAtEnd (*(buffer.begin () + i));
+    pkt->AddAtEnd (*(buffer.begin () + i));
 
   buffer.erase (buffer.begin (), buffer.begin () + n_bs);
 
@@ -392,7 +401,7 @@ GhnPlcLlcCodedFlow::Receive (GhnBuffer buffer, ConnId connId)
   //
   // process data packets
   //
-  SIM_LOG(COMM_NODE_LOG, "Node " << m_id << " Rx buffer size: " << buffer.size() << ", Tx plan: " << header.h.txPlan);
+  SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " Rx buffer size: " << buffer.size () << ", Tx plan: " << header.h.txPlan);
   auto tx_it = header.h.txPlan.begin_orig_order ();
   auto it = state.begin ();
 
@@ -411,21 +420,49 @@ GhnPlcLlcCodedFlow::Receive (GhnBuffer buffer, ConnId connId)
       it++;
 
     }
+  //
+  // find if I am on the main path
+  //
+  auto dll = m_dllMac->GetDllManagement ();
+  auto src = header.h.addr;
+  auto dst = m_connId.dst.GetAsInt ();
+  auto rt = dll->GetRoutingTable ();
+  auto nh = rt->GetNextHopAddress (src, dst).GetAsInt ();
 
-  return GroupEncAckInfo ();
+  GroupEncAckInfo info;
+  if (m_id == nh)
+    {
+      NS_LOG_UNCOND("Connection: " << m_connId << ", Attaching ACK");
+      auto hBuf = ConvertBrrHeaderToPkt (ncr::TxPlan ());
+      info.brrFeedback.insert (info.brrFeedback.begin (), hBuf.begin (), hBuf.end ());
+    }
+  return info;
 }
 
 void
 GhnPlcLlcCodedFlow::ReceiveAck (GroupEncAckInfo info, ConnId connId)
 {
-  SIM_LOG_FUNC(COMM_NODE_LOG);
-  assert(0);
+  SIM_LOG_FUNC (COMM_NODE_LOG);
+
+  NS_LOG_UNCOND("Connection: " << m_connId << ", Processing ACK");
+
+  auto buffer = info.brrFeedback;
+  assert(!buffer.empty());
+
+  std::deque<SegmentState> state = CheckCrc (buffer, connId);
+  //
+   // process header
+   //
+   auto header = ConvertPktToBrrHeader (buffer, state);
+
+   m_brr->RcvHeaderInfo (header.h);
+   ProcessFeedback (header.f);
 }
 
 bool
 GhnPlcLlcCodedFlow::IsQueueEmpty ()
 {
-  SIM_LOG_FUNC(COMM_NODE_LOG);
+  SIM_LOG_FUNC (COMM_NODE_LOG);
 
   if (!m_frameBuffer.empty ()) return false;
 
@@ -556,20 +593,20 @@ GhnPlcLlcCodedFlow::ProcessDecoded (GhnBuffer buffer, ConnId connId)
 
 void
 GhnPlcLlcCodedFlow::ProcessRcvdPacket (std::vector<uint8_t> vec, bool crc, ncr::UanAddress addr, ncr::TxPlan::iterator item,
-      ConnId connId)
+        ConnId connId)
 {
   ncr::GenId genId = item->first;
 
   if (!crc)
     {
-      SIM_LOG(COMM_NODE_LOG, "Node " << m_id << " loosing segment");
+      SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " loosing segment");
       m_brr->UpdateLoss (genId, addr);
       return;
     }
 
   if (m_nodeType == ncr::SOURCE_NODE_TYPE) return;
 
-  SIM_LOG(COMM_NODE_LOG, "Node " << m_id << " receives packet from generation " << genId);
+  SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " receives packet from generation " << genId);
 
   auto rank_b = m_decQueue->rank (genId);
   m_decQueue->enque (vec, genId);
@@ -593,42 +630,42 @@ GhnPlcLlcCodedFlow::ProcessRcvdPacket (std::vector<uint8_t> vec, bool crc, ncr::
   //
   if (m_brr->MaySendNetDiscovery ())
     {
-      SIM_LOG(COMM_NODE_LOG, "Node " << m_id << " sends the network discovery message with maximum TTL");
+      SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " sends the network discovery message with maximum TTL");
 
       m_feedback = m_brr->GetNetDiscoveryInfo ();
 
     }
   else
     {
-      SIM_LOG(COMM_NODE_LOG, "Node " << m_id << " refuses to send the network discovery message");
+      SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " refuses to send the network discovery message");
 
       //
       // --->
       //
       if (m_brr->MaySendRetransRequest (m_decQueue->get_ranks (), addr, genId, item->second.all_prev_acked))
         {
-          SIM_LOG(COMM_NODE_LOG, "Node " << m_id << " sends the retransmission request");
+          SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " sends the retransmission request");
 
           m_feedback = m_brr->GetRetransRequestInfo ();
 
         }
       else
         {
-          SIM_LOG(COMM_NODE_LOG, "Node " << m_id << " refuses to send the retransmission request");
+          SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " refuses to send the retransmission request");
 
           //
           // --->
           //
           if (m_brr->MaySendFeedback ())
             {
-              SIM_LOG(COMM_NODE_LOG, "Node " << m_id << " sends the feedback");
+              SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " sends the feedback");
 
               m_feedback = m_brr->GetFeedbackInfo ();
 
             }
           else
             {
-              SIM_LOG(COMM_NODE_LOG, "Node " << m_id << " refuses to send the feedback");
+              SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " refuses to send the feedback");
             }
         }
     }
@@ -637,7 +674,7 @@ GhnPlcLlcCodedFlow::ProcessRcvdPacket (std::vector<uint8_t> vec, bool crc, ncr::
 void
 GhnPlcLlcCodedFlow::ProcessFeedback (ncr::FeedbackInfo f)
 {
-  SIM_LOG(1, "Node " << m_id << " receive feedback symbol");
+  SIM_LOG (1, "Node " << m_id << " receive feedback symbol");
   m_brr->RcvFeedbackInfo (f);
 
   if (f.ttl != 0)
@@ -653,7 +690,7 @@ GhnPlcLlcCodedFlow::ProcessFeedback (ncr::FeedbackInfo f)
     }
   else
     {
-      SIM_LOG(1, "Node " << m_id << " TTL has expired");
+      SIM_LOG (1, "Node " << m_id << " TTL has expired");
     }
 
 }
@@ -661,38 +698,38 @@ GhnPlcLlcCodedFlow::ProcessFeedback (ncr::FeedbackInfo f)
 void
 GhnPlcLlcCodedFlow::ProcessNetDiscovery (ncr::FeedbackInfo f)
 {
-  SIM_LOG(1, "Node " << m_id << " receive the network discovery message with TTL " << f.ttl);
+  SIM_LOG (1, "Node " << m_id << " receive the network discovery message with TTL " << f.ttl);
 
   if (m_brr->MaySendNetDiscovery (f.ttl))
     {
-      SIM_LOG(1, "Node " << m_id << " sends the network discovery message with TTL " << f.ttl - 1);
+      SIM_LOG (1, "Node " << m_id << " sends the network discovery message with TTL " << f.ttl - 1);
       m_feedback = m_brr->GetNetDiscoveryInfo (f.ttl - 1);
     }
   else
     {
-      SIM_LOG(1, "Node " << m_id << " refuses to send the network discovery message");
+      SIM_LOG (1, "Node " << m_id << " refuses to send the network discovery message");
     }
 }
 void
 GhnPlcLlcCodedFlow::ProcessRetransRequest (ncr::FeedbackInfo f)
 {
-  SIM_LOG(COMM_NODE_LOG, "Node " << m_id << " processing retransission request");
+  SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " processing retransission request");
 
   if (m_brr->ProcessRetransRequest (f))
     {
       if (m_nodeType != ncr::SOURCE_NODE_TYPE)
         {
-          SIM_LOG(COMM_NODE_LOG, "Node " << m_id << " forward retransmission request. TTL " << f.ttl);
+          SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " forward retransmission request. TTL " << f.ttl);
           m_feedback = m_brr->GetRetransRequestInfo (f.ttl - 1);
         }
       else
         {
-          SIM_LOG(COMM_NODE_LOG, "Node " << m_id << ". The source does not forward retransmission requests");
+          SIM_LOG (COMM_NODE_LOG, "Node " << m_id << ". The source does not forward retransmission requests");
         }
     }
   else
     {
-      SIM_LOG(COMM_NODE_LOG, "Node " << m_id << ". Retransmission request is either not set or I should not forward it");
+      SIM_LOG (COMM_NODE_LOG, "Node " << m_id << ". Retransmission request is either not set or I should not forward it");
     }
 
 }

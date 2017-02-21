@@ -34,22 +34,24 @@ GhnPlcHelper::GetTypeId (void)
 }
 
 GhnPlcHelper::GhnPlcHelper (Ptr<const SpectrumModel> sm, Ptr<SpectrumValue> txPsd, PLC_NodeList& deviceNodes) :
-        m_spectrum_model (sm), m_txPsd (txPsd), m_node_list (deviceNodes)
-{
-  // Modulation and Coding Schemes
-  m_header_mcs = ModulationAndCodingScheme (BPSK, CODING_RATE_1_2, 0);
-  m_payload_mcs = ModulationAndCodingScheme (BPSK, CODING_RATE_1_2, 0);
+m_spectrum_model (sm), m_txPsd (txPsd), m_node_list (deviceNodes)
+  {
+    // Modulation and Coding Schemes
+    m_header_mcs = ModulationAndCodingScheme (BPSK, CODING_RATE_1_2, 0);
+    m_payload_mcs = ModulationAndCodingScheme (BPSK, CODING_RATE_1_2, 0);
 
-  // Default phy model to be used
-  m_phyTid = GhnPlcPhyPmdHalfD::GetTypeId ();
-  // Default mac model to be used
-  m_macTid = GhnPlcDllMacCsma::GetTypeId ();
-  m_bitLoadingTid = NcBlVarTxPsd::GetTypeId ();
+    // Default phy model to be used
+    m_phyTid = GhnPlcPhyPmdHalfD::GetTypeId ();
+    // Default mac model to be used
+    m_macTid = GhnPlcDllMacCsma::GetTypeId ();
+    m_bitLoadingTid = NcBlVarTxPsd::GetTypeId ();
 
-  // Create ns3::Node for this NetDevice by default
-  m_create_nodes = true;
-  m_allowCooperation = false;
-}
+    // Create ns3::Node for this NetDevice by default
+    m_create_nodes = true;
+    m_allowCooperation = false;
+    m_stickToMainPath = false;
+    m_immediateFeedback = true;
+  }
 GhnPlcHelper::GhnPlcHelper (BandPlanType bandplan)
 {
   m_bandplan = bandplan;
@@ -72,6 +74,8 @@ GhnPlcHelper::GhnPlcHelper (BandPlanType bandplan)
   // Create ns3::Node for this NetDevice by default
   m_create_nodes = true;
   m_allowCooperation = false;
+  m_stickToMainPath = false;
+  m_immediateFeedback = true;
 }
 
 AddressMap
@@ -285,6 +289,7 @@ GhnPlcHelper::Setup (void)
       dllManager->GetDllMac ()->SetMaxCw (m_maxCwSize);
       dllManager->GetDllMac ()->SetBackoffSlotDuration (NanoSeconds (GDOTHN_IST));
       dllManager->GetDllMac ()->AllowCooperation (m_allowCooperation);
+      dllManager->GetDllMac ()->SetImmediateFeedback(m_immediateFeedback);
 
       if (m_macTid == GhnPlcDllMacCsma::GetTypeId ())
         {
@@ -416,10 +421,9 @@ GhnPlcHelper::CreateBitLoadingTable ()
       for (nit = m_node_list.begin (); nit != m_node_list.end (); nit++)
         {
 
-        auto per = m_sp.mutualPhyLlcCoding ? m_sp.per : MIN_PER_VAL;
+          auto per = m_sp.mutualPhyLlcCoding ? m_sp.per : MIN_PER_VAL;
           m_bitLoadingTable->GetObject<NcBlVarBatMap> ()->SetPer ((*nit)->GetVertexId (), per);
-          std::cout << "Setting PER " << per << " for node " << (*nit)->GetVertexId ()
-                  << std::endl;
+          std::cout << "Setting PER " << per << " for node " << (*nit)->GetVertexId () << std::endl;
         }
     }
 
@@ -622,6 +626,15 @@ GhnPlcHelper::CreateFlow (ConnId connId, Ptr<GhnPlcDllMacCsma> mac, Ptr<GhnPlcDl
       flow_o->SetGenCallback (cb);
       flow_o->Configure (type, connId.dst.GetAsInt (), m_sp);
 
+      if (m_stickToMainPath)
+        {
+          auto dll = mac->GetDllManagement ();
+          auto rt = dll->GetRoutingTable ();
+          auto nh = rt->GetNextHopAddress (connId.src, connId.dst);
+
+          flow_o->SetNextHopVertex (nh);
+        }
+
       m_flowStack.push_back (flow_o);
 
       return flow_i;
@@ -666,6 +679,16 @@ void
 GhnPlcHelper::AllowCooperation (bool v)
 {
   m_allowCooperation = v;
+}
+void
+GhnPlcHelper::StickToMainPath (bool v)
+{
+  m_stickToMainPath = v;
+}
+void
+GhnPlcHelper::SetImmediateFeedback(bool v)
+{
+  m_immediateFeedback = v;
 }
 void
 GhnPlcHelper::SetAppMap (std::map<UanAddress, Ptr<Application> > appMap)

@@ -50,6 +50,8 @@ public:
 
   void
   AllowCooperation (bool v = true);
+  void
+  SetImmediateFeedback (bool v = true);
 
   void
   SetDllLlc (Ptr<GhnPlcDllLlc> ncDllLlc);
@@ -164,6 +166,7 @@ protected:
   GhnPlcCsmaNodeState m_nodeState;
 
   bool m_allowCooperation;
+  bool m_immediateFeedback;
 
   SetMcsCallback m_setMcsCallback;
   SetTxPsdCallback m_setTxPsdCallback;

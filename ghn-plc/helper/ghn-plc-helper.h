@@ -155,6 +155,11 @@ public:
   void
   AllowCooperation (bool v = true);
   void
+  StickToMainPath(bool v = true);
+  void
+  SetImmediateFeedback(bool v = true);
+
+  void
   SetAppMap(std::map<UanAddress, Ptr<Application> > appMap);
 
 protected:
@@ -195,6 +200,8 @@ protected:
   Ptr<GhnPlcStats> m_ncStats;
   ncr::SimParameters m_sp;
   bool m_allowCooperation;
+  bool m_stickToMainPath;
+  bool m_immediateFeedback;
 
   AddressMap m_addressMap;
 

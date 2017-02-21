@@ -62,6 +62,8 @@ public:
   IsQueueEmpty ();
   void
   SetLogCallback (add_log_func addLog);
+  void
+  SetNextHopVertex(UanAddress addr);
 
 private:
 

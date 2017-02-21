@@ -505,9 +505,9 @@ struct TestParameters
   Ssn winConfSize;
   double per;
   uint64_t llcBufferLength;
-  Callback<void, Ptr<Packet> , ConnIdentifier> rcvX1RefPointReport;
-  Callback<void, Ptr<Packet> , ConnIdentifier> inIndexedTrace;
-  Callback<void, Ptr<Packet> , ConnIdentifier> outIndexedTrace;
+  Callback<void, Ptr<Packet>, ConnIdentifier> rcvX1RefPointReport;
+  Callback<void, Ptr<Packet>, ConnIdentifier> inIndexedTrace;
+  Callback<void, Ptr<Packet>, ConnIdentifier> outIndexedTrace;
 };
 
 #define WITH_NC 1
@@ -515,8 +515,8 @@ struct TestParameters
 struct NcAckInfoItem
 {
   uint16_t groupId;
-  uint16_t rcv;// number of correctly received packets
-  uint16_t use;// number of useful correctly received packets
+  uint16_t rcv; // number of correctly received packets
+  uint16_t use; // number of useful correctly received packets
 };
 typedef std::deque<NcAckInfoItem> NcAckInfo;
 
@@ -530,6 +530,7 @@ struct GroupEncAckInfo
     invalid = false;
     details.clear ();
     ncAckInfo.clear ();
+    brrFeedback.clear ();
   }
   GroupEncAckInfo (bool inv)
   {
@@ -539,6 +540,7 @@ struct GroupEncAckInfo
     numRcvSym = 0;
     details.clear ();
     ncAckInfo.clear ();
+    brrFeedback.clear ();
   }
   GroupEncAckInfo (const GroupEncAckInfo &arg)
   {
@@ -549,16 +551,22 @@ struct GroupEncAckInfo
     numRcvSym = arg.numRcvSym;
     ncAckInfo.clear ();
     ncAckInfo.insert (ncAckInfo.begin (), arg.ncAckInfo.begin (), arg.ncAckInfo.end ());
+    brrFeedback.clear ();
+    brrFeedback.insert (brrFeedback.begin (), arg.brrFeedback.begin (), arg.brrFeedback.end ());
     invalid = false;
   }
   GroupEncAckInfo&
   operator= (GroupEncAckInfo arg)
   {
-    details.swap (arg.details);
+    details.clear ();
+    details.insert (details.begin (), arg.details.begin (), arg.details.end ());
     winStart = arg.winStart;
     groupSize = arg.groupSize;
     numRcvSym = arg.numRcvSym;
-    ncAckInfo.swap (arg.ncAckInfo);
+    ncAckInfo.clear ();
+    ncAckInfo.insert (ncAckInfo.begin (), arg.ncAckInfo.begin (), arg.ncAckInfo.end ());
+    brrFeedback.clear ();
+    brrFeedback.insert (brrFeedback.begin (), arg.brrFeedback.begin (), arg.brrFeedback.end ());
     return *this;
   }
 
@@ -566,7 +574,9 @@ struct GroupEncAckInfo
   operator<< (std::ostream& o, GroupEncAckInfo& m)
   {
     o << "[" << m.winStart << " / " << m.groupSize << " / " << m.numRcvSym << " / ";
-    for(auto a : m.details) o << a << " ";
+    for (auto a : m.details)
+      o << a << " ";
+    o << " / " << m.brrFeedback.size();
     o << "]";
     return o;
   }
@@ -578,14 +588,14 @@ struct GroupEncAckInfo
   uint16_t groupSize;
   VirtSsn numRcvSym;
 
+  GhnBuffer brrFeedback;
   NcAckInfo ncAckInfo;
 };
 
-typedef Callback<void, Callback<void, GhnBuffer, ConnIdentifier> , Callback<void, GhnBuffer, ConnIdentifier> , Callback<void,
-        GroupEncAckInfo, ConnIdentifier> , Callback<void, GroupEncAckInfo, ConnIdentifier> > ExternArqOutputs;
-typedef Callback<void, Callback<void, GhnBuffer, ConnIdentifier> , Callback<void, GroupEncAckInfo, ConnIdentifier> , Callback<
-        void, GhnBuffer, ConnIdentifier> , Callback<void, GroupEncAckInfo, ConnIdentifier> , Callback<void, uint64_t> >
-        ExternArqInputs;
+typedef Callback<void, Callback<void, GhnBuffer, ConnIdentifier>, Callback<void, GhnBuffer, ConnIdentifier>,
+        Callback<void, GroupEncAckInfo, ConnIdentifier>, Callback<void, GroupEncAckInfo, ConnIdentifier> > ExternArqOutputs;
+typedef Callback<void, Callback<void, GhnBuffer, ConnIdentifier>, Callback<void, GroupEncAckInfo, ConnIdentifier>,
+        Callback<void, GhnBuffer, ConnIdentifier>, Callback<void, GroupEncAckInfo, ConnIdentifier>, Callback<void, uint64_t> > ExternArqInputs;
 
 #define LSS_N_MAX       15
 #define LSS_MAX         (1 << LSS_N_MAX)

@@ -11,20 +11,20 @@
 #include "ghn-plc-dll-management.h"
 #include "ghn-plc-utilities.h"
 #include "ghn-plc-dll-mac.h"
-NS_LOG_COMPONENT_DEFINE ("GhnPlcDllMac");
+NS_LOG_COMPONENT_DEFINE("GhnPlcDllMac");
 
 namespace ns3
 {
 namespace ghn
 {
 /////////////////////////////////////////////////////////////////////////////////////////////////
-NS_OBJECT_ENSURE_REGISTERED (GhnPlcDllMac);
+NS_OBJECT_ENSURE_REGISTERED(GhnPlcDllMac);
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 TypeId
 GhnPlcDllMac::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::GhnPlcDllMac") .SetParent<Object> ()
+  static TypeId tid = TypeId ("ns3::GhnPlcDllMac").SetParent<Object> ()
 
   .AddTraceSource ("MpduBitsLog", "Number of bits received in the MPDU", MakeTraceSourceAccessor (&GhnPlcDllMac::m_mpduBytes),
           "ns3::MpduBitsLog::TracedCallback");
@@ -33,7 +33,7 @@ GhnPlcDllMac::GetTypeId (void)
 
 GhnPlcDllMac::GhnPlcDllMac ()
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
   m_txAllowed = true;
   m_askedForAck = false;
   m_sentAck = false;
@@ -41,6 +41,7 @@ GhnPlcDllMac::GhnPlcDllMac ()
   m_nodeState = READY;
   m_blockSize = GHN_BLKSZ_540;
   m_allowCooperation = false;
+  m_immediateFeedback = true;
 }
 
 GhnPlcDllMac::~GhnPlcDllMac ()
@@ -53,6 +54,12 @@ GhnPlcDllMac::AllowCooperation (bool v)
 {
   m_allowCooperation = v;
 }
+void
+GhnPlcDllMac::SetImmediateFeedback (bool v)
+{
+  m_immediateFeedback = v;
+}
+
 void
 GhnPlcDllMac::SetPhyManagement (Ptr<GhnPlcPhyManagement> ghnPhyManagement)
 {
@@ -68,7 +75,7 @@ GhnPlcDllMac::GetPhyManagement (void)
 void
 GhnPlcDllMac::SetDllManagement (Ptr<GhnPlcDllManagement> ncDllManagement)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
   m_dllMan = ncDllManagement;
 }
 
@@ -105,19 +112,19 @@ GhnPlcDllMac::SetLpduForwardUpCallback (LpduForwardUpCallback cb)
 void
 GhnPlcDllMac::SetMacCycleBegin (Time macBegin)
 {
-  NS_LOG_FUNCTION (this);
-  NS_LOG_DEBUG ("MAC cycle begin: " << macBegin << " ns");
+  NS_LOG_FUNCTION(this);
+  NS_LOG_DEBUG("MAC cycle begin: " << macBegin << " ns");
   m_macBegin = macBegin;
 }
 
 bool
 GhnPlcDllMac::SendAck (ConnId connId)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
 
-  NS_ASSERT(!m_setMcsCallback.IsNull() && !m_setTxPsdCallback.IsNull());
+  NS_ASSERT(!m_setMcsCallback.IsNull () && !m_setTxPsdCallback.IsNull ());
 
-  NS_LOG_UNCOND ("ACK packet size: " << m_transPacket->GetSize () << ", connId: " << connId);
+  NS_LOG_UNCOND("ACK packet size: " << m_transPacket->GetSize () << ", connId: " << connId);
 
   m_sentAck = true;
   SetState (SEND_ACK);
@@ -152,8 +159,8 @@ GhnPlcDllMac::SendAck (ConnId connId)
 bool
 GhnPlcDllMac::StartTx (void)
 {
-  NS_LOG_FUNCTION (this);
-  NS_LOG_DEBUG ("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
+  NS_LOG_FUNCTION(this);
+  NS_LOG_DEBUG("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
 
   m_setTimeCallback (Simulator::Now ().GetMilliSeconds ());
 
@@ -163,8 +170,8 @@ GhnPlcDllMac::StartTx (void)
 void
 GhnPlcDllMac::NotifyTransmissionEnd (void)
 {
-  NS_LOG_FUNCTION (this);
-  NS_LOG_DEBUG ("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
+  NS_LOG_FUNCTION(this);
+  NS_LOG_DEBUG("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
 
   DoNotifyTransmissionEnd ();
 }
@@ -173,8 +180,8 @@ bool
 GhnPlcDllMac::Receive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, const UanAddress& source, const UanAddress& dest)
 {
   m_blockSize = GHN_BLKSZ_540;
-  NS_LOG_FUNCTION (this);
-  NS_LOG_LOGIC ("Packet size: " << packet->GetSize ());
+  NS_LOG_FUNCTION(this);
+  NS_LOG_LOGIC("Packet size: " << packet->GetSize ());
 
   switch (frameType)
     {
@@ -200,7 +207,7 @@ GhnPlcDllMac::Receive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, const U
     break;
   case PHY_FRAME_ACTMG:
     break;
-  case PHY_FRAME_FTE://should not be used in this simulation (is only for new/extended frame types)
+  case PHY_FRAME_FTE: //should not be used in this simulation (is only for new/extended frame types)
     break;
     }
 
@@ -222,15 +229,15 @@ GhnPlcDllMac::AssembleMpdu (GhnBuffer buffer)
 GhnBuffer
 GhnPlcDllMac::DisassembleMpdu (Ptr<Packet> mpdu)
 {
-  NS_LOG_FUNCTION (this << mpdu->GetSize());
-  NS_ASSERT(mpdu->GetSize() % m_blockSize == 0 || mpdu->GetSize() % m_blockSize == m_blockSize);
+  NS_LOG_FUNCTION(this << mpdu->GetSize());
+  NS_ASSERT(mpdu->GetSize () % m_blockSize == 0 || mpdu->GetSize () % m_blockSize == m_blockSize);
 
   GhnBuffer buffer;
 
   while (mpdu->GetSize () != 0)
     {
       NS_LOG_DEBUG("Adding the segment: " << 0 << " " << m_blockSize);
-      NS_ASSERT(mpdu->GetSize() >= m_blockSize);
+      NS_ASSERT(mpdu->GetSize () >= m_blockSize);
       buffer.push_back ((mpdu->GetSize () == m_blockSize) ? mpdu : mpdu->CreateFragment (0, m_blockSize));
       if (mpdu->GetSize () == m_blockSize) break;
       mpdu->RemoveAtStart (m_blockSize);
@@ -247,8 +254,10 @@ GhnPlcDllMac::SetState (GhnPlcCsmaNodeState s)
 void
 GhnPlcDllMac::CreateLogger ()
 {
-  m_aggr.push_back (CreateObject<FileAggregator> (m_resDir + "mac_rcv_bits_" + std::to_string (
-          m_dllMan->GetAddress ().GetAsInt ()) + ".txt", FileAggregator::FORMATTED));
+  m_aggr.push_back (
+          CreateObject<FileAggregator> (
+                  m_resDir + "mac_rcv_bits_" + std::to_string (m_dllMan->GetAddress ().GetAsInt ()) + ".txt",
+                  FileAggregator::FORMATTED));
   auto aggr = *(m_aggr.end () - 1);
   aggr->Set5dFormat ("%.0f\t%.0f\t%.0f\t%.0f\t%.0f");
   aggr->Enable ();
@@ -256,19 +265,19 @@ GhnPlcDllMac::CreateLogger ()
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-NS_OBJECT_ENSURE_REGISTERED (GhnPlcDllMacCsma);
+NS_OBJECT_ENSURE_REGISTERED(GhnPlcDllMacCsma);
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 TypeId
 GhnPlcDllMacCsma::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::GhnPlcDllMacCsma") .SetParent<GhnPlcDllMac> () .AddConstructor<GhnPlcDllMacCsma> ();
+  static TypeId tid = TypeId ("ns3::GhnPlcDllMacCsma").SetParent<GhnPlcDllMac> ().AddConstructor<GhnPlcDllMacCsma> ();
   return tid;
 }
 
 GhnPlcDllMacCsma::GhnPlcDllMacCsma ()
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
   m_backoff = CreateObject<GhnPlcMacBackoff> ();
   m_mpduSeqNum = 0;
   m_uniformVar = CreateObject<UniformRandomVariable> ();
@@ -285,24 +294,24 @@ GhnPlcDllMacCsma::~GhnPlcDllMacCsma ()
 void
 GhnPlcDllMacCsma::SetCcaRequestCallback (GhnPlcCcaRequestCallback c)
 {
-  NS_LOG_FUNCTION (this);
-  NS_LOG_DEBUG ("Simulation time: " << Simulator::Now ());
+  NS_LOG_FUNCTION(this);
+  NS_LOG_DEBUG("Simulation time: " << Simulator::Now ());
   m_ccaRequest = c;
 }
 
 void
 GhnPlcDllMacCsma::SetCcaCancelCallback (GhnPlcCcaCancelCallback c)
 {
-  NS_LOG_FUNCTION (this);
-  NS_LOG_DEBUG ("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
+  NS_LOG_FUNCTION(this);
+  NS_LOG_DEBUG("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
   m_ccaCancel = c;
 }
 
 void
 GhnPlcDllMacCsma::CcaRequest (void)
 {
-  NS_LOG_FUNCTION (this);
-  NS_LOG_DEBUG ("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
+  NS_LOG_FUNCTION(this);
+  NS_LOG_DEBUG("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
   SetState (CCA);
   m_ccaRequest ();
 }
@@ -310,17 +319,17 @@ GhnPlcDllMacCsma::CcaRequest (void)
 void
 GhnPlcDllMacCsma::CcaConfirm (PLC_PhyCcaResult status)
 {
-  NS_LOG_FUNCTION (this);
-  NS_LOG_LOGIC (Simulator::Now () << " -> CcaConfirm");
+  NS_LOG_FUNCTION(this);
+  NS_LOG_LOGIC(Simulator::Now () << " -> CcaConfirm");
   if (status == CHANNEL_CLEAR)
     {
-      NS_LOG_DEBUG ("Channel is free");
+      NS_LOG_DEBUG("Channel is free");
       SetState (TX);
       StartTx ();
     }
   else
     {
-      NS_LOG_DEBUG ("Channel is busy");
+      NS_LOG_DEBUG("Channel is busy");
       if (m_nodeState != RX) SetState (READY);
       CheckStart ();
     }
@@ -329,8 +338,8 @@ GhnPlcDllMacCsma::CcaConfirm (PLC_PhyCcaResult status)
 void
 GhnPlcDllMacCsma::DoNotifyTransmissionEnd (void)
 {
-  NS_LOG_FUNCTION (this);
-  NS_LOG_DEBUG ("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
+  NS_LOG_FUNCTION(this);
+  NS_LOG_DEBUG("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
 
   if (m_sentAck)
     {
@@ -342,9 +351,9 @@ GhnPlcDllMacCsma::DoNotifyTransmissionEnd (void)
     {
       SetState (WAIT_ACK);
       //      m_askedForAck = false;
-      NS_LOG_DEBUG ("Wait for ACK");
+      NS_LOG_DEBUG("Wait for ACK");
       m_lastEndTxEvent = Simulator::Schedule (NanoSeconds (GDOTHN_TAIFGD) + NanoSeconds (GDOTHN_ACK_DURATION) + MicroSeconds (
-              GDOTHN_MIN_TIFG_DURATION), &GhnPlcDllMacCsma::EndTx, this);
+      GDOTHN_MIN_TIFG_DURATION), &GhnPlcDllMacCsma::EndTx, this);
     }
   else
     {
@@ -356,22 +365,23 @@ GhnPlcDllMacCsma::DoNotifyTransmissionEnd (void)
 void
 GhnPlcDllMacCsma::DoNotifyTransmissionFailure (void)
 {
-  NS_LOG_FUNCTION (this << GetState());
-  NS_LOG_DEBUG ("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
-  NS_LOG_DEBUG ("Flags: <sentAck> " << m_sentAck << " / <askedForAck> " << m_askedForAck << " / <isPacketZero> " << (m_transPacket == 0));
+  NS_LOG_FUNCTION(this << GetState());
+  NS_LOG_DEBUG("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
+  NS_LOG_DEBUG(
+          "Flags: <sentAck> " << m_sentAck << " / <askedForAck> " << m_askedForAck << " / <isPacketZero> " << (m_transPacket == 0));
   if (m_sentAck)
     {
-      NS_LOG_DEBUG ("No Ack retransmission after transmission failure");
+      NS_LOG_DEBUG("No Ack retransmission after transmission failure");
       m_sentAck = false;
     }
   else if (m_askedForAck)
     {
-      NS_LOG_DEBUG ("No Ack is waited after transmission failure");
+      NS_LOG_DEBUG("No Ack is waited after transmission failure");
       m_askedForAck = false;
     }
   else
     {
-      NS_LOG_DEBUG ("The transmitting packet is not zeroed after the transmission failure");
+      NS_LOG_DEBUG("The transmitting packet is not zeroed after the transmission failure");
     }
 
   SetState (GAP);
@@ -381,10 +391,11 @@ GhnPlcDllMacCsma::DoNotifyTransmissionFailure (void)
 void
 GhnPlcDllMacCsma::EndTx (void)
 {
-  NS_LOG_FUNCTION (this);
-  NS_LOG_DEBUG ("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
+  NS_LOG_FUNCTION(this);
+  NS_LOG_DEBUG("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
 
-  NS_LOG_DEBUG("Simulation time: " << Simulator::Now () << ", Node " << (uint16_t)GetDllManagement()->GetAddress().GetAsInt() << " end TX");
+  NS_LOG_DEBUG(
+          "Simulation time: " << Simulator::Now () << ", Node " << (uint16_t)GetDllManagement()->GetAddress().GetAsInt() << " end TX");
   if (!m_dllMan->GetDllLlc ()->IsQueueEmpty ())
     {
       //increase backoff if not acknowledged
@@ -393,17 +404,18 @@ GhnPlcDllMacCsma::EndTx (void)
     }
   else
     {
-      NS_LOG_LOGIC ("GhnPlcDllMacCsma::EndTx: Queue is empty");
+      NS_LOG_LOGIC("GhnPlcDllMacCsma::EndTx: Queue is empty");
       SetState (READY);
     }
 }
 void
 GhnPlcDllMacCsma::EndTxFailure (void)
 {
-  NS_LOG_FUNCTION (this);
-  NS_LOG_DEBUG ("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
+  NS_LOG_FUNCTION(this);
+  NS_LOG_DEBUG("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
 
-  NS_LOG_UNCOND("Simulation time: " << Simulator::Now () << ", Node " << (uint16_t)GetDllManagement()->GetAddress().GetAsInt() << " end TX failure");
+  NS_LOG_UNCOND(
+          "Simulation time: " << Simulator::Now () << ", Node " << (uint16_t)GetDllManagement()->GetAddress().GetAsInt() << " end TX failure");
   if (!m_dllMan->GetDllLlc ()->IsQueueEmpty () || m_transPacket != 0)
     {
       //increase backoff if not acknowledged
@@ -412,7 +424,7 @@ GhnPlcDllMacCsma::EndTxFailure (void)
     }
   else
     {
-      NS_LOG_LOGIC ("GhnPlcDllMacCsma::EndTx: Queue is empty");
+      NS_LOG_LOGIC("GhnPlcDllMacCsma::EndTx: Queue is empty");
       SetState (READY);
     }
 }
@@ -420,13 +432,13 @@ GhnPlcDllMacCsma::EndTxFailure (void)
 void
 GhnPlcDllMacCsma::DoNotifyReceiptionEnd (Time time)
 {
-  NS_LOG_FUNCTION (this);
-  NS_LOG_DEBUG ("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
+  NS_LOG_FUNCTION(this);
+  NS_LOG_DEBUG("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
   SetState (GAP);
-  NS_LOG_LOGIC ("Cancel backoff event with evend id:" << m_lastBackoffEvent.GetUid ());
+  NS_LOG_LOGIC("Cancel backoff event with evend id:" << m_lastBackoffEvent.GetUid ());
   Simulator::Cancel (m_lastBackoffEvent);
   Simulator::Cancel (m_lastEndTxEvent);
-  NS_LOG_LOGIC ("Cancel last CCA request");
+  NS_LOG_LOGIC("Cancel last CCA request");
   m_ccaCancel ();
 
   //
@@ -438,7 +450,7 @@ GhnPlcDllMacCsma::DoNotifyReceiptionEnd (Time time)
 void
 GhnPlcDllMacCsma::StopCsma (void)
 {
-  NS_LOG_LOGIC ("Cancel last backoff, last EndTx, and CCA request in order to stop CSMA");
+  NS_LOG_LOGIC("Cancel last backoff, last EndTx, and CCA request in order to stop CSMA");
   Simulator::Cancel (m_lastBackoffEvent);
   Simulator::Cancel (m_lastEndTxEvent);
   m_ccaCancel ();
@@ -446,10 +458,10 @@ GhnPlcDllMacCsma::StopCsma (void)
 uint64_t
 GhnPlcDllMacCsma::GetBackoffSlots ()
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
 
   uint64_t backoffPeriod = m_uniformVar->GetValue (m_minCw, m_maxCw);
-  NS_LOG_LOGIC ("CSMA/CA backoff period /slots: " << backoffPeriod);
+  NS_LOG_LOGIC("CSMA/CA backoff period /slots: " << backoffPeriod);
 
   return backoffPeriod;
 }
@@ -457,8 +469,8 @@ GhnPlcDllMacCsma::GetBackoffSlots ()
 void
 GhnPlcDllMacCsma::StartBackoff (void)
 {
-  NS_LOG_FUNCTION (this);
-  NS_LOG_DEBUG ("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
+  NS_LOG_FUNCTION(this);
+  NS_LOG_DEBUG("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
 
   if (!m_backoffCallback.IsNull ())
     {
@@ -468,26 +480,26 @@ GhnPlcDllMacCsma::StartBackoff (void)
     {
       m_lastBackoffTime = m_backoff->GetBackoffTime ();
     }
-  NS_LOG_UNCOND (Simulator::Now() << " -> Start contention, backing off for " << m_lastBackoffTime);
+  NS_LOG_UNCOND(Simulator::Now() << " -> Start contention, backing off for " << m_lastBackoffTime);
   m_lastBackoffEvent = Simulator::Schedule (m_lastBackoffTime, &GhnPlcDllMacCsma::CcaRequest, this);
-  NS_LOG_LOGIC ("Schedule backoff event with event id:" << m_lastBackoffEvent.GetUid ());
+  NS_LOG_LOGIC("Schedule backoff event with event id:" << m_lastBackoffEvent.GetUid ());
 }
 
 void
 GhnPlcDllMacCsma::DoCancelEvents (void)
 {
-  NS_LOG_LOGIC ("Cancel events");
+  NS_LOG_LOGIC("Cancel events");
   Simulator::Cancel (m_lastBackoffEvent);
   Simulator::Cancel (m_lastEndTxEvent);
   m_ccaCancel ();
 }
 
 bool
-GhnPlcDllMacCsma::DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, const UanAddress& source,
-        const UanAddress& dest, uint8_t flowId)
+GhnPlcDllMacCsma::DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, const UanAddress& source, const UanAddress& dest,
+        uint8_t flowId)
 {
   ConnId connId (source, dest, flowId);
-  NS_LOG_FUNCTION (this << connId << packet->GetSize ());
+  NS_LOG_FUNCTION(this << connId << packet->GetSize ());
 
   if (m_aggr.empty ()) CreateLogger ();
 
@@ -508,10 +520,10 @@ GhnPlcDllMacCsma::DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, c
 
       if (dest == UanAddress::GetBroadcast ())
         {
-          NS_LOG_LOGIC ("Received broadcast packet");
+          NS_LOG_LOGIC("Received broadcast packet");
           DoNotifyReceiptionEnd (MicroSeconds (GDOTHN_MIN_TIFG_DURATION));
           m_forwardUp (buffer, connId);
-          NS_LOG_LOGIC ("Send no ACK for broadcast packet");
+          NS_LOG_LOGIC("Send no ACK for broadcast packet");
         }
       else
         {
@@ -520,7 +532,8 @@ GhnPlcDllMacCsma::DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, c
               uint32_t s = 0;
               for(auto p : buffer) s += p->GetSize();
               return s;
-            };;
+            };
+          ;
           m_mpduBytes (Simulator::Now ().GetMicroSeconds (), source.GetAsInt (), dest.GetAsInt (), flowId, get_bytes (buffer));
           //
           // the LLC layer decides if the ACK should be sent
@@ -533,17 +546,17 @@ GhnPlcDllMacCsma::DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, c
             }
           else
             {
-              if (info.invalid == false)
+              if ((info.invalid == false) && ((!m_allowCooperation) || (m_allowCooperation && m_immediateFeedback && (!info.brrFeedback.empty ()))))
                 {
                   m_transPacket = GroupEncAckInfoToPkt (info);
                   DoCancelEvents ();
-                  NS_LOG_LOGIC ("Scheduled GhnPlcDllMac::SendAck ()");
+                  NS_LOG_LOGIC("Scheduled GhnPlcDllMac::SendAck ()");
                   Simulator::Schedule (NanoSeconds (GDOTHN_TAIFGD), &GhnPlcDllMac::SendAck, this, connId);
                 }
               else
                 {
                   DoNotifyReceiptionEnd (NanoSeconds (GDOTHN_TAIFGD) + NanoSeconds (GDOTHN_ACK_DURATION) + MicroSeconds (
-                          GDOTHN_MIN_TIFG_DURATION));
+                  GDOTHN_MIN_TIFG_DURATION));
                 }
             }
         }
@@ -555,12 +568,12 @@ GhnPlcDllMacCsma::DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, c
         {
           m_transPacket = 0;
           m_askedForAck = false;
-          NS_LOG_UNCOND ("GhnPlcDllMacCsma: Received my ACK.");
+          NS_LOG_UNCOND("GhnPlcDllMacCsma: Received my ACK.");
           m_ncDllLlc->ReceiveAck (PktToGroupEncAckInfo (packet), connId);
         }
       else
         {
-          NS_LOG_UNCOND ("GhnPlcDllMacCsma: Received not my ACK.");
+          NS_LOG_UNCOND("GhnPlcDllMacCsma: Received not my ACK.");
         }
       DoNotifyReceiptionEnd (MicroSeconds (GDOTHN_MIN_TIFG_DURATION));
       break;
@@ -584,8 +597,8 @@ GhnPlcDllMacCsma::DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, c
 bool
 GhnPlcDllMacCsma::DoStartTx (void)
 {
-  NS_LOG_FUNCTION (this);
-  NS_LOG_DEBUG ("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
+  NS_LOG_FUNCTION(this);
+  NS_LOG_DEBUG("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
 
   m_txAllowed = false;
   SetState (TX);
@@ -594,18 +607,18 @@ GhnPlcDllMacCsma::DoStartTx (void)
     {
       m_sendTuple = m_ncDllLlc->SendDown ();
 
-      NS_LOG_UNCOND("Node " << m_dllMan->GetAddress() << " TX buffer size: " << m_sendTuple.get_buffer().size()
-              << ", connId: " << m_sendTuple.get_conn_id() << ", next hop: " << m_sendTuple.GetNextHopAddress());
+      NS_LOG_UNCOND(
+              "Node " << m_dllMan->GetAddress() << " TX buffer size: " << m_sendTuple.get_buffer().size() << ", connId: " << m_sendTuple.get_conn_id() << ", next hop: " << m_sendTuple.GetNextHopAddress());
 
       m_transPacket = AssembleMpdu (m_sendTuple.get_buffer ());
 
-      NS_LOG_LOGIC ("Packet size: " << m_transPacket->GetSize());
-      NS_ASSERT_MSG (m_transPacket != 0, "GhnPlcDllMac::StartTx(): IsEmpty false but no Packet on queue?");
+      NS_LOG_LOGIC("Packet size: " << m_transPacket->GetSize());
+      NS_ASSERT_MSG(m_transPacket != 0, "GhnPlcDllMac::StartTx(): IsEmpty false but no Packet on queue?");
     }
   else
     {
       NS_LOG_DEBUG("Re-sending the MPDU after the transmission failure");
-      NS_ASSERT(m_sendTuple.get_buffer().size() != 0);
+      NS_ASSERT(m_sendTuple.get_buffer ().size () != 0);
     }
   uint16_t fecBlockSize = m_phyMan->GetTxFecBlockSizeFromHeader () / 8;
   ConnId connId = m_sendTuple.get_conn_id ();
@@ -614,18 +627,20 @@ GhnPlcDllMacCsma::DoStartTx (void)
     {
       m_lastTxMulticastIndication = 0;
 
-      if (!m_allowCooperation || connId.flowId == MANAGMENT_CONN_ID)
+      bool immAck = m_immediateFeedback || (!m_allowCooperation) || connId.flowId == MANAGMENT_CONN_ID;
+
+      if (immAck)
         {
           m_askedForAck = true;
           m_lastTxReplyRequired = 1;
-          NS_LOG_LOGIC ("Send unicast packet");
-          NS_LOG_LOGIC ("Ask for ACK.");
+          NS_LOG_LOGIC("Send unicast packet");
+          NS_LOG_LOGIC("Ask for ACK.");
         }
       else
         {
           m_askedForAck = false;
           m_lastTxReplyRequired = 0;
-          NS_LOG_LOGIC ("Cooperation is allows. Not ACK is acquired");
+          NS_LOG_LOGIC("Cooperation is allows. Not ACK is acquired");
         }
     }
   else
@@ -633,7 +648,7 @@ GhnPlcDllMacCsma::DoStartTx (void)
       m_lastTxMulticastIndication = 1;
       m_askedForAck = false;
       m_lastTxReplyRequired = 0;
-      NS_LOG_LOGIC ("Send broadcast packet");
+      NS_LOG_LOGIC("Send broadcast packet");
     }
 
   m_backoff->RecalculateCw (m_lastBackoffTime);
@@ -645,8 +660,8 @@ GhnPlcDllMacCsma::DoStartTx (void)
 void
 GhnPlcDllMacCsma::TriggerSend ()
 {
-  NS_LOG_FUNCTION (this << m_nodeState << m_askedForAck);
-  NS_LOG_DEBUG ("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
+  NS_LOG_FUNCTION(this << m_nodeState << m_askedForAck);
+  NS_LOG_DEBUG("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
   if (m_nodeState == READY)
     {
       SetState (BACKOFF);
@@ -654,18 +669,18 @@ GhnPlcDllMacCsma::TriggerSend ()
     }
   else
     {
-      NS_LOG_DEBUG ("Current node sate is NOT READY");
+      NS_LOG_DEBUG("Current node sate is NOT READY");
     }
 }
 void
 GhnPlcDllMacCsma::ConfigurePhy (SendTuple st)
 {
-  NS_ASSERT(!m_setMcsCallback.IsNull() && !m_setTxPsdCallback.IsNull());
+  NS_ASSERT(!m_setMcsCallback.IsNull () && !m_setTxPsdCallback.IsNull ());
 
-  auto connId = st.get_conn_id();
+  auto connId = st.get_conn_id ();
   auto rt = m_dllMan->GetRoutingTable ();
   auto bl = m_dllMan->GetBitLoadingTable ();
-  auto nh = st.GetNextHopAddress();
+  auto nh = st.GetNextHopAddress ();
 
   m_lastTxSourceId = rt->GetIdByAddress (connId.src);
   m_destinationId = rt->GetIdByAddress (connId.dst);
@@ -691,12 +706,12 @@ GhnPlcDllMacCsma::ConfigurePhy (SendTuple st)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-NS_OBJECT_ENSURE_REGISTERED (GhnPlcDllMacCsmaCd);
+NS_OBJECT_ENSURE_REGISTERED(GhnPlcDllMacCsmaCd);
 /////////////////////////////////////////////////////////////////////////////////////////////////
 TypeId
 GhnPlcDllMacCsmaCd::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::GhnPlcDllMacCsmaCd") .SetParent<GhnPlcDllMacCsma> () .AddConstructor<GhnPlcDllMacCsmaCd> ();
+  static TypeId tid = TypeId ("ns3::GhnPlcDllMacCsmaCd").SetParent<GhnPlcDllMacCsma> ().AddConstructor<GhnPlcDllMacCsmaCd> ();
   return tid;
 }
 
@@ -713,21 +728,21 @@ GhnPlcDllMacCsmaCd::~GhnPlcDllMacCsmaCd ()
 void
 GhnPlcDllMacCsmaCd::CollisionDetection ()
 {
-  NS_LOG_FUNCTION (this << GetState());
+  NS_LOG_FUNCTION(this << GetState());
 
-  NS_LOG_LOGIC ("Collision detected");
+  NS_LOG_LOGIC("Collision detected");
 
-  NS_ASSERT_MSG(GetState () == TX || GetState() == SEND_ACK, "MAC State: " << GetState ());
+  NS_ASSERT_MSG(GetState () == TX || GetState () == SEND_ACK, "MAC State: " << GetState ());
 
   DoNotifyTransmissionFailure ();
 }
 uint64_t
 GhnPlcDllMacCsmaCd::GetBackoffSlots ()
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
 
   uint64_t backoffPeriod = m_uniformVar->GetValue (m_minCw, m_maxCw);
-  NS_LOG_LOGIC ("CSMA/CA backoff period /slots: " << backoffPeriod);
+  NS_LOG_LOGIC("CSMA/CA backoff period /slots: " << backoffPeriod);
 
   return backoffPeriod;
 }

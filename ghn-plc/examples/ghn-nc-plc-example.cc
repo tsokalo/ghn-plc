@@ -56,8 +56,8 @@ int
 main (int argc, char *argv[])
 {
   std::string resDir = ConstructResFoldName (argc, argv);
-  RemoveDirectory (resDir);
-  CreateDirectory (resDir);
+  ghn::RemoveDirectory (resDir);
+  ghn::CreateDirectory (resDir);
   //
   // Set random seed value
   //
@@ -71,8 +71,8 @@ main (int argc, char *argv[])
   //
   TopologyType topologyType = LINE_TOPOLOGY_TYPE;
   std::vector<uint32_t> distance;
-  uint32_t distance_ptp = 1000;
-  uint16_t num_modems = 3;
+  uint32_t distance_ptp = 1;
+  uint16_t num_modems = 2;
   if (argc > 1)
     {
       num_modems = atoi (argv[1]);
@@ -157,6 +157,8 @@ main (int argc, char *argv[])
   devHelper.SetResDirectory (resDir);
   devHelper.SetMaxCwSize (maxCwSize);
   devHelper.AllowCooperation ();
+  devHelper.StickToMainPath();
+  devHelper.SetImmediateFeedback();
   auto addressMap = devHelper.Setup ();
   cout << "Created communication devices.." << endl;
 
