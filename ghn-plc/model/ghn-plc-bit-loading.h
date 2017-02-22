@@ -32,6 +32,7 @@
 
 namespace ns3 {
 namespace ghn {
+
 // <carrier index> <number of bits corresponding to certain modulation minus 1>
 typedef std::vector<std::vector<double> > ser_map_t;
 typedef std::vector<std::vector<double> > cap_map_t;

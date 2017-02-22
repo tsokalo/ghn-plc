@@ -40,6 +40,7 @@ namespace ghn {
 typedef std::map<std::string, Ptr<GhnPlcNetDevice> > NcNetdeviceMap;
 typedef std::map<uint32_t, UanAddress> AddressMap;
 
+
 class GhnPlcHelper : public Object
 {
   typedef std::shared_ptr<ncr::Logger> logger_ptr;
