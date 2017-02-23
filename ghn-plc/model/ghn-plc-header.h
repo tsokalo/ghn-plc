@@ -575,7 +575,7 @@ struct GroupEncAckInfo
   {
     o << "[" << m.winStart << " / " << m.groupSize << " / " << m.numRcvSym << " / ";
     for (auto a : m.details)
-      o << a << " ";
+      o << (uint16_t)a << " ";
     o << " / " << m.brrFeedback.size();
     o << "]";
     return o;

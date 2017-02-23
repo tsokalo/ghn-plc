@@ -59,7 +59,11 @@ GhnPlcDllMac::SetImmediateFeedback (bool v)
 {
   m_immediateFeedback = v;
 }
-
+void
+GhnPlcDllMac::SetLowerSrcPriority(bool v)
+{
+  m_useLowerSrcPriority = v;
+}
 void
 GhnPlcDllMac::SetPhyManagement (Ptr<GhnPlcPhyManagement> ghnPhyManagement)
 {
@@ -480,7 +484,7 @@ GhnPlcDllMacCsma::StartBackoff (void)
     {
       m_lastBackoffTime = m_backoff->GetBackoffTime ();
     }
-  NS_LOG_UNCOND(Simulator::Now() << " -> Start contention, backing off for " << m_lastBackoffTime);
+  NS_LOG_LOGIC(Simulator::Now() << " -> Start contention, backing off for " << m_lastBackoffTime);
   m_lastBackoffEvent = Simulator::Schedule (m_lastBackoffTime, &GhnPlcDllMacCsma::CcaRequest, this);
   NS_LOG_LOGIC("Schedule backoff event with event id:" << m_lastBackoffEvent.GetUid ());
 }
@@ -542,19 +546,24 @@ GhnPlcDllMacCsma::DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, c
 
           if (m_phyMan->GetRxReplyRequired () != 1)
             {
+              NS_LOG_LOGIC("ACK is not requested");
               DoNotifyReceiptionEnd (MicroSeconds (GDOTHN_MIN_TIFG_DURATION));
             }
           else
             {
-              if ((info.invalid == false) && ((!m_allowCooperation) || (m_allowCooperation && m_immediateFeedback && (!info.brrFeedback.empty ()))))
+              bool management_conn_and_dest = (flowId == MANAGMENT_CONN_ID && dest == m_dllMan->GetAddress ());
+              bool cooperate_and_have_feedback = (m_allowCooperation && m_immediateFeedback && (!info.brrFeedback.empty ()));
+              bool valid = (info.invalid == false);
+              if (valid && ((!m_allowCooperation) || cooperate_and_have_feedback || management_conn_and_dest))
                 {
                   m_transPacket = GroupEncAckInfoToPkt (info);
                   DoCancelEvents ();
-                  NS_LOG_LOGIC("Scheduled GhnPlcDllMac::SendAck ()");
+                  NS_LOG_LOGIC("ACK is requested and I do answer");
                   Simulator::Schedule (NanoSeconds (GDOTHN_TAIFGD), &GhnPlcDllMac::SendAck, this, connId);
                 }
               else
                 {
+                  NS_LOG_LOGIC("ACK is requested but I am not the right node to answer");
                   DoNotifyReceiptionEnd (NanoSeconds (GDOTHN_TAIFGD) + NanoSeconds (GDOTHN_ACK_DURATION) + MicroSeconds (
                   GDOTHN_MIN_TIFG_DURATION));
                 }
@@ -660,8 +669,8 @@ GhnPlcDllMacCsma::DoStartTx (void)
 void
 GhnPlcDllMacCsma::TriggerSend ()
 {
-  NS_LOG_FUNCTION(this << m_nodeState << m_askedForAck);
-  NS_LOG_DEBUG("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
+//  NS_LOG_FUNCTION(this << m_nodeState << m_askedForAck);
+//  NS_LOG_DEBUG("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
   if (m_nodeState == READY)
     {
       SetState (BACKOFF);
@@ -669,7 +678,7 @@ GhnPlcDllMacCsma::TriggerSend ()
     }
   else
     {
-      NS_LOG_DEBUG("Current node sate is NOT READY");
+//      NS_LOG_DEBUG("Current node sate is NOT READY");
     }
 }
 void
@@ -681,6 +690,7 @@ GhnPlcDllMacCsma::ConfigurePhy (SendTuple st)
   auto rt = m_dllMan->GetRoutingTable ();
   auto bl = m_dllMan->GetBitLoadingTable ();
   auto nh = st.GetNextHopAddress ();
+  auto src = rt->GetIdByAddress(m_dllMan->GetAddress());
 
   m_lastTxSourceId = rt->GetIdByAddress (connId.src);
   m_destinationId = rt->GetIdByAddress (connId.dst);
@@ -694,15 +704,15 @@ GhnPlcDllMacCsma::ConfigurePhy (SendTuple st)
   m_phyMan->SetMcAckSlotsNumber (m_mpduSeqNum++);
 
   uint32_t nextId = rt->GetIdByAddress (nh);
-  ModulationAndCodingScheme mcs (bl->GetModulationAndCodingScheme (m_lastTxSourceId, nextId));
+  ModulationAndCodingScheme mcs (bl->GetModulationAndCodingScheme (src, nextId));
   m_setMcsCallback (mcs);
 
   NS_LOG_UNCOND("Setting MCS: " << mcs);
   m_phyMan->SetTxPayloadFecRate (ConvertPlcRateToGhnRate (mcs.ct));
   m_phyMan->SetTxRepetitionsNumber (ENCODING_REPETITIONS_1);
 
-  m_dllMan->SetTxPsd (bl->GetTxPsd (m_lastTxSourceId, nextId));
-  m_setTxPsdCallback (bl->GetTxPsd (m_lastTxSourceId, nextId));
+  m_dllMan->SetTxPsd (bl->GetTxPsd (src, nextId));
+  m_setTxPsdCallback (bl->GetTxPsd (src, nextId));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

@@ -9,7 +9,12 @@
 #ifndef GHN_PLC_PHY_PMD_H_
 #define GHN_PLC_PHY_PMD_H_
 
+#include <vector>
+#include <string.h>
+
 #include "ns3/plc-inf-rate-fd-phy.h"
+#include "ns3/file-aggregator.h"
+#include "ns3/traced-callback.h"
 
 #include "ghn-plc-phy-header.h"
 #include "ghn-plc-phy-pma.h"
@@ -35,6 +40,7 @@ public:
 
   void EndRxPayload(Ptr<const PLC_TrxMetaInfo> metaInfo);
   uint32_t GetFrameSize(){return m_incommingFrameSize;}
+  void  SetResDirectory (std::string resDir)  {    m_resDir = resDir;  }
 
 protected:
 //  virtual bool DoStartTx (Ptr<const Packet> p);
@@ -42,10 +48,21 @@ protected:
   virtual void StartReception (uint32_t txId, Ptr<const SpectrumValue> rxPsd, Time duration, Ptr<const PLC_TrxMetaInfo> metaInfo);
 
 private:
+
+  void CreateLogger ();
+
   BandPlanType m_bandplan;
   Ptr<GhnPlcPhyPma> m_ghnPhyPma;
   GhnPlcPhyFrameHeaderCoreCommon m_rxPhyHeaderCoreCommon;
   uint32_t m_incommingFrameSize;
+
+  std::vector<Ptr<FileAggregator> > m_aggr;
+  //
+  // <source ID> <TX duration in microseconds>
+  //
+  TracedCallback<double, double> m_txDurationLogTrace;
+
+  std::string m_resDir;
 };
 }
 } // namespace ns3

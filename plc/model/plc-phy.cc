@@ -1314,7 +1314,7 @@ PLC_InformationRatePhy::StartReception (uint32_t txId, Ptr<const SpectrumValue> 
 
 	// Receive header
 	Time header_duration = metaInfo->GetHeaderDuration ();
-	NS_LOG_LOGIC ("header duration: " << header_duration);
+	NS_LOG_UNCOND ("header duration: " << header_duration);
 
 	// header is not FEC encoded => no coding overhead
 	m_information_rate_model->SetCodingOverhead(0);

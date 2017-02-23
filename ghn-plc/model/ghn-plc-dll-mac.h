@@ -52,6 +52,8 @@ public:
   AllowCooperation (bool v = true);
   void
   SetImmediateFeedback (bool v = true);
+  void
+  SetLowerSrcPriority(bool v = true);
 
   void
   SetDllLlc (Ptr<GhnPlcDllLlc> ncDllLlc);
@@ -167,6 +169,7 @@ protected:
 
   bool m_allowCooperation;
   bool m_immediateFeedback;
+  bool m_useLowerSrcPriority;
 
   SetMcsCallback m_setMcsCallback;
   SetTxPsdCallback m_setTxPsdCallback;

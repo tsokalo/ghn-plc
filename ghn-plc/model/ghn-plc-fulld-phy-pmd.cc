@@ -11,23 +11,27 @@
 
 #include "ghn-plc-fulld-phy-pmd.h"
 
-NS_LOG_COMPONENT_DEFINE ("GhnPlcPhyPmdFullD");
+NS_LOG_COMPONENT_DEFINE("GhnPlcPhyPmdFullD");
 
 namespace ns3
 {
-namespace ghn {
-NS_OBJECT_ENSURE_REGISTERED (GhnPlcPhyPmdFullD);
+namespace ghn
+{
+NS_OBJECT_ENSURE_REGISTERED(GhnPlcPhyPmdFullD);
 
 TypeId
 GhnPlcPhyPmdFullD::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::GhnPlcPhyPmdFullD") .SetParent<PLC_InfRateFDPhy> () .AddConstructor<GhnPlcPhyPmdFullD> ();
+  static TypeId tid = TypeId ("ns3::GhnPlcPhyPmdFullD").SetParent<PLC_InfRateFDPhy> ().AddConstructor<GhnPlcPhyPmdFullD> ()
+
+  .AddTraceSource ("TxDurationLog", "Duration of TX frame", MakeTraceSourceAccessor (&GhnPlcPhyPmdFullD::m_txDurationLogTrace),
+          "ns3::TxDurationLog::TracedCallback");
   return tid;
 }
 
 GhnPlcPhyPmdFullD::GhnPlcPhyPmdFullD ()
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
   SetBandplan (GDOTHN_BANDPLAN_25MHZ);
   SetHeaderModulationAndCodingScheme (ModulationAndCodingScheme (QAM4, CODING_RATE_1_2, 0));
   m_incommingFrameSize = 0;
@@ -53,10 +57,12 @@ GhnPlcPhyPmdFullD::GetBandplan (void)
 bool
 GhnPlcPhyPmdFullD::Send (Ptr<Packet> txPhyFrame, GhnPlcPhyFrameType frameType, uint8_t headerSymbols, uint32_t payloadSymbols)
 {
-  NS_LOG_FUNCTION (this << txPhyFrame);
+  NS_LOG_FUNCTION(this << txPhyFrame);
+
+  if (m_aggr.empty ()) CreateLogger ();
 
   //Append preamble
-  NS_LOG_LOGIC ("Adding preamble...");
+  NS_LOG_LOGIC("Adding preamble...");
   txPhyFrame->AddHeader (PLC_Preamble ());
 
   // Create meta information object
@@ -69,12 +75,17 @@ GhnPlcPhyPmdFullD::Send (Ptr<Packet> txPhyFrame, GhnPlcPhyFrameType frameType, u
   metaInfo->SetPayloadMcs (GetPayloadModulationAndCodingScheme ());
 
   Time tx_duration = metaInfo->GetHeaderDuration () + metaInfo->GetPayloadDuration () + PLC_Preamble::GetDuration ();
-  NS_LOG_LOGIC ("header_duration: " << metaInfo->GetHeaderDuration ());
-  NS_LOG_LOGIC ("payload_duration: " << metaInfo->GetPayloadDuration ());
-  NS_LOG_LOGIC ("preamble_duration: " << PLC_Preamble::GetDuration ());
-  NS_LOG_UNCOND ("tx_duration: " << tx_duration);
+  NS_LOG_LOGIC("header_duration: " << metaInfo->GetHeaderDuration ());
+  NS_LOG_LOGIC("payload_duration: " << metaInfo->GetPayloadDuration ());
+  NS_LOG_LOGIC("preamble_duration: " << PLC_Preamble::GetDuration ());
+  NS_LOG_UNCOND("tx_duration: " << tx_duration);
 
-  DoStartTx (metaInfo);
+  auto src = m_ghnPhyPma->GetPhyManagement ()->GetAddress ().GetAsInt();
+  m_txDurationLogTrace (src, tx_duration.GetMicroSeconds ());
+
+  NS_LOG_UNCOND("Starting frame sending... State: " << GetState());
+
+  return DoStartTx (metaInfo);
 }
 
 void
@@ -90,10 +101,11 @@ GhnPlcPhyPmdFullD::GetPhyPma (void)
 }
 
 void
-GhnPlcPhyPmdFullD::StartReception (uint32_t txId, Ptr<const SpectrumValue> rxPsd, Time duration, Ptr<const PLC_TrxMetaInfo> metaInfo)
+GhnPlcPhyPmdFullD::StartReception (uint32_t txId, Ptr<const SpectrumValue> rxPsd, Time duration,
+        Ptr<const PLC_TrxMetaInfo> metaInfo)
 {
-  NS_LOG_FUNCTION (this << txId << rxPsd << duration << metaInfo);
-  NS_LOG_INFO ("Starting frame reception...");
+  NS_LOG_FUNCTION(this << txId << rxPsd << duration << metaInfo);
+  NS_LOG_UNCOND("Starting frame reception... State: " << GetState());
 
   // Determine uncoded header bits
   ModulationAndCodingScheme header_mcs = metaInfo->GetHeaderMcs ();
@@ -101,21 +113,21 @@ GhnPlcPhyPmdFullD::StartReception (uint32_t txId, Ptr<const SpectrumValue> rxPsd
 
   // Receive header
   Time header_duration = metaInfo->GetHeaderDuration ();
-  NS_LOG_LOGIC ("header duration: " << header_duration);
+  NS_LOG_LOGIC("header duration: " << header_duration);
 
   // header is not FEC encoded => no coding overhead
   m_information_rate_model->SetCodingOverhead (0);
   m_information_rate_model->StartRx (header_mcs, rxPsd, uncoded_header_bits);
-  Simulator::Schedule (header_duration, &GhnPlcPhyPmdFullD::EndRxHeader, this, txId, rxPsd, metaInfo);
+  m_receptionEndEvent = Simulator::Schedule (header_duration, &GhnPlcPhyPmdFullD::EndRxHeader, this, txId, rxPsd, metaInfo);
 }
 
 void
 GhnPlcPhyPmdFullD::EndRxHeader (uint32_t txId, Ptr<const SpectrumValue> rxPsd, Ptr<const PLC_TrxMetaInfo> metaInfo)
 {
-  NS_LOG_FUNCTION (this << metaInfo << GetState ());
+  NS_LOG_FUNCTION(this << metaInfo << GetState ());
 
   if (GetState () == IDLE) return;
-  NS_ASSERT_MSG (GetState () == RX || GetState () == TXRX, "PHY state: " << GetState());
+  NS_ASSERT_MSG(GetState () == RX || GetState () == TXRX, "PHY state: " << GetState());
 
   ModulationAndCodingScheme payload_mcs = metaInfo->GetPayloadMcs ();
   Time payload_duration = metaInfo->GetPayloadDuration ();
@@ -124,7 +136,7 @@ GhnPlcPhyPmdFullD::EndRxHeader (uint32_t txId, Ptr<const SpectrumValue> rxPsd, P
 
   if (m_information_rate_model->EndRx ())
     {
-      NS_LOG_INFO ("Successfully received header, starting payload reception");
+      NS_LOG_INFO("Successfully received header, starting payload reception");
 
       ModulationAndCodingScheme payload_mcs = metaInfo->GetPayloadMcs ();
 
@@ -199,16 +211,16 @@ GhnPlcPhyPmdFullD::EndRxHeader (uint32_t txId, Ptr<const SpectrumValue> rxPsd, P
           m_information_rate_model->SetCodingOverhead (0);
         }
 
-      NS_LOG_INFO ("Remaining rx time: " << payload_duration);
+      NS_LOG_INFO("Remaining rx time: " << payload_duration);
 
       size_t uncoded_payload_bits = m_incoming_frame->GetSize () * 8;
       m_incommingFrameSize = uncoded_payload_bits;
 
-      if ((frameType == PHY_FRAME_ACK) || (frameType == PHY_FRAME_RTS) || (frameType == PHY_FRAME_CTS) || (frameType
-              == PHY_FRAME_CTMG) || (frameType == PHY_FRAME_ACKRQ) || (frameType == PHY_FRAME_ACTMG) || (frameType
-              == PHY_FRAME_FTE)) uncoded_payload_bits = 0;
+      if ((frameType == PHY_FRAME_ACK) || (frameType == PHY_FRAME_RTS) || (frameType == PHY_FRAME_CTS)
+              || (frameType == PHY_FRAME_CTMG) || (frameType == PHY_FRAME_ACKRQ) || (frameType == PHY_FRAME_ACTMG)
+              || (frameType == PHY_FRAME_FTE)) uncoded_payload_bits = 0;
 
-      NS_LOG_LOGIC ("Starting payload reception: " << payload_duration << payload_mcs << uncoded_payload_bits);
+      NS_LOG_LOGIC("Starting payload reception: " << payload_duration << payload_mcs << uncoded_payload_bits);
       //      NS_LOG_UNCOND ("Starting payload reception: " << payload_duration << payload_mcs << uncoded_payload_bits);
 
       m_incoming_frame->AddHeader (header3);
@@ -257,16 +269,16 @@ GhnPlcPhyPmdFullD::EndRxHeader (uint32_t txId, Ptr<const SpectrumValue> rxPsd, P
       m_incoming_frame->AddHeader (m_rxPhyHeaderCoreCommon);
 
       m_information_rate_model->StartRx (payload_mcs, rxPsd, uncoded_payload_bits);
-      Simulator::Schedule (payload_duration, &GhnPlcPhyPmdFullD::EndRxPayload, this, metaInfo);
-      Simulator::Schedule (payload_duration, &PLC_InfRateFDPhy::ChangeState, this, IDLE);
+      m_receptionEndEvent = Simulator::Schedule (payload_duration, &GhnPlcPhyPmdFullD::EndRxPayload, this, metaInfo);
+      m_stateChangeEvent = Simulator::Schedule (payload_duration, &PLC_InfRateFDPhy::ChangeState, this, IDLE);
     }
   else
     {
-      NS_LOG_INFO ("Header reception failed, remaining signal treated as interference");
+      NS_LOG_INFO("Header reception failed, remaining signal treated as interference");
 
       NoiseStart (txId, rxPsd, payload_duration);
 
-      Simulator::Schedule (payload_duration, &PLC_InfRateFDPhy::ReceptionFailure, this);
+      m_receptionEndEvent = Simulator::Schedule (payload_duration, &PLC_InfRateFDPhy::ReceptionFailure, this);
       ChangeState (IDLE);
     }
 }
@@ -277,8 +289,8 @@ GhnPlcPhyPmdFullD::EndRxPayload (Ptr<const PLC_TrxMetaInfo> metaInfo)
   if (m_information_rate_model->EndRx ())
     {
       // Successful payload reception
-      NS_LOG_INFO ("Message successfully decoded");
-      NS_LOG_LOGIC ("Decoded packet: " << *m_incoming_frame);
+      NS_LOG_INFO("Message successfully decoded");
+      NS_LOG_LOGIC("Decoded packet: " << *m_incoming_frame);
 
       if (!m_receive_success_cb.IsNull ())
         {
@@ -291,10 +303,24 @@ GhnPlcPhyPmdFullD::EndRxPayload (Ptr<const PLC_TrxMetaInfo> metaInfo)
     }
   else
     {
-      NS_LOG_INFO ("Not able to decode datagram");
+      NS_LOG_INFO("Not able to decode datagram");
       NotifyPayloadReceptionFailed (metaInfo);
       ReceptionFailure ();
     }
+}
+
+void
+GhnPlcPhyPmdFullD::CreateLogger ()
+{
+  auto src = m_ghnPhyPma->GetPhyManagement ()->GetAddress ().GetAsInt();
+
+  m_aggr.push_back (
+          CreateObject<FileAggregator> (m_resDir + "phy_frame_tx_duration_" + std::to_string (src) + ".txt",
+                  FileAggregator::FORMATTED));
+  auto aggr = *(m_aggr.end () - 1);
+  aggr->Set2dFormat ("%.0f\t%.0f");
+  aggr->Enable ();
+  TraceConnect ("TxDurationLog", "TxDurationLogContext", MakeCallback (&FileAggregator::Write2d, aggr));
 }
 }
 } // namespace ns3

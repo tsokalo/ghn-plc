@@ -103,7 +103,6 @@ GhnPlcLlcCodedFlow::NotifyRcvUp (ncr::GenId genId)
 {
   m_brr->UpdateRcvd (genId, m_id);
 }
-
 SendTuple
 GhnPlcLlcCodedFlow::SendDown ()
 {
@@ -710,6 +709,7 @@ GhnPlcLlcCodedFlow::ProcessNetDiscovery (ncr::FeedbackInfo f)
       SIM_LOG (1, "Node " << m_id << " refuses to send the network discovery message");
     }
 }
+
 void
 GhnPlcLlcCodedFlow::ProcessRetransRequest (ncr::FeedbackInfo f)
 {

@@ -116,6 +116,9 @@ public:
   Ptr<PLC_TxInterface> GetTxInterface(){NS_ASSERT(!m_txInterfaceCallback.IsNull());return m_txInterfaceCallback();}
   Ptr<PLC_RxInterface> GetRxInterface(){NS_ASSERT(!m_rxInterfaceCallback.IsNull());return m_rxInterfaceCallback();}
 
+  void SetAddress(UanAddress addr){m_addr = addr;}
+  UanAddress GetAddress(){return m_addr;}
+
 private:
 
   uint32_t
@@ -144,6 +147,7 @@ private:
   uint8_t m_txConnectionIdentifier; //used to transfer current MAC
   uint16_t m_txCtmgData16; //used to transfer current MAC in CTMG
 
+  UanAddress m_addr;
 
   //RX parameters
   uint32_t m_rxPacketSize;

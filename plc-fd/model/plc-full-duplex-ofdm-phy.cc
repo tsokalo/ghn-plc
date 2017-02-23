@@ -45,6 +45,7 @@ void
 PLC_FullDuplexOfdmPhy::DoStart (void)
 {
   NS_LOG_FUNCTION (this);
+  assert(0);
   m_state = IDLE;
   PLC_Phy::DoInitialize ();
 }
@@ -366,7 +367,7 @@ PLC_FullDuplexOfdmPhy::ChangeState (State newState)
   NS_LOG_FUNCTION (this);
   if (newState != GetState ())
     {
-      PLC_LOG_LOGIC (this << " state: " << GetState () << " -> " << newState);
+      NS_LOG_UNCOND (this << " state: " << GetState () << " -> " << newState);
       NS_ASSERT_MSG(m_outlet, "PHY's outlet is not set!");
 
       if (newState == TX || newState == TXRX)
@@ -382,7 +383,7 @@ PLC_FullDuplexOfdmPhy::ChangeState (State newState)
 PLC_FullDuplexOfdmPhy::State
 PLC_FullDuplexOfdmPhy::GetState (void)
 {
-  NS_LOG_FUNCTION (this);
+//  NS_LOG_FUNCTION (this);
   return m_state;
 }
 

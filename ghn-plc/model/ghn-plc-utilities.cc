@@ -115,6 +115,9 @@ GroupEncAckInfoToPkt (GroupEncAckInfo info)
 {
   std::stringstream ss;
 
+  //
+  // convert G.hn ACK
+  //
   ss << info.winStart << DELIMITER;
   ss << info.numRcvSym << DELIMITER;
   ss << info.invalid << DELIMITER;
@@ -122,7 +125,7 @@ GroupEncAckInfoToPkt (GroupEncAckInfo info)
   ss << info.details.size () << DELIMITER;
   for (auto d : info.details)
     {
-      ss << (uint8_t)d << DELIMITER;
+      ss << (uint8_t) d << DELIMITER;
     };;
 
   ss << info.ncAckInfo.size () << DELIMITER;
@@ -134,18 +137,56 @@ GroupEncAckInfoToPkt (GroupEncAckInfo info)
     };;
 
   std::string str = ss.str ();
-  Ptr<Packet> ack = Create<Packet> ((uint8_t const*) str.c_str (), (uint32_t) str.size());
-  uint16_t num_blocks = ceil((double) ack->GetSize() / (double)GHN_BLKSZ_540);
-  ack->AddPaddingAtEnd (GHN_BLKSZ_540 * num_blocks - ack->GetSize ());
-  return ack;
+
+  auto bs = GHN_BLKSZ_540;
+  auto pkt_size = str.size () + 1;
+  uint8_t n_bs = ceil ((double) pkt_size / (double) bs);
+
+  auto pkt = Create<Packet> ((const uint8_t*) (&n_bs), 1);
+  pkt->AddAtEnd (Create<Packet> ((const uint8_t*) str.c_str (), str.size ()));
+
+  auto padding_length = n_bs * bs - pkt->GetSize ();
+  if (padding_length != 0) pkt->AddPaddingAtEnd (padding_length);
+
+  //
+  // convert ANChOR ACK if present
+  //
+  if (!info.brrFeedback.empty ())
+    {
+      NS_LOG_UNCOND("Send ANChOR ACK!");
+      auto it = info.brrFeedback.begin ();
+      while (it != info.brrFeedback.end ())
+        {
+          pkt->AddAtEnd (*it);
+          pkt->AddPaddingAtEnd (4);
+          it++;
+        }
+    }
+  else
+    {
+      NS_LOG_UNCOND("Send NO ANChOR ACK!");
+    }
+
+  return pkt;
 }
 GroupEncAckInfo
-PktToGroupEncAckInfo (Ptr<Packet> packet)
+PktToGroupEncAckInfo (Ptr<Packet> pkt)
 {
-  uint8_t *buffer = new uint8_t[packet->GetSize () + 1];
-  int32_t copied = packet->CopyData (buffer, packet->GetSize ());
-  assert(copied == packet->GetSize ());
-  std::stringstream ss (std::string ((char*) buffer, copied));
+  //
+  // convert G.hn ACK
+  //
+  uint8_t n_bs = 0;
+  pkt->CopyData (&n_bs, 1);
+  assert(n_bs != 0);
+
+  auto bs = GHN_BLKSZ_540;
+  auto pkt_frag = pkt->CreateFragment (0, n_bs * bs);
+  pkt_frag->RemoveAtStart (1);
+
+  uint8_t * buffer = new uint8_t[pkt_frag->GetSize () + 1];
+  pkt_frag->CopyData (buffer, pkt_frag->GetSize ());
+
+  std::stringstream ss (std::string ((char*) buffer, pkt_frag->GetSize ()));
 
   GroupEncAckInfo info;
 
@@ -170,6 +211,27 @@ PktToGroupEncAckInfo (Ptr<Packet> packet)
       ss >> i.rcv;
       ss >> i.use;
       info.ncAckInfo.push_back (i);
+    }
+
+  //
+  // convert ANChOR ACK if present
+  //
+  if (pkt->GetSize () > n_bs * bs)
+    {
+      NS_LOG_UNCOND("Receive ANChOR ACK!");
+      auto start = n_bs * bs;
+      while (start != pkt->GetSize ())
+        {
+          assert(start + bs <= pkt->GetSize ());
+          auto p = pkt->CreateFragment (start, bs);
+          p->RemoveAtEnd (4);
+          info.brrFeedback.push_back (p);
+          start += bs;
+        }
+    }
+  else
+    {
+      NS_LOG_UNCOND("Receive NO ANChOR ACK!");
     }
 
   delete[] buffer;
@@ -571,7 +633,7 @@ ConvertVecsToBuffer (std::vector<std::vector<uint8_t> > vecs)
 void
 ThrowToFile (std::string line, std::string path)
 {
-  std::ofstream f (path, std::ios_base::out|std::ios_base::app);
+  std::ofstream f (path, std::ios_base::out | std::ios_base::app);
   f << line << std::endl;
   f.close ();
 }

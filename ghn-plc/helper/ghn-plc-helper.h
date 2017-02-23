@@ -159,6 +159,8 @@ public:
   StickToMainPath(bool v = true);
   void
   SetImmediateFeedback(bool v = true);
+  void
+  SetLowerSrcPriority(bool v = true);
 
   void
   SetAppMap(std::map<UanAddress, Ptr<Application> > appMap);
@@ -200,9 +202,13 @@ protected:
   Ptr<GhnPlcBitLoading> m_bitLoadingTable;
   Ptr<GhnPlcStats> m_ncStats;
   ncr::SimParameters m_sp;
+  //
+  // flags
+  //
   bool m_allowCooperation;
   bool m_stickToMainPath;
   bool m_immediateFeedback;
+  bool m_useLowerSrcPriority;
 
   AddressMap m_addressMap;
 

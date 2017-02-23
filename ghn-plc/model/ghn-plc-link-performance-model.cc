@@ -97,7 +97,13 @@ GhnPlcLinkPerformanceModel::CalculateChunkGuardIntervals (Time chunk_duration)
                 {
                         NS_LOG_LOGIC ("Considering guard intervals of completed chunk symbols");
                         chunk_guard_intervals += (double) first_guard_interval_residual / m_guard_interval_duration.GetInteger();
-                        chunk_guard_intervals += chunk_duration.GetInteger() / m_symbol_duration.GetInteger();
+                        // tsokalo
+                        if(chunk_duration >= m_symbol_duration)
+                          {
+                            chunk_guard_intervals += (chunk_duration.GetInteger() / m_symbol_duration.GetInteger() - 1);
+                          }
+                        // original
+//                      chunk_guard_intervals += chunk_duration.GetInteger() / m_symbol_duration.GetInteger();
 
                         if (symbol_residual >= m_guard_interval_duration.GetInteger())
                         {

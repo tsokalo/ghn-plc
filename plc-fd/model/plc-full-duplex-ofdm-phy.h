@@ -277,7 +277,6 @@ protected:
   // update the interference model when a signal changes
   std::map<uint32_t, std::pair<EventId, Ptr<const SpectrumValue> > > m_rxNoisePsdMap;
 
-  State m_state;
   uint32_t m_locked_txId;
 
   EventId m_ccaEndEvent;
@@ -285,6 +284,10 @@ protected:
   EventId m_txFrameEvent;
   PLC_PhyCcaConfirmCallback m_ccaConfirmCallback;
   TracedCallback<Time, State> m_PhyStateLogger;
+
+private:
+
+  State m_state;
 };
 
 std::ostream&

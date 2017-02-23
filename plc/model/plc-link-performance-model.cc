@@ -134,6 +134,7 @@ bool
 PLC_LinkPerformanceModel::EndRx(void)
 {
 	NS_LOG_FUNCTION(this);
+	NS_LOG_LOGIC("Do end RX: " << Simulator::Now());
 	EvaluateChunk();
 	m_interference->EndRx();
 	m_receiving = false;
@@ -383,6 +384,8 @@ PLC_InformationRateModel::DoStartRx(double requiredInformationBits)
 	m_required_information_bits = requiredInformationBits;
 	m_gathered_information_bits = 0;
 	m_lastChangeTime = Now ();
+
+	NS_LOG_LOGIC("Do start RX: " << Simulator::Now());
 }
 
 double
@@ -416,7 +419,13 @@ PLC_InformationRateModel::CalculateChunkGuardIntervals (Time chunk_duration)
 		{
 			NS_LOG_LOGIC ("Considering guard intervals of completed chunk symbols");
 			chunk_guard_intervals += (double) first_guard_interval_residual / m_guard_interval_duration.GetInteger();
-			chunk_guard_intervals += chunk_duration.GetInteger() / m_symbol_duration.GetInteger();
+			// tsokalo
+			if(chunk_duration >= m_symbol_duration)
+			  {
+			    chunk_guard_intervals += (chunk_duration.GetInteger() / m_symbol_duration.GetInteger() - 1);
+			  }
+			// original
+//			chunk_guard_intervals += chunk_duration.GetInteger() / m_symbol_duration.GetInteger();
 
 			if (symbol_residual >= m_guard_interval_duration.GetInteger())
 			{
@@ -502,14 +511,15 @@ PLC_InformationRateModel::DoEvaluateChunk(void)
         NS_ASSERT (vi == CapacityPerHertz.ConstValuesEnd ());
 
 	NS_LOG_LOGIC("Chunk information in bits: " << chunk_bit_information);
+	NS_LOG_LOGIC("Chunk information in bits: " << chunk_bit_information << ", gathered bits: " << m_gathered_information_bits);
 
 	m_gathered_information_bits += chunk_bit_information;
 
 	NS_LOG_LOGIC("Bits required for decoding: " << m_required_information_bits);
 	NS_LOG_LOGIC("Collected bits: " << m_gathered_information_bits);
 //
-//        NS_LOG_UNCOND("Bits required for decoding: " << m_required_information_bits);
-//        NS_LOG_UNCOND("Collected bits: " << m_gathered_information_bits);
+//        NS_LOG_LOGIC("Bits required for decoding: " << m_required_information_bits);
+//        NS_LOG_LOGIC("Collected bits: " << m_gathered_information_bits);
 
 	m_lastChangeTime = Now();
 }
@@ -523,6 +533,13 @@ PLC_InformationRateModel::DoEndRx(void)
 
 	NS_LOG_INFO("Required bits: " << m_required_information_bits);
 	NS_LOG_INFO("Gathered bits: " << m_gathered_information_bits);
+
+	//
+	// tsokalo: let the above layer decide if the data can be decoded
+	// If m_gathered_information_bits is slightly smaller than m_required_information_bits
+	// then there is a chance that at least some FEC blocks can be decoded
+	//
+	return true;
 
 	if (m_gathered_information_bits >= m_required_information_bits)
 	{

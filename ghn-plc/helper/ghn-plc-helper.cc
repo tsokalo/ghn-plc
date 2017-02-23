@@ -51,6 +51,7 @@ m_spectrum_model (sm), m_txPsd (txPsd), m_node_list (deviceNodes)
     m_allowCooperation = false;
     m_stickToMainPath = false;
     m_immediateFeedback = true;
+    m_useLowerSrcPriority = false;
   }
 GhnPlcHelper::GhnPlcHelper (BandPlanType bandplan)
 {
@@ -76,8 +77,8 @@ GhnPlcHelper::GhnPlcHelper (BandPlanType bandplan)
   m_allowCooperation = false;
   m_stickToMainPath = false;
   m_immediateFeedback = true;
+  m_useLowerSrcPriority = false;
 }
-
 AddressMap
 GhnPlcHelper::Setup (void)
 {
@@ -226,6 +227,8 @@ GhnPlcHelper::Setup (void)
           // Set modulation and coding scheme
           pmd->SetPayloadModulationAndCodingScheme (ModulationAndCodingScheme (QAM4, CODING_RATE_2_3, 0));
 
+          pmd->SetResDirectory (m_resDir);
+
           //Set FEC block size
           phyManager->SetTxFecBlockSize (FEC_BLOCK_SIZE_540);
 
@@ -290,6 +293,7 @@ GhnPlcHelper::Setup (void)
       dllManager->GetDllMac ()->SetBackoffSlotDuration (NanoSeconds (GDOTHN_IST));
       dllManager->GetDllMac ()->AllowCooperation (m_allowCooperation);
       dllManager->GetDllMac ()->SetImmediateFeedback(m_immediateFeedback);
+      dllManager->GetDllMac ()->SetLowerSrcPriority(m_useLowerSrcPriority);
 
       if (m_macTid == GhnPlcDllMacCsma::GetTypeId ())
         {
@@ -342,6 +346,7 @@ GhnPlcHelper::Setup (void)
       auto addr = UanAddress::Allocate ();
       m_addressMap[std::distance (m_node_list.begin (), nit)] = addr;
       dev->SetAddress (addr);
+      phyManager->SetAddress(addr);
 
       // Setting PLC node here to complete config
       dev->SetPlcNode (*nit);
@@ -689,6 +694,11 @@ void
 GhnPlcHelper::SetImmediateFeedback(bool v)
 {
   m_immediateFeedback = v;
+}
+void
+GhnPlcHelper::SetLowerSrcPriority(bool v)
+{
+  m_useLowerSrcPriority = v;
 }
 void
 GhnPlcHelper::SetAppMap (std::map<UanAddress, Ptr<Application> > appMap)

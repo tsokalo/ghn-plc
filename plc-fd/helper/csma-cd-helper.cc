@@ -9,13 +9,11 @@
 #include "ns3/nstime.h"
 
 #include "ns3/plc-helper.h"
-//#include "ns3/plc-defs-extension.h"
-
-#include "ns3/ghn-plc-module.h"
 #include "ns3/plc-fd-module.h"
 
 #include "csma-cd-helper.h"
 
+#include "ns3/ghn-plc-dll-management.h"
 
 namespace ns3
 {
