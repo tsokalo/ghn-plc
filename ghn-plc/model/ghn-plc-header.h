@@ -61,7 +61,7 @@ namespace ghn
  * Run one of the routines. If the short statistics of your simulation shows transmission of
  * exactly the amount of packet that you have set - than you can decrease this period
  */
-#define GHN_WARMUP_PERIOD 0.1
+#define GHN_WARMUP_PERIOD 1.0
 /*
  * The period is needed by TCP sockets to be released
  */
@@ -467,7 +467,7 @@ typedef std::deque<Ptr<Packet> > GhnBuffer;
 //
 #define GHN_CRC_LENGTH	4
 
-#define MAX_LLC_QUEUE_LENGTH	1000
+#define MAX_LLC_QUEUE_LENGTH	10000
 struct GhnSeg
 {
   Ptr<Packet> pkt;

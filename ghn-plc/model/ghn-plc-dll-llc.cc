@@ -207,7 +207,7 @@ GhnPlcDllLlc::SendDown ()
   //
   for (uint32_t i = 0; i < m_flowMap.size (); i++)
     {
-      if (m_flowMap.at (i).first.flowId == MANAGMENT_CONN_ID)
+      if (m_flowMap.at (i).first.flowId == MANAGMENT_CONN_ID || m_flowMap.at (i).first.dst == UanAddress::GetBroadcast ())
         {
           auto f = m_flowMap.at (i).second;
           if (!f.IsQueueEmpty ())
@@ -225,22 +225,43 @@ GhnPlcDllLlc::SendDown ()
           return f.SendDown ();
         }
     }
-  NS_ASSERT_MSG(0, "Node " << m_dllMac->GetDllManagement ()->GetAddress () << ": have NO data to send");
+  NS_ASSERT_MSG(0, "Node " << m_dllMac->GetDllManagement ()->GetAddress () << ": has NO data to send");
 }
 bool
 GhnPlcDllLlc::IsQueueEmpty ()
 {
   NS_LOG_FUNCTION_NOARGS ();
 
+  //
+  // give priority to the management connections
+  //
   for (uint32_t i = 0; i < m_flowMap.size (); i++)
     {
-      auto f = m_flowMap.at (i).second;
-      if (!f.IsQueueEmpty ())
+      if (m_flowMap.at (i).first.flowId == MANAGMENT_CONN_ID || m_flowMap.at (i).first.dst == UanAddress::GetBroadcast ())
         {
-          NS_LOG_UNCOND("Node " << m_dllMac->GetDllManagement ()->GetAddress () << ": have NON-empty queue");
-          return false;
+          auto f = m_flowMap.at (i).second;
+          if (!f.IsQueueEmpty ())
+            {
+              NS_LOG_UNCOND("Node " << m_dllMac->GetDllManagement ()->GetAddress () << ": has NON-empty queue");
+              return false;
+            }
         }
     }
+
+  if (Simulator::Now () >= Seconds (GHN_WARMUP_PERIOD))
+    {
+      for (uint32_t i = 0; i < m_flowMap.size (); i++)
+        {
+          auto f = m_flowMap.at (i).second;
+          if (!f.IsQueueEmpty ())
+            {
+              NS_LOG_UNCOND("Node " << m_dllMac->GetDllManagement ()->GetAddress () << ": has NON-empty queue");
+              return false;
+            }
+        }
+    }
+
+  NS_LOG_UNCOND("Node " << m_dllMac->GetDllManagement ()->GetAddress () << ": has empty queue");
 
   return true;
 }

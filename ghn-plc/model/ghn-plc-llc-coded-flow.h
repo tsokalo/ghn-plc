@@ -68,7 +68,7 @@ public:
 private:
 
   void
-  PrepareForSend (uint64_t dataAmount);
+  PrepareForSend ();
   void
   ProcessDecoded (GhnBuffer buffer, ConnId connId);
 

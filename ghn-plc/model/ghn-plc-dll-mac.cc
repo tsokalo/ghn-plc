@@ -230,6 +230,7 @@ GhnPlcDllMac::AssembleMpdu (GhnBuffer buffer)
     }
   return bigpacket;
 }
+
 GhnBuffer
 GhnPlcDllMac::DisassembleMpdu (Ptr<Packet> mpdu)
 {
@@ -240,7 +241,6 @@ GhnPlcDllMac::DisassembleMpdu (Ptr<Packet> mpdu)
 
   while (mpdu->GetSize () != 0)
     {
-      NS_LOG_DEBUG("Adding the segment: " << 0 << " " << m_blockSize);
       NS_ASSERT(mpdu->GetSize () >= m_blockSize);
       buffer.push_back ((mpdu->GetSize () == m_blockSize) ? mpdu : mpdu->CreateFragment (0, m_blockSize));
       if (mpdu->GetSize () == m_blockSize) break;
@@ -573,11 +573,11 @@ GhnPlcDllMacCsma::DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, c
     }
   case PHY_FRAME_ACK:
     {
-      if (dest == m_dllMan->GetAddress ())
+      if (dest == m_dllMan->GetAddress () || m_allowCooperation)
         {
           m_transPacket = 0;
           m_askedForAck = false;
-          NS_LOG_UNCOND("GhnPlcDllMacCsma: Received my ACK.");
+          NS_LOG_UNCOND("GhnPlcDllMacCsma: Received my ACK (or I simply cooperate).");
           m_ncDllLlc->ReceiveAck (PktToGroupEncAckInfo (packet), connId);
         }
       else

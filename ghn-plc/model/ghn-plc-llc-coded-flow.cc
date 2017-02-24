@@ -38,7 +38,6 @@ GhnPlcLlcCodedFlow::~GhnPlcLlcCodedFlow ()
 {
 
 }
-
 void
 GhnPlcLlcCodedFlow::Configure (ncr::NodeType type, ncr::UanAddress dst, ncr::SimParameters sp)
 {
@@ -123,98 +122,108 @@ GhnPlcLlcCodedFlow::SendDown ()
   if (m_nodeType != ncr::DESTINATION_NODE_TYPE)
     {
       NS_LOG_UNCOND("Node " << (uint16_t)src << ", Connection " << m_connId << " SEND!");
-
       if (nh == -1) nh = rt->GetNextHopAddress (src, dst).GetAsInt ();
       NS_ASSERT(src != nh);
       m_brr->SetSendingRate (bt->GetNumEffBits (src, nh));
-      auto dataAmount = bt->GetDataAmount (Seconds (GHN_CYCLE_MAX), src, nh);
-      uint32_t pushedPkts = 0, maxPkts = floor ((double) dataAmount / (double) m_blockSize);
-      assert(maxPkts > 0);
 
-      std::cout << "Using ANChOR next hop selecter: " << (m_sp.mutualPhyLlcCoding ? "TRUE" : "FALSE") << " -> " << (uint16_t) nh
-              << std::endl;
-      NS_LOG_UNCOND(
-              "Node " << m_id << ", Flow " << m_connId << ": " << "dataAmount: " << dataAmount << ", m_blockSize: " << m_blockSize);
-
-      PrepareForSend (dataAmount);
-
-      if (m_nodeType == ncr::SOURCE_NODE_TYPE)
+      if (Simulator::Now () >= 2 * GHN_WARMUP_PERIOD)
         {
-          auto maxBuf = m_brr->GetMaxAmountTxData ();
-          assert(maxBuf >= maxPkts);
-          assert(!m_genCallback.IsNull ());
-          //
-          // generate minimum required for buffering by ANChOR
-          //
-          if (m_brr->NeedGen ())
+          auto dataAmount = bt->GetDataAmount (Seconds (GHN_CYCLE_MAX), src, nh);
+          uint32_t pushedPkts = 0, maxPkts = floor ((double) dataAmount / (double) m_blockSize);
+          assert(maxPkts > 0);
+
+          NS_LOG_UNCOND(
+                  "Node " << m_id << ", Flow " << m_connId << ": " << "dataAmount: " << dataAmount << ", maxPkts: " << maxPkts);
+
+          if (m_nodeType == ncr::SOURCE_NODE_TYPE)
             {
-              m_genCallback (m_brr->GenNumGreedyGen () * m_sp.symbolSize);
-              PrepareForSend (dataAmount);
+              //
+              // get maximum number of NC symbols that BRR allows transmitting in one train
+              //
+              auto maxBuf = m_brr->GetMaxAmountTxData ();
+              //
+              // limit this number by the amount of packets that MAC allows transmitting in one train
+              //
+              maxBuf = (maxPkts > maxBuf) ? maxBuf : maxPkts;
+
+              assert(!m_genCallback.IsNull ());
+              //
+              // get the number of NC symbols that already can be sent by BRR
+              //
+              auto busy_space = m_brr->GetAmountTxData ();
+              maxBuf = (busy_space < maxBuf) ? maxBuf - busy_space : 0;
+              //
+              // ask BRR if the number of generation in BRR buffer should be increased to certain minimum level
+              //
+              if (m_brr->NeedGen ())
+                {
+                  auto v = m_brr->GetNumGreedyGen () * m_sp.genSize;
+                  maxBuf = (maxBuf < v) ? v : maxBuf;
+                }
+
+              NS_LOG_UNCOND(
+                      "Node " << m_id << ", Flow " << m_connId << ": " << "maxBuf: " << maxBuf << ", busy_space: " << busy_space << ", maxPkts: " << maxBuf);
+
+              //
+              // generate data on application layer
+              //
+              m_genCallback (maxBuf * m_sp.symbolSize);
+              //
+              // segment, code the newly generated data and pass it to BRR
+              //
+              PrepareForSend ();
             }
-          //
-          // generate additional packets if the room permits
-          //
-          auto fspace = m_brr->GetAmountTxData ();
-          while (fspace < maxPkts + m_sp.genSize)
+
+          assert(m_nodeType != ncr::DESTINATION_NODE_TYPE);
+          ncr::TxPlan plan = m_brr->GetTxPlan ();
+          ncr::TxPlan planI;
+
+          if (plan.empty ())
             {
-              SIM_LOG (COMM_NODE_LOG,
-                      "Flow " << m_connId << ": generate more data, busy space: " << fspace << ", max pkts: " << maxPkts
-                              << ", frame buffer size: " << m_frameBuffer.size ());
-              SIM_LOG (COMM_NODE_LOG,
-                      "Flow " << m_connId << ": amount (bytes) " << (maxPkts + m_sp.genSize - fspace) * m_sp.symbolSize);
-              m_genCallback ((maxPkts + m_sp.genSize - fspace) * m_sp.symbolSize);
-              PrepareForSend (dataAmount);
-              auto fspace_prev = fspace;
-              fspace = m_brr->GetAmountTxData ();
+              SIM_LOG (COMM_NODE_LOG, "Flow " << m_connId << ": " << "Sending the message with feedback only");
             }
-          SIM_LOG (1,
-                  "Flow " << m_connId << ": busy space: " << fspace << ", max pkts: " << maxPkts << ", frame buffer size: "
-                          << m_frameBuffer.size ());
-        }
 
-      assert(m_nodeType != ncr::DESTINATION_NODE_TYPE);
-      ncr::TxPlan plan = m_brr->GetTxPlan ();
-      ncr::TxPlan planI;
-
-      if (plan.empty ())
-        {
-          SIM_LOG (COMM_NODE_LOG, "Flow " << m_connId << ": " << "Sending the message with feedback only");
-        }
-
-      auto p_it = plan.begin_orig_order ();
-      while (p_it != plan.end ())
-        {
-          ncr::GenId genId = p_it->first;
-          auto n = p_it->second.num_all;
-          uint16_t i = 0;
-          for (; i < n;)
+          auto p_it = plan.begin_orig_order ();
+          while (p_it != plan.end ())
             {
-              auto contents =
-                      (m_nodeType == ncr::SOURCE_NODE_TYPE) ? m_encQueue->get_coded (genId) : m_decQueue->get_coded (genId);
-              //          header_value<local_msg_type>::append(contents, (local_msg_type)DATA_MSG_TYPE);
-              auto pkt = Create<Packet> ((uint8_t const*) contents.data (), contents.size ());
-              toTransmit.push_back (pkt);
-              pushedPkts++;
-              i++;
+              ncr::GenId genId = p_it->first;
+              auto n = p_it->second.num_all;
+              uint16_t i = 0;
+              for (; i < n;)
+                {
+                  auto contents =
+                          (m_nodeType == ncr::SOURCE_NODE_TYPE) ? m_encQueue->get_coded (genId) : m_decQueue->get_coded (genId);
+                  auto pkt = Create<Packet> ((uint8_t const*) contents.data (), contents.size ());
+                  toTransmit.push_back (pkt);
+                  pushedPkts++;
+                  i++;
+                  if (pushedPkts == maxPkts) break;
+                }
+              m_brr->UpdateSent (genId, i, true);
+              planI[genId].num_all = i;
+              planI[genId].all_prev_acked = p_it->second.all_prev_acked;
               if (pushedPkts == maxPkts) break;
+              p_it = plan.next_orig_order (p_it);
             }
-          m_brr->UpdateSent (genId, i, true);
-          planI[genId].num_all = i;
-          planI[genId].all_prev_acked = p_it->second.all_prev_acked;
-          if (pushedPkts == maxPkts) break;
-          p_it = plan.next_orig_order (p_it);
-        }
 
-      if (m_nodeType == ncr::SOURCE_NODE_TYPE)
-        {
-          if (pushedPkts != maxPkts)
+          if (m_nodeType == ncr::SOURCE_NODE_TYPE)
             {
-              SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " pushed pkts: " << pushedPkts << ", max pkts: " << maxPkts);
+              if (pushedPkts != maxPkts)
+                {
+                  SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " pushed pkts: " << pushedPkts << ", max pkts: " << maxPkts);
+                }
             }
-        }
+          NS_LOG_UNCOND("Node " << m_id << ", Flow " << m_connId << ": " << " Tx Plan: " << planI);
 
-      auto hBuf = ConvertBrrHeaderToPkt (planI);
-      toTransmit.insert (toTransmit.begin (), hBuf.begin (), hBuf.end ());
+          auto hBuf = ConvertBrrHeaderToPkt (planI);
+          toTransmit.insert (toTransmit.begin (), hBuf.begin (), hBuf.end ());
+        }
+      else
+        {
+          NS_LOG_UNCOND("Flow " << m_connId << ": " << " Warm-up phase is not over yet");
+          auto hBuf = ConvertBrrHeaderToPkt (ncr::TxPlan ());
+          toTransmit.insert (toTransmit.begin (), hBuf.begin (), hBuf.end ());
+        }
     }
   else
     {
@@ -245,40 +254,31 @@ GhnPlcLlcCodedFlow::SendDown ()
   return SendTuple (toTransmit, m_connId, UanAddress (nh));
 }
 void
-GhnPlcLlcCodedFlow::PrepareForSend (uint64_t dataAmount)
+GhnPlcLlcCodedFlow::PrepareForSend ()
 {
   if (!m_frameBuffer.empty ())
     {
       assert(m_nodeType == ncr::SOURCE_NODE_TYPE);
 
-      auto freeBufSize = m_brr->GetFreeBufferSpace ();
-
-      NS_LOG_DEBUG(
-              "Flow " << m_connId << ": " << "BEFORE INDEXING: Free buffer size: " << freeBufSize << ", number of non-indexed segments: " << m_nonindexedSegs.size() << ", not-segmented data: " << m_frameBuffer.size() << ", dataAmount: " << dataAmount);
-
       //
       // create non-indexed segments
       //
-      uint64_t dataLimit = (dataAmount > (uint64_t) freeBufSize * m_blockSize) ? freeBufSize * m_blockSize : dataAmount;
-      if ((m_nonindexedSegs.size ()) * m_blockSize < dataLimit && (!m_frameBuffer.empty ()))
-        {
-          SegGhnBuffer addNonIndexed = m_txSegmenter->SegmentData (m_frameBuffer);
-          m_nonindexedSegs.insert (m_nonindexedSegs.end (), addNonIndexed.begin (), addNonIndexed.end ());
-          m_frameBuffer.clear ();
-        }
+      SegGhnBuffer addNonIndexed = m_txSegmenter->SegmentData (m_frameBuffer);
+      m_nonindexedSegs.insert (m_nonindexedSegs.end (), addNonIndexed.begin (), addNonIndexed.end ());
+      m_frameBuffer.clear ();
+
+      auto s = m_nonindexedSegs.size () * m_nonindexedSegs.begin ()->pkt->GetSize ();
+      NS_LOG_UNCOND("Segmented buffer contains " << s << " bytes");
 
       //
       // index segments
       //
       std::deque<Ssn> newSentSegs;
-      while (freeBufSize != 0 && (!m_nonindexedSegs.empty ()))
+      while (!m_nonindexedSegs.empty ())
         {
           GhnPlcLpduHeader header;
           header.SetLfbo ((*m_nonindexedSegs.begin ()).posLlcFrame);
           header.SetMqf ((*m_nonindexedSegs.begin ()).validSeg);
-          //
-          // TODO set SSN locally
-          //
           header.SetSsn (m_ssn.val ());
           m_ssn++;
           NS_LOG_DEBUG("Flow " << m_connId << ": " << "Indexing the segment by SSN: " << header.GetSsn());
@@ -286,11 +286,7 @@ GhnPlcLlcCodedFlow::PrepareForSend (uint64_t dataAmount)
           (*m_nonindexedSegs.begin ()).pkt->AddHeader (header);
           m_encQueue->enque (ConvertPacketToVec ((*m_nonindexedSegs.begin ()).pkt));
           m_nonindexedSegs.pop_front ();
-          freeBufSize--;
         }
-
-      NS_LOG_DEBUG(
-              "Flow " << m_connId << ": " << "AFTER INDEXING: Free buffer size: " << freeBufSize << ", number of non-indexed segments: " << m_nonindexedSegs.size() << ", number of indexed segments: " << m_indexedSegs.size() << ", not-segmented data: " << m_frameBuffer.size());
     }
 }
 
@@ -320,6 +316,9 @@ GhnPlcLlcCodedFlow::ConvertBrrHeaderToPkt (ncr::TxPlan plan)
       if (pkt->GetSize () == bs) break;
       pkt->RemoveAtStart (bs);
     }
+
+  assert(buffer.size () == n_bs);
+
   return buffer;
 }
 ncr::BrrHeader
@@ -330,6 +329,8 @@ GhnPlcLlcCodedFlow::ConvertPktToBrrHeader (GhnBuffer &buffer, std::deque<Segment
   //
   assert(!buffer.empty ());
   auto pkt = *buffer.begin ();
+  auto bs = m_blockSize - GHN_CRC_LENGTH;
+  assert(pkt->GetSize () == bs);
 
   uint8_t n_bs = 0;
   pkt->CopyData (&n_bs, 1);
@@ -356,6 +357,7 @@ GhnPlcLlcCodedFlow::ConvertPktToBrrHeader (GhnBuffer &buffer, std::deque<Segment
   delete[] v;
   return h;
 }
+
 GroupEncAckInfo
 GhnPlcLlcCodedFlow::Receive (GhnBuffer buffer, ConnId connId)
 {
@@ -395,7 +397,6 @@ GhnPlcLlcCodedFlow::Receive (GhnBuffer buffer, ConnId connId)
   auto header = ConvertPktToBrrHeader (buffer, state);
 
   m_brr->RcvHeaderInfo (header.h);
-  ProcessFeedback (header.f);
 
   //
   // process data packets
@@ -419,6 +420,12 @@ GhnPlcLlcCodedFlow::Receive (GhnBuffer buffer, ConnId connId)
       it++;
 
     }
+
+  //
+  // process feedback (and produce own feedback message considering just received packets)
+  //
+  ProcessFeedback (header.f);
+
   //
   // find if I am on the main path
   //
@@ -431,31 +438,39 @@ GhnPlcLlcCodedFlow::Receive (GhnBuffer buffer, ConnId connId)
   GroupEncAckInfo info;
   if (m_id == nh)
     {
-      NS_LOG_UNCOND("Connection: " << m_connId << ", Attaching ACK");
+      NS_LOG_UNCOND("Connection: " << m_connId << " " << m_id << ", Attaching ACK");
       auto hBuf = ConvertBrrHeaderToPkt (ncr::TxPlan ());
+      //
+      // add CRC
+      //
+      auto it = hBuf.begin ();
+      while (it != hBuf.end ())
+        {
+          (*it)->AddPaddingAtEnd (GHN_CRC_LENGTH);
+          it++;
+        }
       info.brrFeedback.insert (info.brrFeedback.begin (), hBuf.begin (), hBuf.end ());
     }
   return info;
 }
-
 void
 GhnPlcLlcCodedFlow::ReceiveAck (GroupEncAckInfo info, ConnId connId)
 {
   SIM_LOG_FUNC (COMM_NODE_LOG);
 
-  NS_LOG_UNCOND("Connection: " << m_connId << ", Processing ACK");
+  NS_LOG_UNCOND("Connection: " << m_connId << " " << m_id << ", Processing ACK");
 
   auto buffer = info.brrFeedback;
-  assert(!buffer.empty());
+  assert(!buffer.empty ());
 
   std::deque<SegmentState> state = CheckCrc (buffer, connId);
   //
-   // process header
-   //
-   auto header = ConvertPktToBrrHeader (buffer, state);
+  // process header
+  //
+  auto header = ConvertPktToBrrHeader (buffer, state);
 
-   m_brr->RcvHeaderInfo (header.h);
-   ProcessFeedback (header.f);
+  m_brr->RcvHeaderInfo (header.h);
+  ProcessFeedback (header.f);
 }
 
 bool
@@ -463,22 +478,25 @@ GhnPlcLlcCodedFlow::IsQueueEmpty ()
 {
   SIM_LOG_FUNC (COMM_NODE_LOG);
 
-  if (!m_frameBuffer.empty ()) return false;
-
   if (m_feedback.updated) return false;
+
+  if (Simulator::Now () < 2 * GHN_WARMUP_PERIOD) return true;
+
+  if (!m_frameBuffer.empty ()) return false;
 
   double dr = m_drCalc.Get ();
   double rel_dr = dr * PLC_Phy::GetSymbolDuration ().GetSeconds ();
   NS_LOG_UNCOND(
-          "Connection: " << m_connId << ", time: " << Simulator::Now() << ", data rate: " << dr << " bps, relative data rate: " << rel_dr << " bits");
+          "Connection: " << m_connId << " " << m_id << ", data rate: " << dr << " bps, relative data rate: " << rel_dr << " bits");
 
-  //  if (!m_brr->MaySendData (rel_dr)) return true;
+//    if (!m_brr->MaySendData (rel_dr)) return true;
 
   auto tx_amount = m_brr->GetAmountTxData ();
-  NS_LOG_UNCOND("Connection: " << m_connId << ", TX amount: " << tx_amount << " NC symbols");
+  NS_LOG_UNCOND("Connection: " << m_connId << " " << m_id << ", TX amount: " << tx_amount << " NC symbols");
 
   return (tx_amount == 0);
 }
+
 void
 GhnPlcLlcCodedFlow::SetLogCallback (add_log_func addLog)
 {

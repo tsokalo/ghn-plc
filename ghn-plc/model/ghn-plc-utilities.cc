@@ -158,7 +158,6 @@ GroupEncAckInfoToPkt (GroupEncAckInfo info)
       while (it != info.brrFeedback.end ())
         {
           pkt->AddAtEnd (*it);
-          pkt->AddPaddingAtEnd (4);
           it++;
         }
     }
@@ -169,6 +168,7 @@ GroupEncAckInfoToPkt (GroupEncAckInfo info)
 
   return pkt;
 }
+
 GroupEncAckInfo
 PktToGroupEncAckInfo (Ptr<Packet> pkt)
 {
@@ -224,7 +224,6 @@ PktToGroupEncAckInfo (Ptr<Packet> pkt)
         {
           assert(start + bs <= pkt->GetSize ());
           auto p = pkt->CreateFragment (start, bs);
-          p->RemoveAtEnd (4);
           info.brrFeedback.push_back (p);
           start += bs;
         }

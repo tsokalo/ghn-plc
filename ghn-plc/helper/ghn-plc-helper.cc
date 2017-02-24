@@ -631,11 +631,11 @@ GhnPlcHelper::CreateFlow (ConnId connId, Ptr<GhnPlcDllMacCsma> mac, Ptr<GhnPlcDl
       flow_o->SetGenCallback (cb);
       flow_o->Configure (type, connId.dst.GetAsInt (), m_sp);
 
-      if (m_stickToMainPath)
+      if (m_stickToMainPath && mac->GetDllManagement ()->GetAddress() != connId.dst)
         {
           auto dll = mac->GetDllManagement ();
           auto rt = dll->GetRoutingTable ();
-          auto nh = rt->GetNextHopAddress (connId.src, connId.dst);
+          auto nh = rt->GetNextHopAddress (mac->GetDllManagement ()->GetAddress(), connId.dst);
 
           flow_o->SetNextHopVertex (nh);
         }
