@@ -86,6 +86,8 @@ private:
   ProcessNetDiscovery (ncr::FeedbackInfo f);
   void
   ProcessRetransRequest (ncr::FeedbackInfo f);
+  void
+  UpdateFeedback();
 
   routing_rules_ptr m_brr;
   encoder_queue_ptr m_encQueue;
