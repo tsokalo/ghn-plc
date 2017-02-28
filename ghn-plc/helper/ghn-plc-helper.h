@@ -39,6 +39,7 @@ namespace ns3
 namespace ghn {
 typedef std::map<std::string, Ptr<GhnPlcNetDevice> > NcNetdeviceMap;
 typedef std::map<uint32_t, UanAddress> AddressMap;
+typedef std::shared_ptr<ncr::SimParameters> sim_par_ptr;
 
 
 class GhnPlcHelper : public Object
@@ -201,7 +202,7 @@ protected:
   Ptr<GhnPlcRoutingTable> m_routingTable;
   Ptr<GhnPlcBitLoading> m_bitLoadingTable;
   Ptr<GhnPlcStats> m_ncStats;
-  ncr::SimParameters m_sp;
+  sim_par_ptr m_sp;
   //
   // flags
   //

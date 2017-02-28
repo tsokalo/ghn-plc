@@ -14,37 +14,37 @@
 #include <ns3/object-factory.h>
 #include "ns3/plc-simulator-impl.h"
 #include "plc-full-duplex-ofdm-phy.h"
-NS_LOG_COMPONENT_DEFINE ("PLC_FullDuplexOfdmPhy");
+NS_LOG_COMPONENT_DEFINE("PLC_FullDuplexOfdmPhy");
 
 namespace ns3
 {
 
-NS_OBJECT_ENSURE_REGISTERED (PLC_FullDuplexOfdmPhy);
+NS_OBJECT_ENSURE_REGISTERED(PLC_FullDuplexOfdmPhy);
 
 Time PLC_FullDuplexOfdmPhy::guard_interval_duration = MicroSeconds (20);
 
 TypeId
 PLC_FullDuplexOfdmPhy::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::PLC_FullDuplexOfdmPhy") .SetParent<PLC_Phy> ();
+  static TypeId tid = TypeId ("ns3::PLC_FullDuplexOfdmPhy").SetParent<PLC_Phy> ();
   return tid;
 }
 
 PLC_FullDuplexOfdmPhy::PLC_FullDuplexOfdmPhy ()
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
   m_state = IDLE;
 }
 
 PLC_FullDuplexOfdmPhy::~PLC_FullDuplexOfdmPhy ()
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
 }
 
 void
 PLC_FullDuplexOfdmPhy::DoStart (void)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
   assert(0);
   m_state = IDLE;
   PLC_Phy::DoInitialize ();
@@ -70,8 +70,9 @@ PLC_FullDuplexOfdmPhy::DoDispose ()
 PLC_ChannelTransferImpl *
 PLC_FullDuplexOfdmPhy::DoGetChannelTransferImpl (Ptr<PLC_Phy> rxPhy)
 {
-  NS_LOG_FUNCTION (this << rxPhy);
-  NS_ASSERT_MSG(rxPhy->GetInstanceTypeId().IsChildOf(PLC_FullDuplexOfdmPhy::GetTypeId()), "RX Phy not of type PLC_FullDuplexOfdmPhy");
+  NS_LOG_FUNCTION(this << rxPhy);
+  NS_ASSERT_MSG(rxPhy->GetInstanceTypeId ().IsChildOf (PLC_FullDuplexOfdmPhy::GetTypeId ()),
+          "RX Phy not of type PLC_FullDuplexOfdmPhy");
   Ptr<PLC_RxInterface> rxIf = (StaticCast<PLC_FullDuplexOfdmPhy, PLC_Phy> (rxPhy))->GetRxInterface ();
   return GetTxInterface ()->GetChannelTransferImpl (PeekPointer (rxIf));
 }
@@ -79,8 +80,9 @@ PLC_FullDuplexOfdmPhy::DoGetChannelTransferImpl (Ptr<PLC_Phy> rxPhy)
 Ptr<PLC_ChannelTransferImpl>
 PLC_FullDuplexOfdmPhy::DoGetChannelTransferImplPtr (Ptr<PLC_Phy> rxPhy)
 {
-  NS_LOG_FUNCTION (this << rxPhy);
-  NS_ASSERT_MSG(rxPhy->GetInstanceTypeId().IsChildOf(PLC_FullDuplexOfdmPhy::GetTypeId()), "RX Phy not of type PLC_FullDuplexOfdmPhy");
+  NS_LOG_FUNCTION(this << rxPhy);
+  NS_ASSERT_MSG(rxPhy->GetInstanceTypeId ().IsChildOf (PLC_FullDuplexOfdmPhy::GetTypeId ()),
+          "RX Phy not of type PLC_FullDuplexOfdmPhy");
   Ptr<PLC_RxInterface> rxIf = (StaticCast<PLC_FullDuplexOfdmPhy, PLC_Phy> (rxPhy))->GetRxInterface ();
   return Ptr<PLC_ChannelTransferImpl> (GetTxInterface ()->GetChannelTransferImpl (PeekPointer (rxIf)));
 }
@@ -98,20 +100,22 @@ PLC_FullDuplexOfdmPhy::GetGuardIntervalDuration (void)
 }
 
 void
-PLC_FullDuplexOfdmPhy::CreateInterfaces (Ptr<PLC_Outlet> outlet, Ptr<SpectrumValue> txPsd, Ptr<PLC_Impedance> rxImpedance, Ptr<
-        PLC_Impedance> txImpedance)
+PLC_FullDuplexOfdmPhy::CreateInterfaces (Ptr<PLC_Outlet> outlet, Ptr<SpectrumValue> txPsd, Ptr<PLC_Impedance> rxImpedance,
+        Ptr<PLC_Impedance> txImpedance)
 {
-  NS_LOG_FUNCTION (this << outlet << txPsd << rxImpedance << txImpedance);
+  NS_LOG_FUNCTION(this << outlet << txPsd << rxImpedance << txImpedance);
   m_node = outlet->GetNode ();
 
   NS_ASSERT_MSG(m_node, "PLC_FullDuplexOfdmPhy::CreateInterfaces: outlet has to be bound to a PLC_Node");
   m_outlet = outlet;
 
   Ptr<PLC_Graph> graph = m_node->GetGraph ();
-  NS_ASSERT_MSG(graph, "PLC_FullDuplexOfdmPhy::CreateInterfaces: PLC_Node the outlet is located on is not attached to a PLC_Graph");
+  NS_ASSERT_MSG(graph,
+          "PLC_FullDuplexOfdmPhy::CreateInterfaces: PLC_Node the outlet is located on is not attached to a PLC_Graph");
 
   Ptr<PLC_Channel> ch = graph->GetChannel ();
-  NS_ASSERT_MSG(ch, "PLC_FullDuplexOfdmPhy::CreateInterfaces: the graph the outlet's node is connected to is not bound to a PLC_Channel");
+  NS_ASSERT_MSG(ch,
+          "PLC_FullDuplexOfdmPhy::CreateInterfaces: the graph the outlet's node is connected to is not bound to a PLC_Channel");
 
   if (!m_txInterface)
     {
@@ -146,7 +150,7 @@ Ptr<PLC_TxInterface>
 PLC_FullDuplexOfdmPhy::GetTxInterface (void)
 {
   PLC_LOG_FUNCTION(this);
-  NS_ASSERT_MSG (m_txInterface, "TX interface not yet created!");
+  NS_ASSERT_MSG(m_txInterface, "TX interface not yet created!");
   return m_txInterface;
 }
 
@@ -160,9 +164,10 @@ PLC_FullDuplexOfdmPhy::GetRxInterface (void)
 void
 PLC_FullDuplexOfdmPhy::SetTxPowerSpectralDensity (Ptr<SpectrumValue> txPsd)
 {
-  NS_ASSERT_MSG (m_txInterface, "Phy interfaces have to be created first before changing txPsd");
+  NS_ASSERT_MSG(m_txInterface, "Phy interfaces have to be created first before changing txPsd");
   if (m_txPsd)
-  NS_ASSERT_MSG (txPsd->GetSpectrumModel() == m_txPsd->GetSpectrumModel(), "PLC_FullDuplexOfdmPhy::SetTxPowerSpectralDensity: new txPsd uses different SpectrumModel");
+  NS_ASSERT_MSG(txPsd->GetSpectrumModel () == m_txPsd->GetSpectrumModel (),
+          "PLC_FullDuplexOfdmPhy::SetTxPowerSpectralDensity: new txPsd uses different SpectrumModel");
 
   m_txPsd = txPsd;
   m_numSubcarriers = m_txPsd->GetSpectrumModel ()->GetNumBands ();
@@ -172,7 +177,7 @@ PLC_FullDuplexOfdmPhy::SetTxPowerSpectralDensity (Ptr<SpectrumValue> txPsd)
 void
 PLC_FullDuplexOfdmPhy::SetShuntImpedance (Ptr<PLC_Impedance> shuntImpedance)
 {
-  NS_LOG_FUNCTION (this << shuntImpedance);
+  NS_LOG_FUNCTION(this << shuntImpedance);
 
 #ifdef PLC_USE_IMPEDANCE_HASHING
   if (shuntImpedance)
@@ -205,7 +210,7 @@ PLC_FullDuplexOfdmPhy::SetShuntImpedance (Ptr<PLC_Impedance> shuntImpedance)
 void
 PLC_FullDuplexOfdmPhy::SetRxImpedance (Ptr<PLC_Impedance> rxImpedance)
 {
-  NS_LOG_FUNCTION (this << rxImpedance);
+  NS_LOG_FUNCTION(this << rxImpedance);
 
 #ifdef PLC_USE_IMPEDANCE_HASHING
   if (rxImpedance)
@@ -238,7 +243,7 @@ PLC_FullDuplexOfdmPhy::SetRxImpedance (Ptr<PLC_Impedance> rxImpedance)
 void
 PLC_FullDuplexOfdmPhy::SetTxImpedance (Ptr<PLC_Impedance> txImpedance)
 {
-  NS_LOG_FUNCTION (this << txImpedance);
+  NS_LOG_FUNCTION(this << txImpedance);
 
 #ifdef PLC_USE_IMPEDANCE_HASHING
   if (txImpedance)
@@ -271,19 +276,19 @@ PLC_FullDuplexOfdmPhy::SetTxImpedance (Ptr<PLC_Impedance> txImpedance)
 void
 PLC_FullDuplexOfdmPhy::SetNoiseFloor (Ptr<const SpectrumValue> noiseFloor)
 {
-  NS_LOG_FUNCTION (this << noiseFloor);
-  GetLinkPerformanceModel ()-> SetNoiseFloor (noiseFloor);
+  NS_LOG_FUNCTION(this << noiseFloor);
+  GetLinkPerformanceModel ()->SetNoiseFloor (noiseFloor);
 }
 
 void
 PLC_FullDuplexOfdmPhy::ComputeEquivalentImpedances (void)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
   if (m_shuntImpedance)
     {
       if (m_rxImpedance)
         {
-          NS_LOG_INFO ("Node has shunt impedance. Using equivalent value of the parallel circuit as RX access impedance");
+          NS_LOG_INFO("Node has shunt impedance. Using equivalent value of the parallel circuit as RX access impedance");
           m_eqRxImpedance = Divide (Multiply (m_rxImpedance, m_shuntImpedance), Add (m_rxImpedance, m_shuntImpedance));
           PLC_LOG_LOGIC("Equivalent RX impedance: " << *m_eqRxImpedance);
         }
@@ -293,7 +298,7 @@ PLC_FullDuplexOfdmPhy::ComputeEquivalentImpedances (void)
         }
       if (m_txImpedance)
         {
-          NS_LOG_INFO ("Node has shunt impedance. Using equivalent value of the parallel circuit as TX access impedance");
+          NS_LOG_INFO("Node has shunt impedance. Using equivalent value of the parallel circuit as TX access impedance");
           m_eqTxImpedance = Divide (Multiply (m_txImpedance, m_shuntImpedance), Add (m_txImpedance, m_shuntImpedance));
           PLC_LOG_LOGIC("Equivalent TX impedance: " << *m_eqTxImpedance);
         }
@@ -312,12 +317,12 @@ PLC_FullDuplexOfdmPhy::ComputeEquivalentImpedances (void)
 void
 PLC_FullDuplexOfdmPhy::SwitchImpedance (State state)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
 
   if (GetState () == state) return;
 
-  PLC_LOG_LOGIC ("m_eqRxImpedance: " << m_eqRxImpedance);
-  PLC_LOG_LOGIC ("m_eqTxImpedance: " << m_eqRxImpedance);
+  PLC_LOG_LOGIC("m_eqRxImpedance: " << m_eqRxImpedance);
+  PLC_LOG_LOGIC("m_eqTxImpedance: " << m_eqRxImpedance);
 
   if (state == TX)
     {
@@ -332,7 +337,7 @@ PLC_FullDuplexOfdmPhy::SwitchImpedance (State state)
 void
 PLC_FullDuplexOfdmPhy::CcaRequest (void)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
   static Time ccaTime = Seconds (CCA_NUM_SYMBOLS * GetSymbolDuration ().GetSeconds ());
   m_ccaEndEvent = Simulator::Schedule (ccaTime, &PLC_FullDuplexOfdmPhy::EndCca, this);
 }
@@ -340,14 +345,14 @@ PLC_FullDuplexOfdmPhy::CcaRequest (void)
 void
 PLC_FullDuplexOfdmPhy::CancelCca (void)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
   m_ccaEndEvent.Cancel ();
 }
 
 void
 PLC_FullDuplexOfdmPhy::EndCca (void)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
   if (!m_ccaConfirmCallback.IsNull ())
     {
       m_ccaConfirmCallback (ClearChannelAssessment ());
@@ -364,10 +369,10 @@ PLC_FullDuplexOfdmPhy::SetCcaConfirmCallback (PLC_PhyCcaConfirmCallback c)
 void
 PLC_FullDuplexOfdmPhy::ChangeState (State newState)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION(this);
   if (newState != GetState ())
     {
-      NS_LOG_UNCOND (this << " state: " << GetState () << " -> " << newState);
+      NS_LOG_UNCOND(this << " state: " << GetState () << " -> " << newState);
       NS_ASSERT_MSG(m_outlet, "PHY's outlet is not set!");
 
       if (newState == TX || newState == TXRX)
@@ -390,17 +395,18 @@ PLC_FullDuplexOfdmPhy::GetState (void)
 Time
 PLC_FullDuplexOfdmPhy::CalculateTransmissionDuration (size_t symbols)
 {
-  return Time::FromInteger (((PLC_Phy::GetSymbolDuration ().GetInteger () + GetGuardIntervalDuration ().GetInteger ())
-          * symbols), Time::GetResolution ());
+  return Time::FromInteger (
+          ((PLC_Phy::GetSymbolDuration ().GetInteger () + GetGuardIntervalDuration ().GetInteger ()) * symbols),
+          Time::GetResolution ());
 }
 
 void
 PLC_FullDuplexOfdmPhy::SendFrame (Ptr<PLC_TrxMetaInfo> metaInfo)
 {
-  NS_LOG_FUNCTION (this << metaInfo);
-  NS_ASSERT_MSG (m_txInterface, "Phy has no tx interface");
-  NS_ASSERT (metaInfo && metaInfo->GetFrame ());
-  NS_ASSERT (GetState () != TXRX);
+  NS_LOG_FUNCTION(this << metaInfo);
+  NS_ASSERT_MSG(m_txInterface, "Phy has no tx interface");
+  NS_ASSERT(metaInfo && metaInfo->GetFrame ());
+  NS_ASSERT(GetState () != TXRX);
 
   Ptr<Packet> frame = metaInfo->GetFrame ();
 
@@ -409,7 +415,7 @@ PLC_FullDuplexOfdmPhy::SendFrame (Ptr<PLC_TrxMetaInfo> metaInfo)
   NS_LOG_LOGIC(Simulator::Now() << " -> SendFrame on PHY. Frame duration: " << tx_duration);
 
   m_txEnd = Simulator::Now () + tx_duration;
-  NS_LOG_LOGIC ("Start sending frame...");
+  NS_LOG_LOGIC("Start sending frame...");
   if (GetState () == RX)
     {
       ChangeState (TXRX);
@@ -426,7 +432,7 @@ PLC_FullDuplexOfdmPhy::SendFrame (Ptr<PLC_TrxMetaInfo> metaInfo)
 void
 PLC_FullDuplexOfdmPhy::NoiseStart (uint32_t txId, Ptr<const SpectrumValue> psd, Time duration)
 {
-  NS_LOG_FUNCTION (this << txId << psd);
+  NS_LOG_FUNCTION(this << txId << psd);
 
   EventId noiseRemoveEvent;
   if (m_rxNoisePsdMap.find (txId) != m_rxNoisePsdMap.end ())
@@ -437,12 +443,15 @@ PLC_FullDuplexOfdmPhy::NoiseStart (uint32_t txId, Ptr<const SpectrumValue> psd, 
     }
 
   PLC_LOG_LOGIC("Adding " << txId << " to noise psd map");
-  m_rxNoisePsdMap[txId].second = psd;
-  PLC_LOG_LOGIC ("Mean Rx power before adding noise signal: " << GetLinkPerformanceModel ()->GetMeanRxPower());
+  Ptr<SpectrumValue> v = Create<SpectrumValue> (psd->GetSpectrumModel ());
+  if (m_rxNoisePsdMap[txId].second) *v += *(m_rxNoisePsdMap[txId].second);
+  *v += *psd;
+  m_rxNoisePsdMap[txId].second = v;
+  PLC_LOG_LOGIC("Mean Rx power before adding noise signal: " << GetLinkPerformanceModel ()->GetMeanRxPower());
   GetLinkPerformanceModel ()->AddNoiseSignal (psd);
-  PLC_LOG_LOGIC ("Interference signal: " << *psd);
+  PLC_LOG_LOGIC("Interference signal: " << *psd);
 
-  PLC_LOG_LOGIC ("Mean Rx power after adding noise signal: " << GetLinkPerformanceModel ()->GetMeanRxPower());
+  PLC_LOG_LOGIC("Mean Rx power after adding noise signal: " << GetLinkPerformanceModel ()->GetMeanRxPower());
 
   noiseRemoveEvent = Simulator::Schedule (duration, &PLC_FullDuplexOfdmPhy::NoiseStop, this, txId);
   m_rxNoisePsdMap[txId].first = noiseRemoveEvent;
@@ -451,7 +460,7 @@ PLC_FullDuplexOfdmPhy::NoiseStart (uint32_t txId, Ptr<const SpectrumValue> psd, 
 void
 PLC_FullDuplexOfdmPhy::NoiseStop (uint32_t txId)
 {
-  NS_LOG_FUNCTION (this << txId);
+  NS_LOG_FUNCTION(this << txId);
 
   if (m_rxNoisePsdMap.find (txId) == m_rxNoisePsdMap.end ())
     {
@@ -470,11 +479,12 @@ PLC_FullDuplexOfdmPhy::NoiseStop (uint32_t txId)
 void
 PLC_FullDuplexOfdmPhy::DoUpdateRxPsd (uint32_t txId, Ptr<const SpectrumValue> rxSignal)
 {
-  NS_LOG_FUNCTION (this << txId << rxSignal);
+  NS_LOG_FUNCTION(this << txId << rxSignal);
 
   if ((GetState () == RX || GetState () == TXRX) && m_locked_txId == txId)
     {
-      NS_ASSERT_MSG (m_rxNoisePsdMap.find (txId) == m_rxNoisePsdMap.end (), "TxId also registered as interfering source, something went wrong...");
+      NS_ASSERT_MSG(m_rxNoisePsdMap.find (txId) == m_rxNoisePsdMap.end (),
+              "TxId also registered as interfering source, something went wrong...");
       GetLinkPerformanceModel ()->AlterRxSignal (rxSignal);
     }
   else
@@ -484,7 +494,7 @@ PLC_FullDuplexOfdmPhy::DoUpdateRxPsd (uint32_t txId, Ptr<const SpectrumValue> rx
           GetLinkPerformanceModel ()->RemoveNoiseSignal (m_rxNoisePsdMap[txId].second);
           GetLinkPerformanceModel ()->AddNoiseSignal (rxSignal);
 
-          PLC_LOG_LOGIC ("Adding " << txId << " to noise psd map");
+          PLC_LOG_LOGIC("Adding " << txId << " to noise psd map");
           m_rxNoisePsdMap[txId].second = rxSignal;
         }
     }

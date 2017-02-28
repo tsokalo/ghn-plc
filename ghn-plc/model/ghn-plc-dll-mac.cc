@@ -60,7 +60,7 @@ GhnPlcDllMac::SetImmediateFeedback (bool v)
   m_immediateFeedback = v;
 }
 void
-GhnPlcDllMac::SetLowerSrcPriority(bool v)
+GhnPlcDllMac::SetLowerSrcPriority (bool v)
 {
   m_useLowerSrcPriority = v;
 }
@@ -389,6 +389,7 @@ GhnPlcDllMacCsma::DoNotifyTransmissionFailure (void)
     }
 
   SetState (GAP);
+  if (m_lastEndTxEvent.IsRunning ()) m_lastEndTxEvent.Cancel ();
   m_lastEndTxEvent = Simulator::Schedule (MicroSeconds (GDOTHN_MIN_TIFG_DURATION), &GhnPlcDllMacCsma::EndTxFailure, this);
 }
 
@@ -690,7 +691,7 @@ GhnPlcDllMacCsma::ConfigurePhy (SendTuple st)
   auto rt = m_dllMan->GetRoutingTable ();
   auto bl = m_dllMan->GetBitLoadingTable ();
   auto nh = st.GetNextHopAddress ();
-  auto src = rt->GetIdByAddress(m_dllMan->GetAddress());
+  auto src = rt->GetIdByAddress (m_dllMan->GetAddress ());
 
   m_lastTxSourceId = rt->GetIdByAddress (connId.src);
   m_destinationId = rt->GetIdByAddress (connId.dst);
@@ -738,6 +739,9 @@ GhnPlcDllMacCsmaCd::~GhnPlcDllMacCsmaCd ()
 void
 GhnPlcDllMacCsmaCd::CollisionDetection ()
 {
+  //
+  // calling this function on the collision detection by the sending nodes
+  //
   NS_LOG_FUNCTION(this << GetState());
 
   NS_LOG_LOGIC("Collision detected");
@@ -745,6 +749,23 @@ GhnPlcDllMacCsmaCd::CollisionDetection ()
   NS_ASSERT_MSG(GetState () == TX || GetState () == SEND_ACK, "MAC State: " << GetState ());
 
   DoNotifyTransmissionFailure ();
+}
+void
+GhnPlcDllMacCsmaCd::AbortReception ()
+{
+  //
+  // calling this function on the collision detection by the receiving nodes
+  //
+  NS_LOG_FUNCTION(this << GetState());
+
+  if (!(GetState () == TX || GetState () == SEND_ACK))
+    {
+      NS_LOG_LOGIC("Aborting reception");
+
+      if(m_lastBackoffEvent.IsRunning())m_lastBackoffEvent.Cancel();
+      m_ccaCancel();
+      DoNotifyTransmissionFailure ();
+    }
 }
 uint64_t
 GhnPlcDllMacCsmaCd::GetBackoffSlots ()
@@ -770,6 +791,11 @@ operator<< (std::ostream& os, GhnPlcCsmaNodeState state)
   case (GhnPlcCsmaNodeState::TX):
     {
       os << "TX";
+      break;
+    }
+  case (GhnPlcCsmaNodeState::CCA):
+    {
+      os << "CCA";
       break;
     }
   case (GhnPlcCsmaNodeState::RX):

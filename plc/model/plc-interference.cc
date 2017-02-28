@@ -99,6 +99,7 @@ PLC_Interference::DoDispose ()
 void
 PLC_Interference::StartRx (Ptr<const SpectrumValue> rxPsd)
 {
+        NS_LOG_UNCOND("Start Interference RX");
 	NS_LOG_FUNCTION (this << rxPsd);
 	NS_LOG_LOGIC (*rxPsd);
 	NS_ASSERT_MSG(m_noiseFloor, "PLC_Interference: Noise floor psd has to be set before using interference instance!");

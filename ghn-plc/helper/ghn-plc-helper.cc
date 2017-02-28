@@ -15,6 +15,8 @@
 #include "ns3/ghn-plc-greedy-udp-client.h"
 #include "ns3/ghn-plc-bit-loading-data.h"
 
+#include "utils/utils.h"
+
 namespace ns3
 {
 namespace ghn
@@ -82,6 +84,8 @@ GhnPlcHelper::GhnPlcHelper (BandPlanType bandplan)
 AddressMap
 GhnPlcHelper::Setup (void)
 {
+  m_sp = sim_par_ptr(new ncr::SimParameters("/home/tsokalo/workspace/ns-allinone-3.25/ns-3.25/src/ghn-plc/" + ncr::GetSimParamFileName()));
+
   NS_ASSERT_MSG(m_txPsd, "TX psd not set!");
 
   NS_LOG_LOGIC("Setting up " << m_node_list.size() << " nodes");
@@ -103,8 +107,8 @@ GhnPlcHelper::Setup (void)
     }
 
   m_logger = logger_ptr (new ncr::Logger (m_resDir));
-  if (!m_allowCooperation) m_sp.mutualPhyLlcCoding = false;
-  std::cout << "Mutual LLC and PHY coding: " << (m_sp.mutualPhyLlcCoding ? "ACTIVE" : "NOT ACTIVE") << std::endl;
+  if (!m_allowCooperation) m_sp->mutualPhyLlcCoding = false;
+  std::cout << "Mutual LLC and PHY coding: " << (m_sp->mutualPhyLlcCoding ? "ACTIVE" : "NOT ACTIVE") << std::endl;
 
   ObjectFactory netdeviceFactory;
   netdeviceFactory.SetTypeId (GhnPlcNetDevice::GetTypeId ());
@@ -274,6 +278,10 @@ GhnPlcHelper::Setup (void)
           StaticCast<PLC_InfRateFDPhy, PLC_Phy> (phy)->SetCollisionDetection (
                   MakeCallback (&GhnPlcDllMacCsmaCd::CollisionDetection,
                           (StaticCast<GhnPlcDllMacCsmaCd, GhnPlcDllMac> (dllManager->GetDllMac ()))));
+
+          StaticCast<PLC_InfRateFDPhy, PLC_Phy> (phy)->SetNotifyMacAbortReceptionCallback (
+                  MakeCallback (&GhnPlcDllMacCsmaCd::AbortReception,
+                          (StaticCast<GhnPlcDllMacCsmaCd, GhnPlcDllMac> (dllManager->GetDllMac ()))));
         }
       else
         {
@@ -403,6 +411,7 @@ GhnPlcHelper::CreateRoutingTable ()
 
   m_routingTable->PrintRoutingTable ();
 }
+
 void
 GhnPlcHelper::CreateBitLoadingTable ()
 {
@@ -426,7 +435,7 @@ GhnPlcHelper::CreateBitLoadingTable ()
       for (nit = m_node_list.begin (); nit != m_node_list.end (); nit++)
         {
 
-          auto per = m_sp.mutualPhyLlcCoding ? m_sp.per : MIN_PER_VAL;
+          auto per = m_sp->mutualPhyLlcCoding ? m_sp->per : MIN_PER_VAL;
           m_bitLoadingTable->GetObject<NcBlVarBatMap> ()->SetPer ((*nit)->GetVertexId (), per);
           std::cout << "Setting PER " << per << " for node " << (*nit)->GetVertexId () << std::endl;
         }
@@ -627,9 +636,9 @@ GhnPlcHelper::CreateFlow (ConnId connId, Ptr<GhnPlcDllMacCsma> mac, Ptr<GhnPlcDl
               MakeCallback (&GhnPlcLlcCodedFlow::Receive, flow_o), MakeCallback (&GhnPlcLlcCodedFlow::ReceiveAck, flow_o),
               MakeCallback (&GhnPlcLlcCodedFlow::IsQueueEmpty, flow_o), MakeCallback (&GhnPlcLlcCodedFlow::SendDown, flow_o));
 
-      m_sp.sendRate = 5000;
+      m_sp->sendRate = 5000;
       flow_o->SetGenCallback (cb);
-      flow_o->Configure (type, connId.dst.GetAsInt (), m_sp);
+      flow_o->Configure (type, connId.dst.GetAsInt (), *m_sp);
 
       if (m_stickToMainPath && mac->GetDllManagement ()->GetAddress() != connId.dst)
         {

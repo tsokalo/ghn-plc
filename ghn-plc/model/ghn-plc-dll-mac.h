@@ -26,7 +26,8 @@
 
 namespace ns3
 {
-namespace ghn {
+namespace ghn
+{
 std::ostream&
 operator<< (std::ostream& os, GhnPlcCsmaNodeState state);
 
@@ -53,7 +54,7 @@ public:
   void
   SetImmediateFeedback (bool v = true);
   void
-  SetLowerSrcPriority(bool v = true);
+  SetLowerSrcPriority (bool v = true);
 
   void
   SetDllLlc (Ptr<GhnPlcDllLlc> ncDllLlc);
@@ -100,8 +101,8 @@ public:
   bool
   Receive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, const UanAddress& source, const UanAddress& dest);
   virtual bool
-          DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, const UanAddress& source, const UanAddress& dest,
-                  uint8_t flowId) = 0;
+  DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, const UanAddress& source, const UanAddress& dest,
+          uint8_t flowId) = 0;
 
   typedef Callback<bool, GhnPlcPhyFrameType, Ptr<const Packet> > MpduForwardDownCallback;
   typedef Callback<GroupEncAckInfo, GhnBuffer, ConnId> LpduForwardUpCallback;
@@ -119,16 +120,25 @@ public:
   void
   SetMacCycleBegin (Time macBegin);
 
-
-  void SetSetMcsCallback(SetMcsCallback cb){m_setMcsCallback = cb;}
-  void SetSetTxPsdCallback(SetTxPsdCallback cb){m_setTxPsdCallback = cb;}
-  void CreateLogger ();
+  void
+  SetSetMcsCallback (SetMcsCallback cb)
+  {
+    m_setMcsCallback = cb;
+  }
+  void
+  SetSetTxPsdCallback (SetTxPsdCallback cb)
+  {
+    m_setTxPsdCallback = cb;
+  }
+  void
+  CreateLogger ();
   void
   SetResDirectory (std::string resDir)
   {
     m_resDir = resDir;
   }
-  void SetTimeCallback(TimeCallback cb)
+  void
+  SetTimeCallback (TimeCallback cb)
   {
     m_setTimeCallback = cb;
   }
@@ -227,8 +237,8 @@ public:
   DoCancelEvents (void);
 
   virtual bool
-          DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, const UanAddress& source, const UanAddress& dest,
-                  uint8_t flowId);
+  DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, const UanAddress& source, const UanAddress& dest,
+          uint8_t flowId);
   virtual bool
   DoStartTx (void);
   void
@@ -315,14 +325,13 @@ public:
 
   void
   CollisionDetection ();
+  void
+  AbortReception ();
 
   uint64_t
   GetBackoffSlots ();
 
-
 private:
-
-
 
 };
 }

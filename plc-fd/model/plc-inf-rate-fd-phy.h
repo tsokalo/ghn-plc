@@ -57,6 +57,7 @@ static std::array<double, 85> sca_ecg =
 namespace ns3
 {
 typedef Callback<void> PLC_CollisionDetection;
+typedef Callback<void> NotifyMacAbortReceptionCallback;
 typedef Callback<void, uint32_t, Ptr<const SpectrumValue>, Ptr<const PLC_TrxMetaInfo> > EndRxHeaderCallback;
 //typedef std::function<void(uint32_t, Ptr<const SpectrumValue>, Ptr<const PLC_TrxMetaInfo>) > EndRxHeaderCallback;
 
@@ -154,6 +155,11 @@ public:
     m_collisionDetection = cb;
   }
   void
+  SetNotifyMacAbortReceptionCallback(NotifyMacAbortReceptionCallback cb)
+  {
+    m_notifyMacAbort = cb;
+  }
+  void
   SetEndRxHeaderCallback(EndRxHeaderCallback cb)
   {
     m_endRxHeaderCallback = cb;
@@ -225,6 +231,7 @@ protected:
 
   PLC_PayloadReceptionFailedCallback m_payload_reception_failed_cb;
   PLC_CollisionDetection m_collisionDetection;
+  NotifyMacAbortReceptionCallback m_notifyMacAbort;
   EndRxHeaderCallback m_endRxHeaderCallback;
 };
 }
