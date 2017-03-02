@@ -84,13 +84,14 @@ main (int argc, char *argv[])
   double load = 1.0; //no units
   double dr = 200 * 1000 * 1000; //unit [bps]
   double nodeRate = load * dr / (double) (num_modems - 1); //unit [bps]
-  double simDuration = 1.0; //unit [s]
+  double simDuration = 1.0 + 2 * GHN_WARMUP_PERIOD; //unit [s]
   double minSimDuration = 0.1; //unit [s]
-  uint16_t maxCwSize = 50;
+  uint16_t maxCwSize = 6;
   if (argc > 2)
     {
       maxCwSize = atoi (argv[2]);
     }
+
   BandPlanType bandplan = GDOTHN_BANDPLAN_25MHZ;
   GhnPlcDllMacProtocol macMode = CSMA_CD;
   if (argc > 3)
@@ -144,7 +145,7 @@ main (int argc, char *argv[])
   // Create communication devices
   //
   devHelper.SetNodeList (node_list);
-  if (macMode == CSMA_CA)
+  if (macMode == CSMA_CD)
     {
       devHelper.DefinePhyType (GhnPlcPhyPmdFullD::GetTypeId ());
       devHelper.DefineMacType (GhnPlcDllMacCsmaCd::GetTypeId ());
