@@ -43,7 +43,7 @@ main (int argc, char *argv[])
   //
   std::vector<uint32_t> distance;
   uint32_t distance_ptp = 50;
-  uint16_t num_modems = 30;
+  uint16_t num_modems = 3;
   for (uint16_t i = 0; i < num_modems - 1; i++)
     distance.push_back (distance_ptp); //unit [meters]
   PLC_NodeList node_list;
@@ -63,6 +63,7 @@ main (int argc, char *argv[])
   PLC_Interference interference;
   interference.SetNoiseFloor (noiseFloor);
 
+
   //
   // Create interfaces (usually done by the device helper)
   //
@@ -71,11 +72,11 @@ main (int argc, char *argv[])
   channel->AddTxInterface (txIf);
 
   std::vector<Ptr<PLC_RxInterface> > rxIfs;
-  for(auto i = 1 ; i < node_list.size(); i++)
+  for (uint16_t i = 1; i < node_list.size (); i++)
     {
       auto receiver = node_list.at(i);
       auto rxIf = CreateObject<PLC_RxInterface> (receiver, sm);
-      rxIfs.push_back(rxIf);
+      rxIfs.push_back (rxIf);
       channel->AddRxInterface (rxIf);
     }
 
@@ -86,10 +87,35 @@ main (int argc, char *argv[])
   channel->CalcTransmissionChannels ();
 
   //
+  // Create bit loading table object
+  //
+  Ptr<GhnPlcBitLoading> bl;
+
+  ObjectFactory blFactory;
+  blFactory.SetTypeId (NcBlVarBatMap::GetTypeId ());
+  bl = blFactory.Create<GhnPlcBitLoading> ();
+
+  bl->SetTxEnvelope (txPsd);
+  bl->SetNoiseEnvelope (m_noiseFloor);
+
+  PLC_NodeList::iterator nit;
+  for (nit = node_list.begin (); nit != node_list.end (); nit++)
+    {
+      bl->AddNode (*nit);
+      auto per = 0.2;
+      bl->GetObject<NcBlVarBatMap> ()->SetPer ((*nit)->GetVertexId (), per);
+      std::cout << "Setting PER " << per << " for node " << (*nit)->GetVertexId () << std::endl;
+    }
+  bl->SetResDirectory (resDir);
+  bl->SetChannel (channel);
+  bl->CalcBitLoadingTable ();
+
+
+  //
   // The receive power spectral density computation is done by the channel
   // transfer implementation from TX interface to RX interface
   //
-  for(auto i = 1 ; i < node_list.size(); i++)
+  for (uint16_t i = 1; i < node_list.size (); i++)
     {
       auto rxIf = rxIfs.at(i - 1);
       auto chImpl = txIf->GetChannelTransferImpl (PeekPointer (rxIf));
@@ -97,15 +123,16 @@ main (int argc, char *argv[])
 
       interference.StartRx (rxPsd);
       Ptr<const SpectrumValue> sinr = interference.GetSinr ();
+
       SpectrumValue sinr_db = 20 * Log10 (*sinr);
 
       Bands::const_iterator bi = sinr_db.ConstBandsBegin ();
       Values::const_iterator vi = sinr_db.ConstValuesBegin ();
 
-      std::string f_name = resDir + "sinr_dB_0_" + std::to_string(i) + ".txt";
+      std::string f_name = resDir + "sinr_dB_0_" + std::to_string (i) + ".txt";
       std::cout << "SINR between 0 and " << i << " in " << f_name << std::endl;
 
-      std::ofstream f(f_name, std::ios::out);
+      std::ofstream f (f_name, std::ios::out);
       while (bi != sinr_db.ConstBandsEnd ())
         {
           NS_ASSERT (vi != sinr_db.ConstValuesEnd ());
@@ -115,7 +142,7 @@ main (int argc, char *argv[])
           ++bi;
           ++vi;
         }
-      f.close();
+      f.close ();
     }
 
   return EXIT_SUCCESS;
