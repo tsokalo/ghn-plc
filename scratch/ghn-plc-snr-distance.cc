@@ -7,6 +7,7 @@
 #include <fstream>
 #include <time.h>
 #include <vector>
+#include <string.h>
 
 #include <ns3/core-module.h>
 #include <ns3/nstime.h>
@@ -21,9 +22,16 @@
 using namespace ns3;
 using namespace ghn;
 
+std::string
+ConstructResFoldName (int argc, char *argv[]);
+
 int
 main (int argc, char *argv[])
 {
+  std::string resDir = ConstructResFoldName (argc, argv);
+  ghn::RemoveDirectory (resDir);
+  ghn::CreateDirectory (resDir);
+
   BandPlanType bandplan = GDOTHN_BANDPLAN_25MHZ;
   GhnPlcHelper helper (bandplan);
   Ptr<const SpectrumModel> sm = helper.GetSpectrumModel ();
@@ -51,7 +59,7 @@ main (int argc, char *argv[])
   //
   // Define background noise
   //
-  Ptr<SpectrumValue> noiseFloor = CreateBestCaseBgNoise(sm)->GetNoisePsd ();
+  Ptr<SpectrumValue> noiseFloor = CreateWorstCaseBgNoise(sm)->GetNoisePsd ();
   PLC_Interference interference;
   interference.SetNoiseFloor (noiseFloor);
 
@@ -89,9 +97,42 @@ main (int argc, char *argv[])
 
       interference.StartRx (rxPsd);
       Ptr<const SpectrumValue> sinr = interference.GetSinr ();
-      // TODO: convert to dB and format output with carriers and write to files
-      NS_LOG_UNCOND("SINR between 0 and " << i << ":\n" << *sinr);
+      SpectrumValue sinr_db = 20 * Log10 (*sinr);
+
+      Bands::const_iterator bi = sinr_db.ConstBandsBegin ();
+      Values::const_iterator vi = sinr_db.ConstValuesBegin ();
+
+      std::string f_name = resDir + "sinr_dB_0_" + std::to_string(i) + ".txt";
+      std::cout << "SINR between 0 and " << i << " in " << f_name << std::endl;
+
+      std::ofstream f(f_name, std::ios::out);
+      while (bi != sinr_db.ConstBandsEnd ())
+        {
+          NS_ASSERT (vi != sinr_db.ConstValuesEnd ());
+          double carrier = (bi->fh + bi->fl) / 2;
+          double sinr_db_val = *vi;
+          f << carrier << "\t" << sinr_db_val << std::endl;
+          ++bi;
+          ++vi;
+        }
+      f.close();
     }
 
   return EXIT_SUCCESS;
+}
+
+std::string
+ConstructResFoldName (int argc, char *argv[])
+{
+  std::stringstream ss;
+  std::string path = argv[0]; // get path from argument 0
+  path = path.substr (0, path.rfind ("/") + 1);
+  ss << path << "Results";
+
+  //  for (uint16_t i = 1; i < argc; i++)
+  //    {
+  //      ss << "_" << argv[1];
+  //    }
+  ss << "/";
+  return ss.str ();
 }

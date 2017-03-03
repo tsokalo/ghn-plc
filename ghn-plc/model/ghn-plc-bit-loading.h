@@ -156,6 +156,9 @@ public:
 	ser_map_t CalculateSerMap(SpectrumValue sinr);
 	cap_map_t CalculateCapMap (SpectrumValue sinr);
 
+        uint32_t CalcBitsPerSymbol(BitAllocationTable bat);
+        double GetOfdmSymbolCapacity(BitAllocationTable bat, SpectrumValue sinr);
+
 private:
 
 	void CalcModulationAndCodingScheme();
@@ -163,7 +166,6 @@ private:
 	double GetOfdmSymbolCapacity(ModulationAndCodingScheme mcs, SpectrumValue sinr);
 	// functions in plc-dcmc-capacity should give the same results
 	double CalcSer(ModulationType m, double sinr);
-	uint32_t CalcBitsPerSymbol(BitAllocationTable bat);
 
 	std::map<uint16_t, double> m_desiredPer;
 };

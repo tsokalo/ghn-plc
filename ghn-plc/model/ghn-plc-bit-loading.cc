@@ -554,6 +554,7 @@ NcBlVarBatMap::GetNumEffBits (ModulationAndCodingScheme mcs, SpectrumValue sinr)
   return (sum_bit * codingRates.at ((uint16_t) mcs.ct - 1) < max_sum_bit) ? 0 :
           max_sum_bit / codingRates.at ((uint16_t) mcs.ct - 1);
 }
+
 BitAllocationTable
 NcBlVarBatMap::CalculateBat (double P_t, SpectrumValue sinr)
 {
@@ -669,19 +670,24 @@ NcBlVarBatMap::CalculateCapMap (SpectrumValue sinr)
   return cap_map;
 }
 double
-NcBlVarBatMap::GetOfdmSymbolCapacity (ModulationAndCodingScheme mcs, SpectrumValue sinr)
+NcBlVarBatMap::GetOfdmSymbolCapacity(BitAllocationTable bat, SpectrumValue sinr)
 {
   SpectrumValue sinr_db = 20 * Log10 (sinr); // - m_mcs.gap2Capacity_dB;
   double sum_bit = 0;
-  auto m_it = mcs.bat.begin ();
+  auto m_it = bat.begin ();
   auto sinr_db_it = sinr_db.ValuesBegin ();
-  while (m_it != mcs.bat.end ())
+  while (m_it != bat.end ())
     {
       sum_bit += GetCapPerChannel (*sinr_db_it, *m_it);
       m_it++;
       sinr_db_it++;
     }
   return sum_bit;
+}
+double
+NcBlVarBatMap::GetOfdmSymbolCapacity (ModulationAndCodingScheme mcs, SpectrumValue sinr)
+{
+  return GetOfdmSymbolCapacity(mcs.bat, sinr);
 }
 uint32_t
 NcBlVarBatMap::CalcBitsPerSymbol (BitAllocationTable bat)

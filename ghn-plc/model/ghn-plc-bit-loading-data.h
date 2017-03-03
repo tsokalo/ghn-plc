@@ -20,7 +20,8 @@
 
 namespace ns3
 {
-namespace ghn {
+namespace ghn
+{
 struct PbMapping
 {
   PbMapping (double per_, CodingType ct, double ber, double per)
@@ -65,9 +66,9 @@ public:
     assert(ncr::geq(per, MIN_PER_VAL));
     assert(ncr::leq(per, MAX_PER_VAL));
 
-    for(auto pbm : m_pbMapping)
+    for (auto pbm : m_pbMapping)
       {
-        if(ncr::geq(pbm.per, per))
+        if (ncr::geq (pbm.per, per))
           {
             return pbm;
           }
@@ -77,6 +78,42 @@ public:
 //    uint16_t i = per * 1000 - 1;
 //    assert(i < PER_BER_MAP_SIZE);
 //    return m_pbMapping.at (i);
+  }
+
+  static double
+  get_per (double ber)
+  {
+    auto min_ber = m_pbMapping.begin()->ber;
+    auto max_ber = m_pbMapping.at(m_pbMapping.size() - 1).ber;
+    if(ber < min_ber)return 0;
+    if(ber > max_ber)return 1;
+
+    for (auto pbm : m_pbMapping)
+      {
+        if (ncr::geq (pbm.ber, ber))
+          {
+            return pbm.per;
+          }
+      }
+    assert(0);
+  }
+
+  static double
+  get_ber (double per)
+  {
+    auto min_per = m_pbMapping.begin()->per;
+    auto max_per = m_pbMapping.at(m_pbMapping.size() - 1).per;
+    if(per < min_per)return 0;
+    if(per > max_per)return 1;
+
+    for (auto pbm : m_pbMapping)
+      {
+        if (ncr::geq (pbm.per, per))
+          {
+            return pbm.ber;
+          }
+      }
+    assert(0);
   }
 
 private:
