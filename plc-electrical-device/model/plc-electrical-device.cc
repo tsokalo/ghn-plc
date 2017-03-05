@@ -15,12 +15,13 @@ NS_OBJECT_ENSURE_REGISTERED(PLC_Electrical_Device);
 TypeId
 PLC_Electrical_Device::GetTypeId (void)
 {
-  static TypeId tid = ns3::TypeId ("ns3::PLC_Electrical_Device").SetParent<PLC_Node> ();
+  static TypeId tid =
+          ns3::TypeId ("ns3::PLC_Electrical_Device").SetParent<PLC_Node> ().AddConstructor<PLC_Electrical_Device> ();
   return tid;
 }
 
 PLC_Electrical_Device::PLC_Electrical_Device () :
-        PLC_Node ()
+  PLC_Node ()
 {
   NS_LOG_DEBUG("Electrical device Node Id: " << this->GetVertexId ());
   m_impedance = 0;
@@ -79,7 +80,7 @@ PLC_Electrical_Device::LoadImpedance (Ptr<const SpectrumModel> sm, std::istream 
 {
   fi >> m_impedanceProperties;
 
-  m_impedance = CreateObject < PLC_TimeVariantFreqSelectiveImpedance > (sm);
+  m_impedance = CreateObject<PLC_TimeVariantFreqSelectiveImpedance> (sm);
 
   NS_LOG_DEBUG("Loaded impedance type: " << m_impedanceProperties.impedanceType);
 
@@ -88,8 +89,8 @@ PLC_Electrical_Device::LoadImpedance (Ptr<const SpectrumModel> sm, std::istream 
       uint16_t carrierIndex = 0;
       for (Bands::const_iterator band = sm->Begin (); band != sm->End (); band++)
         {
-          PLC_Value value = GetImpedanceValue (m_impedanceProperties, band->fc,
-                  Seconds (slotIndex * PLC_Time::GetResolutionS ()));
+          PLC_Value value = GetImpedanceValue (m_impedanceProperties, band->fc, Seconds (slotIndex
+                  * PLC_Time::GetResolutionS ()));
           //                    NS_LOG_UNCOND("Setting impedance t<" << slotIndex << "> f<" << carrierIndex << "> : r<" << value.real() << "> i<" << value.imag() << ">");
           m_impedance->Set (slotIndex, carrierIndex++, value.real (), value.imag ());
         }
@@ -105,21 +106,21 @@ PLC_Electrical_Device::LoadImpulsiveNoise (Ptr<const SpectrumModel> sm, std::ist
   for (uint16_t slotIndex = 0; slotIndex < PLC_Time::GetNumTimeslots (); slotIndex++)
     {
       //      NS_LOG_DEBUG("Calculating impulsive noise for time slot<" << slotIndex << ">");
-      Ptr < SpectrumValue > noiseValue = Create < SpectrumValue > (sm);
+      Ptr<SpectrumValue> noiseValue = Create<SpectrumValue> (sm);
       Values::iterator value = noiseValue->ValuesBegin ();
       //                        uint16_t carrierIndex = 0;
 
       for (Bands::const_iterator band = sm->Begin (); band != sm->End (); band++)
         {
-          double noiseWHz = GetImpulseNoiseValue (m_impNoiseProperties, m_impedanceProperties, band,
-                  Seconds (slotIndex * PLC_Time::GetResolutionS ()));
+          double noiseWHz = GetImpulseNoiseValue (m_impNoiseProperties, m_impedanceProperties, band, Seconds (slotIndex
+                  * PLC_Time::GetResolutionS ()));
           (*value) = noiseWHz;
           value++;
           //          NS_LOG_DEBUG("Setting impulsive noise t<" << slotIndex << "> f<" << carrierIndex++ << "> : " << 30 + 10 * log(noiseWHz) << " dBm/Hz>");
         }
       impulsiveNoiseValue.push_back (noiseValue);
     }
-  m_impNoise = Create < PLC_CustomImpulsiveNoiseSource > (this, impulsiveNoiseValue);
+  m_impNoise = Create<PLC_CustomImpulsiveNoiseSource> (this, impulsiveNoiseValue);
   m_impNoise->Init ();
 }
 void
@@ -147,12 +148,17 @@ PLC_Electrical_Device::SetPhy (Ptr<PLC_Phy> phy)
   NS_LOG_FUNCTION(this << phy);
   m_phy = phy;
 }
+Ptr<PLC_Phy>
+PLC_Electrical_Device::GetPhy ()
+{
+  return m_phy;
+}
 void
 PLC_Electrical_Device::CreateImpedance (Ptr<const SpectrumModel> sm)
 {
-  m_impedance = CreateObject < PLC_TimeVariantFreqSelectiveImpedance > (sm);
+  m_impedance = CreateObject<PLC_TimeVariantFreqSelectiveImpedance> (sm);
 
-  InitImpedanceProperties (m_impedanceProperties);
+  InitImpedanceProperties ( m_impedanceProperties);
 
   NS_LOG_DEBUG("Created impedance type: " << m_impedanceProperties.impedanceType);
 
@@ -161,8 +167,8 @@ PLC_Electrical_Device::CreateImpedance (Ptr<const SpectrumModel> sm)
       uint16_t carrierIndex = 0;
       for (Bands::const_iterator band = sm->Begin (); band != sm->End (); band++)
         {
-          PLC_Value value = GetImpedanceValue (m_impedanceProperties, band->fc,
-                  Seconds (slotIndex * PLC_Time::GetResolutionS ()));
+          PLC_Value value = GetImpedanceValue (m_impedanceProperties, band->fc, Seconds (slotIndex
+                  * PLC_Time::GetResolutionS ()));
           //                    NS_LOG_UNCOND("Setting impedance t<" << slotIndex << "> f<" << carrierIndex << "> : r<" << value.real() << "> i<" << value.imag() << ">");
           m_impedance->Set (slotIndex, carrierIndex++, value.real (), value.imag ());
         }
@@ -179,21 +185,21 @@ PLC_Electrical_Device::CreateImpulsiveNoiseValue (Ptr<const SpectrumModel> sm)
   for (uint16_t slotIndex = 0; slotIndex < PLC_Time::GetNumTimeslots (); slotIndex++)
     {
       //      NS_LOG_DEBUG("Calculating impulsive noise for time slot<" << slotIndex << ">");
-      Ptr < SpectrumValue > noiseValue = Create < SpectrumValue > (sm);
+      Ptr<SpectrumValue> noiseValue = Create<SpectrumValue> (sm);
       Values::iterator value = noiseValue->ValuesBegin ();
       //            		uint16_t carrierIndex = 0;
 
       for (Bands::const_iterator band = sm->Begin (); band != sm->End (); band++)
         {
-          double noiseWHz = GetImpulseNoiseValue (m_impNoiseProperties, m_impedanceProperties, band,
-                  Seconds (slotIndex * PLC_Time::GetResolutionS ()));
+          double noiseWHz = GetImpulseNoiseValue (m_impNoiseProperties, m_impedanceProperties, band, Seconds (slotIndex
+                  * PLC_Time::GetResolutionS ()));
           (*value) = noiseWHz;
           value++;
           //          NS_LOG_DEBUG("Setting impulsive noise t<" << slotIndex << "> f<" << carrierIndex++ << "> : " << 30 + 10 * log(noiseWHz) << " dBm/Hz>");
         }
       impulsiveNoiseValue.push_back (noiseValue);
     }
-  m_impNoise = Create < PLC_CustomImpulsiveNoiseSource > (this, impulsiveNoiseValue);
+  m_impNoise = Create<PLC_CustomImpulsiveNoiseSource> (this, impulsiveNoiseValue);
   m_impNoise->Init ();
 
 }

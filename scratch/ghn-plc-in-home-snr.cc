@@ -31,19 +31,31 @@ std::string
 ConstructResFoldName (int argc, char *argv[]);
 
 void
-CreateInhomeTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, Ptr<const SpectrumModel> sm, uint16_t num_modems,
+CreateInhomeTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, uint16_t num_modems,
         uint16_t num_el_devs, double totalSquare, std::ostream &fo);
 void
 SaveBackgroundNoise (Ptr<SpectrumValue> noiseFloor, std::ostream &fo);
 void
-LoadInhomeTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, Ptr<const SpectrumModel> sm, uint16_t &num_modems,
+LoadInhomeTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, uint16_t &num_modems,
         uint16_t &num_el_devs, double &totalSquare, std::istream &fi);
 Ptr<SpectrumValue>
 LoadInhomeBackgroundNoise (Ptr<const SpectrumModel> sm, std::istream &fi);
 
+
+
+//export 'NS_LOG=InhomeTopology=level_all|prefix_time|prefix_node|prefix_func'
+
 int
 main (int argc, char *argv[])
 {
+  //
+  // Set random seed value
+  //
+  typedef std::chrono::high_resolution_clock myclock;
+  myclock::time_point beginning = myclock::now ();
+  myclock::duration d = myclock::now () - beginning;
+  RngSeedManager::SetSeed (d.count ());
+
   std::string resDir = ConstructResFoldName (argc, argv);
   ghn::RemoveDirectory (resDir);
   ghn::CreateDirectory (resDir);
@@ -61,7 +73,7 @@ main (int argc, char *argv[])
   Ptr<PLC_Cable> cable = CreateObject<PLC_NAYY50SE_Cable> (sm);
   Ptr<PLC_Channel> channel;
   Ptr<SpectrumValue> noiseFloor;
-  PlcElectricalDeviceHelper elDevHelper (bandplan);
+  PlcElectricalDeviceHelper elDevHelper (bandplan, sm);
   PLC_ChannelHelper channelHelper (sm);
   Ptr<SpectrumValue> txPsd = devHelper.GetTxPsd ();
 
@@ -75,9 +87,9 @@ main (int argc, char *argv[])
       num_el_devs = 3;
       totalSquare = 60;
 
-      CreateInhomeTopology (node_list, cable, sm, num_modems, num_el_devs, totalSquare, fo);
+      CreateInhomeTopology (node_list, cable, num_modems, num_el_devs, totalSquare, fo);
       modem_list.insert (modem_list.begin (), node_list.begin (), node_list.begin () + num_modems);
-      eldev_list.insert (eldev_list.begin (), node_list.begin () + num_modems, node_list.end ());
+      eldev_list.insert (eldev_list.begin (), node_list.begin () + num_modems, node_list.begin () + num_modems + num_el_devs);
       std::cout << "Created topology.." << std::endl;
 
       //
@@ -98,11 +110,6 @@ main (int argc, char *argv[])
       elDevHelper.SetNodeList (eldev_list);
       elDevHelper.SetChannel (channel);
       elDevHelper.Setup ();
-      SwitchingIntesity switchingIntesity;
-      switchingIntesity.first = 1;
-      switchingIntesity.second = 0;
-      for (auto &eldev : eldev_list)
-        eldev->GetObject<PLC_Electrical_Device> ()->OnStart (switchingIntesity);
 
       elDevHelper.Save (fo);
       cout << "Created electrical devices.." << endl;
@@ -115,9 +122,9 @@ main (int argc, char *argv[])
       // Load scenario from the file
       //
       std::ifstream fi (path, std::ios::in);
-      LoadInhomeTopology (node_list, cable, sm, num_modems, num_el_devs, totalSquare, fi);
+      LoadInhomeTopology (node_list, cable, num_modems, num_el_devs, totalSquare, fi);
       modem_list.insert (modem_list.begin (), node_list.begin (), node_list.begin () + num_modems);
-      eldev_list.insert (eldev_list.begin (), node_list.begin () + num_modems, node_list.end ());
+      eldev_list.insert (eldev_list.begin (), node_list.begin () + num_modems, node_list.begin () + num_modems + num_el_devs);
       std::cout << "Loaded topology.." << std::endl;
       //
       // Load background noise
@@ -149,6 +156,7 @@ main (int argc, char *argv[])
   devHelper.SetChannel (channel);
   devHelper.SetTxImpedance (CreateObject<PLC_ConstImpedance> (sm, PLC_Value (50, 0)));
   devHelper.SetRxImpedance (CreateObject<PLC_ConstImpedance> (sm, PLC_Value (200000, 0)));
+  devHelper.Setup();
   cout << "Created communication devices.." << endl;
 
   channel->InitTransmissionChannels ();
@@ -326,7 +334,7 @@ main (int argc, char *argv[])
               auto d_id = d->GetVertexId ();
               if (s_id == d_id || r_id == d_id) continue;
 
-              auto phy_d = devHelper.GetDevice (r->GetName ())->GetPhy ();
+              auto phy_d = devHelper.GetDevice (d->GetName ())->GetPhy ();
               Ptr<PLC_RxInterface> rxIf3 = choose_rx_if (phy_d);
 
               auto sinr12 = get_sinr (txIf1, rxIf2);
@@ -359,7 +367,7 @@ ConstructResFoldName (int argc, char *argv[])
 }
 
 void
-CreateInhomeTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, Ptr<const SpectrumModel> sm, uint16_t num_modems,
+CreateInhomeTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, uint16_t num_modems,
         uint16_t num_el_devs, double totalSquare, std::ostream &fo)
 {
   fo << num_modems << DELIMITER;
@@ -405,7 +413,7 @@ CreateInhomeTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, Ptr<const S
     }
 }
 void
-LoadInhomeTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, Ptr<const SpectrumModel> sm, uint16_t &num_modems,
+LoadInhomeTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, uint16_t &num_modems,
         uint16_t &num_el_devs, double &totalSquare, std::istream &fi)
 {
   fi >> num_modems;
@@ -454,11 +462,11 @@ void
 SaveBackgroundNoise (Ptr<SpectrumValue> noiseFloor, std::ostream &fo)
 {
   auto it = noiseFloor->ValuesBegin ();
-  auto sm = noiseFloor->GetSpectrumModel ();
 
   while(it != noiseFloor->ValuesEnd())
     {
       fo << *it << DELIMITER;
+      it++;
     }
 }
 

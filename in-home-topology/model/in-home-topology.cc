@@ -9,7 +9,7 @@
 
 namespace ns3
 {
-NS_LOG_COMPONENT_DEFINE("PLC_INHOME_TOPOLOGY");
+NS_LOG_COMPONENT_DEFINE("InhomeTopology");
 
 Room::Room (double L) :
         m_L (L)
@@ -158,6 +158,7 @@ InhomeTopology::InhomeTopology (double totalSquare, uint16_t numModems, uint16_t
         m_numModems (numModems), m_numDevs (numDevs)
 {
   UniformRandomVariable uniRV;
+  uniRV.SetStream(1);
   m_roomSqaure = uniRV.GetValue (15, 45);
   NS_LOG_DEBUG("Sqaure of each room: " << m_roomSqaure);
   m_L = sqrt (m_roomSqaure);
@@ -285,6 +286,7 @@ InhomeTopology::SetupModems(PLC_NodeList &nodes, Ptr<PLC_Cable> cable)
     {
       NS_LOG_DEBUG("Creating a distribution box node " << nodeIndex);
       nodes.at (nodeIndex) = CreateObject<PLC_Node> ();
+      nodes.at (nodeIndex)->SetName (std::string ("Distribution box ") + std::to_string (nodeIndex + 1 - nodes.size () + numDistrBoxes));
     }
   //
   // assign positions to the nodes

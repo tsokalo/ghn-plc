@@ -30,31 +30,36 @@ GhnPlcHelper::GetTypeId (void)
 {
   static TypeId tid = ns3::TypeId ("ns3::GhnPlcHelper").SetParent<Object> ()
 
-  .AddTraceSource ("CostLog", "The cost at the moment of the network start up",
-          MakeTraceSourceAccessor (&GhnPlcHelper::m_costTrace), "ns3::CostLogTrace::TracedCallback");
+  .AddTraceSource ("CostLog", "The cost at the moment of the network start up", MakeTraceSourceAccessor (
+          &GhnPlcHelper::m_costTrace), "ns3::CostLogTrace::TracedCallback");
   return tid;
 }
+GhnPlcHelper::GhnPlcHelper (BandPlanType bandplan, Ptr<const SpectrumModel> sm)
+{
+  m_bandplan = bandplan;
+  PLC_Time::SetTimeModel (50, 50);
+  //  NS_LOG_DEBUG("Using following slot duration: " << PLC_Time::GetResolutionS());
+  //  NS_LOG_DEBUG("Number of slots per cycle: " << PLC_Time::GetNumTimeslots());
 
-GhnPlcHelper::GhnPlcHelper (Ptr<const SpectrumModel> sm, Ptr<SpectrumValue> txPsd, PLC_NodeList& deviceNodes) :
-m_spectrum_model (sm), m_txPsd (txPsd), m_node_list (deviceNodes)
-  {
-    // Modulation and Coding Schemes
-    m_header_mcs = ModulationAndCodingScheme (BPSK, CODING_RATE_1_2, 0);
-    m_payload_mcs = ModulationAndCodingScheme (BPSK, CODING_RATE_1_2, 0);
+  m_spectrum_model = sm;
+  m_txPsd = GetGhnTransmitPSD (m_bandplan, m_spectrum_model);
+  SetPhyParameters (m_bandplan);
+  // Modulation and Coding Schemes
+  m_header_mcs = ModulationAndCodingScheme (BPSK, CODING_RATE_1_2, 0);
+  m_payload_mcs = ModulationAndCodingScheme (BPSK, CODING_RATE_1_2, 0);
 
-    // Default phy model to be used
-    m_phyTid = GhnPlcPhyPmdHalfD::GetTypeId ();
-    // Default mac model to be used
-    m_macTid = GhnPlcDllMacCsma::GetTypeId ();
-    m_bitLoadingTid = NcBlVarTxPsd::GetTypeId ();
+  // Default phy model to be used
+  m_phyTid = GhnPlcPhyPmdHalfD::GetTypeId ();
+  // Default mac model to be used
+  m_macTid = GhnPlcDllMacCsma::GetTypeId ();
 
-    // Create ns3::Node for this NetDevice by default
-    m_create_nodes = true;
-    m_allowCooperation = false;
-    m_stickToMainPath = false;
-    m_immediateFeedback = true;
-    m_useLowerSrcPriority = false;
-  }
+  // Create ns3::Node for this NetDevice by default
+  m_create_nodes = true;
+  m_allowCooperation = false;
+  m_stickToMainPath = false;
+  m_immediateFeedback = true;
+  m_useLowerSrcPriority = false;
+}
 GhnPlcHelper::GhnPlcHelper (BandPlanType bandplan)
 {
   m_bandplan = bandplan;
@@ -84,7 +89,8 @@ GhnPlcHelper::GhnPlcHelper (BandPlanType bandplan)
 AddressMap
 GhnPlcHelper::Setup (void)
 {
-  m_sp = sim_par_ptr(new ncr::SimParameters("/home/tsokalo/workspace/ns-allinone-3.25/ns-3.25/src/ghn-plc/" + ncr::GetSimParamFileName()));
+  m_sp = sim_par_ptr (new ncr::SimParameters ("/home/tsokalo/workspace/ns-allinone-3.25/ns-3.25/src/ghn-plc/"
+          + ncr::GetSimParamFileName ()));
 
   NS_ASSERT_MSG(m_txPsd, "TX psd not set!");
 
@@ -153,23 +159,24 @@ GhnPlcHelper::Setup (void)
 
           phyManager->SetFrameSizeCallback (MakeCallback (&GhnPlcPhyPmdHalfD::GetFrameSize, pmd));
           phyManager->SetGatheredInfBitsCallback (MakeCallback (&GhnPlcPhyPmdHalfD::GetGatheredInformationBits, pmd));
-          phyManager->SetTxInterfaceCallback (
-                  MakeCallback (&PLC_HalfDuplexOfdmPhy::GetTxInterface, pmd->GetObject<PLC_HalfDuplexOfdmPhy> ()));
-          phyManager->SetRxInterfaceCallback (
-                  MakeCallback (&PLC_HalfDuplexOfdmPhy::GetRxInterface, pmd->GetObject<PLC_HalfDuplexOfdmPhy> ()));
+          phyManager->SetTxInterfaceCallback (MakeCallback (&PLC_HalfDuplexOfdmPhy::GetTxInterface, pmd->GetObject<
+                  PLC_HalfDuplexOfdmPhy> ()));
+          phyManager->SetRxInterfaceCallback (MakeCallback (&PLC_HalfDuplexOfdmPhy::GetRxInterface, pmd->GetObject<
+                  PLC_HalfDuplexOfdmPhy> ()));
           pma->SetSendCallback (MakeCallback (&GhnPlcPhyPmdHalfD::Send, pmd));
           pma->SetBandPlanType (m_bandplan);
-          pma->SetGetPmcScheme (
-                  MakeCallback (&PLC_InformationRatePhy::GetPayloadModulationAndCodingScheme,
-                          pmd->GetObject<PLC_InformationRatePhy> ()));
+          pma->SetGetPmcScheme (MakeCallback (&PLC_InformationRatePhy::GetPayloadModulationAndCodingScheme, pmd->GetObject<
+                  PLC_InformationRatePhy> ()));
 
           // Set the function to be called after successful packet reception by phy2
           pmd->SetReceiveSuccessCallback (MakeCallback (&GhnPlcPhyPcs::ReceiveSuccess, pcs));
           pmd->SetReceiveErrorCallback (MakeCallback (&GhnPlcPhyPcs::ReceiveFailure, pcs));
 
-          NS_ASSERT(m_ncStats);
-          pcs->TraceConnectWithoutContext ("PhyRcvFailureLog", MakeCallback (&GhnPlcStats::NotifyPhyFailure, m_ncStats));
-          pcs->TraceConnectWithoutContext ("PhyRcvSuccessLog", MakeCallback (&GhnPlcStats::NotifyPhySuccess, m_ncStats));
+          if (m_ncStats)
+            {
+              pcs->TraceConnectWithoutContext ("PhyRcvFailureLog", MakeCallback (&GhnPlcStats::NotifyPhyFailure, m_ncStats));
+              pcs->TraceConnectWithoutContext ("PhyRcvSuccessLog", MakeCallback (&GhnPlcStats::NotifyPhySuccess, m_ncStats));
+            }
           dllManager->SetPhyPcs (pcs);
 
           pmd->SetBandplan (m_bandplan);
@@ -206,14 +213,14 @@ GhnPlcHelper::Setup (void)
 
           phyManager->SetFrameSizeCallback (MakeCallback (&GhnPlcPhyPmdFullD::GetFrameSize, pmd));
           phyManager->SetGatheredInfBitsCallback (MakeCallback (&GhnPlcPhyPmdFullD::GetGatheredInformationBits, pmd));
-          phyManager->SetTxInterfaceCallback (
-                  MakeCallback (&PLC_FullDuplexOfdmPhy::GetTxInterface, pmd->GetObject<PLC_FullDuplexOfdmPhy> ()));
-          phyManager->SetRxInterfaceCallback (
-                  MakeCallback (&PLC_FullDuplexOfdmPhy::GetRxInterface, pmd->GetObject<PLC_FullDuplexOfdmPhy> ()));
+          phyManager->SetTxInterfaceCallback (MakeCallback (&PLC_FullDuplexOfdmPhy::GetTxInterface, pmd->GetObject<
+                  PLC_FullDuplexOfdmPhy> ()));
+          phyManager->SetRxInterfaceCallback (MakeCallback (&PLC_FullDuplexOfdmPhy::GetRxInterface, pmd->GetObject<
+                  PLC_FullDuplexOfdmPhy> ()));
           pma->SetSendCallback (MakeCallback (&GhnPlcPhyPmdFullD::Send, pmd));
           pma->SetBandPlanType (m_bandplan);
-          pma->SetGetPmcScheme (
-                  MakeCallback (&PLC_InfRateFDPhy::GetPayloadModulationAndCodingScheme, pmd->GetObject<PLC_InfRateFDPhy> ()));
+          pma->SetGetPmcScheme (MakeCallback (&PLC_InfRateFDPhy::GetPayloadModulationAndCodingScheme, pmd->GetObject<
+                  PLC_InfRateFDPhy> ()));
 
           // Set the function to be called after successful packet reception by phy2
           pmd->SetReceiveSuccessCallback (MakeCallback (&GhnPlcPhyPcs::ReceiveSuccess, pcs));
@@ -258,30 +265,27 @@ GhnPlcHelper::Setup (void)
       dllManager->CreateDllMac ();
       if (m_phyTid == GhnPlcPhyPmdHalfD::GetTypeId ())
         {
-          dllManager->GetDllMac ()->SetSetMcsCallback (
-                  MakeCallback (&PLC_InformationRatePhy::SetPayloadModulationAndCodingScheme,
-                          StaticCast<PLC_InformationRatePhy, PLC_Phy> (phy)));
-          dllManager->GetDllMac ()->SetSetTxPsdCallback (
-                  MakeCallback (&PLC_HalfDuplexOfdmPhy::SetTxPowerSpectralDensity,
-                          StaticCast<PLC_HalfDuplexOfdmPhy, PLC_Phy> (phy)));
+          dllManager->GetDllMac ()->SetSetMcsCallback (MakeCallback (
+                  &PLC_InformationRatePhy::SetPayloadModulationAndCodingScheme, StaticCast<PLC_InformationRatePhy, PLC_Phy> (
+                          phy)));
+          dllManager->GetDllMac ()->SetSetTxPsdCallback (MakeCallback (&PLC_HalfDuplexOfdmPhy::SetTxPowerSpectralDensity,
+                  StaticCast<PLC_HalfDuplexOfdmPhy, PLC_Phy> (phy)));
         }
       else if (m_phyTid == GhnPlcPhyPmdFullD::GetTypeId ())
         {
 
-          dllManager->GetDllMac ()->SetSetMcsCallback (
-                  MakeCallback (&PLC_InfRateFDPhy::SetPayloadModulationAndCodingScheme,
-                          StaticCast<PLC_InfRateFDPhy, PLC_Phy> (phy)));
-          dllManager->GetDllMac ()->SetSetTxPsdCallback (
-                  MakeCallback (&PLC_FullDuplexOfdmPhy::SetTxPowerSpectralDensity,
-                          StaticCast<PLC_FullDuplexOfdmPhy, PLC_Phy> (phy)));
+          dllManager->GetDllMac ()->SetSetMcsCallback (MakeCallback (&PLC_InfRateFDPhy::SetPayloadModulationAndCodingScheme,
+                  StaticCast<PLC_InfRateFDPhy, PLC_Phy> (phy)));
+          dllManager->GetDllMac ()->SetSetTxPsdCallback (MakeCallback (&PLC_FullDuplexOfdmPhy::SetTxPowerSpectralDensity,
+                  StaticCast<PLC_FullDuplexOfdmPhy, PLC_Phy> (phy)));
 
-          StaticCast<PLC_InfRateFDPhy, PLC_Phy> (phy)->SetCollisionDetection (
-                  MakeCallback (&GhnPlcDllMacCsmaCd::CollisionDetection,
-                          (StaticCast<GhnPlcDllMacCsmaCd, GhnPlcDllMac> (dllManager->GetDllMac ()))));
+          StaticCast<PLC_InfRateFDPhy, PLC_Phy> (phy)->SetCollisionDetection (MakeCallback (
+                  &GhnPlcDllMacCsmaCd::CollisionDetection, (StaticCast<GhnPlcDllMacCsmaCd, GhnPlcDllMac> (
+                          dllManager->GetDllMac ()))));
 
-          StaticCast<PLC_InfRateFDPhy, PLC_Phy> (phy)->SetNotifyMacAbortReceptionCallback (
-                  MakeCallback (&GhnPlcDllMacCsmaCd::AbortReception,
-                          (StaticCast<GhnPlcDllMacCsmaCd, GhnPlcDllMac> (dllManager->GetDllMac ()))));
+          StaticCast<PLC_InfRateFDPhy, PLC_Phy> (phy)->SetNotifyMacAbortReceptionCallback (MakeCallback (
+                  &GhnPlcDllMacCsmaCd::AbortReception,
+                  (StaticCast<GhnPlcDllMacCsmaCd, GhnPlcDllMac> (dllManager->GetDllMac ()))));
         }
       else
         {
@@ -300,33 +304,32 @@ GhnPlcHelper::Setup (void)
       dllManager->GetDllMac ()->SetMaxCw (m_maxCwSize);
       dllManager->GetDllMac ()->SetBackoffSlotDuration (NanoSeconds (GDOTHN_IST));
       dllManager->GetDllMac ()->AllowCooperation (m_allowCooperation);
-      dllManager->GetDllMac ()->SetImmediateFeedback(m_immediateFeedback);
-      dllManager->GetDllMac ()->SetLowerSrcPriority(m_useLowerSrcPriority);
+      dllManager->GetDllMac ()->SetImmediateFeedback (m_immediateFeedback);
+      dllManager->GetDllMac ()->SetLowerSrcPriority (m_useLowerSrcPriority);
 
       if (m_macTid == GhnPlcDllMacCsma::GetTypeId ())
         {
           NS_LOG_LOGIC("CSMA CA is chosen");
-          dllManager->GetDllMac ()->SetCcaRequestCallback (
-                  MakeCallback (&PLC_HalfDuplexOfdmPhy::CcaRequest, StaticCast<PLC_HalfDuplexOfdmPhy, PLC_Phy> (phy)));
-          dllManager->GetDllMac ()->SetCcaCancelCallback (
-                  MakeCallback (&PLC_HalfDuplexOfdmPhy::CancelCca, StaticCast<PLC_HalfDuplexOfdmPhy, PLC_Phy> (phy)));
+          dllManager->GetDllMac ()->SetCcaRequestCallback (MakeCallback (&PLC_HalfDuplexOfdmPhy::CcaRequest, StaticCast<
+                  PLC_HalfDuplexOfdmPhy, PLC_Phy> (phy)));
+          dllManager->GetDllMac ()->SetCcaCancelCallback (MakeCallback (&PLC_HalfDuplexOfdmPhy::CancelCca, StaticCast<
+                  PLC_HalfDuplexOfdmPhy, PLC_Phy> (phy)));
 
           phy->SetFrameSentCallback (MakeCallback (&GhnPlcDllMac::NotifyTransmissionEnd, dllManager->GetDllMac ()));
-          StaticCast<PLC_HalfDuplexOfdmPhy, PLC_Phy> (phy)->SetCcaConfirmCallback (
-                  MakeCallback (&GhnPlcDllMacCsma::CcaConfirm, dllManager->GetDllMac ()));
+          StaticCast<PLC_HalfDuplexOfdmPhy, PLC_Phy> (phy)->SetCcaConfirmCallback (MakeCallback (&GhnPlcDllMacCsma::CcaConfirm,
+                  dllManager->GetDllMac ()));
         }
       else if (m_macTid == GhnPlcDllMacCsmaCd::GetTypeId ())
         {
           NS_LOG_LOGIC("CSMA CD is chosen");
-          StaticCast<GhnPlcDllMacCsmaCd, GhnPlcDllMacCsma> (dllManager->GetDllMac ())->SetCcaRequestCallback (
-                  MakeCallback (&PLC_FullDuplexOfdmPhy::CcaRequest, StaticCast<PLC_FullDuplexOfdmPhy, PLC_Phy> (phy)));
-          StaticCast<GhnPlcDllMacCsmaCd, GhnPlcDllMacCsma> (dllManager->GetDllMac ())->SetCcaCancelCallback (
-                  MakeCallback (&PLC_FullDuplexOfdmPhy::CancelCca, StaticCast<PLC_FullDuplexOfdmPhy, PLC_Phy> (phy)));
+          StaticCast<GhnPlcDllMacCsmaCd, GhnPlcDllMacCsma> (dllManager->GetDllMac ())->SetCcaRequestCallback (MakeCallback (
+                  &PLC_FullDuplexOfdmPhy::CcaRequest, StaticCast<PLC_FullDuplexOfdmPhy, PLC_Phy> (phy)));
+          StaticCast<GhnPlcDllMacCsmaCd, GhnPlcDllMacCsma> (dllManager->GetDllMac ())->SetCcaCancelCallback (MakeCallback (
+                  &PLC_FullDuplexOfdmPhy::CancelCca, StaticCast<PLC_FullDuplexOfdmPhy, PLC_Phy> (phy)));
 
           phy->SetFrameSentCallback (MakeCallback (&GhnPlcDllMacCsma::NotifyTransmissionEnd, dllManager->GetDllMac ()));
-          StaticCast<PLC_FullDuplexOfdmPhy, PLC_Phy> (phy)->SetCcaConfirmCallback (
-                  MakeCallback (&GhnPlcDllMacCsmaCd::CcaConfirm,
-                          StaticCast<GhnPlcDllMacCsmaCd, GhnPlcDllMacCsma> (dllManager->GetDllMac ())));
+          StaticCast<PLC_FullDuplexOfdmPhy, PLC_Phy> (phy)->SetCcaConfirmCallback (MakeCallback (
+                  &GhnPlcDllMacCsmaCd::CcaConfirm, StaticCast<GhnPlcDllMacCsmaCd, GhnPlcDllMacCsma> (dllManager->GetDllMac ())));
         }
 
       dllManager->GetDllMac ()->SetTimeCallback (MakeCallback (&ncr::Logger::IncTime, &(*m_logger)));
@@ -354,7 +357,7 @@ GhnPlcHelper::Setup (void)
       auto addr = UanAddress::Allocate ();
       m_addressMap[std::distance (m_node_list.begin (), nit)] = addr;
       dev->SetAddress (addr);
-      phyManager->SetAddress(addr);
+      phyManager->SetAddress (addr);
 
       // Setting PLC node here to complete config
       dev->SetPlcNode (*nit);
@@ -407,7 +410,7 @@ GhnPlcHelper::CreateRoutingTable ()
   m_routingTable->CalcRoutingTable ();
 
   for (auto p : m_netdeviceMap)
-    p.second->GetDllManagement ()->SetRoutingTable (m_routingTable);
+  p.second->GetDllManagement ()->SetRoutingTable (m_routingTable);
 
   m_routingTable->PrintRoutingTable ();
 }
@@ -446,7 +449,7 @@ GhnPlcHelper::CreateBitLoadingTable ()
   m_bitLoadingTable->CalcBitLoadingTable ();
 
   for (auto p : m_netdeviceMap)
-    p.second->GetDllManagement ()->SetBitLoadingTable (m_bitLoadingTable);
+  p.second->GetDllManagement ()->SetBitLoadingTable (m_bitLoadingTable);
 
   m_bitLoadingTable->PrintBitLoadingTable ();
 }
@@ -513,7 +516,7 @@ GhnPlcHelper::SetTxImpedance (Ptr<PLC_Impedance> txImpedance)
 Ptr<GhnPlcNetDevice>
 GhnPlcHelper::GetDevice (std::string name)
 {
-  NS_ASSERT_MSG(m_netdeviceMap.find (name) != m_netdeviceMap.end (), "Unknown net device");
+  NS_ASSERT_MSG(m_netdeviceMap.find (name) != m_netdeviceMap.end (), "Unknown net device: " << name);
   return m_netdeviceMap[name];
 }
 
@@ -551,7 +554,7 @@ GhnPlcHelper::SetChannel (Ptr<PLC_Channel> channel)
 bool
 GhnPlcHelper::IsCommunicationPossible (uint32_t src_id, uint32_t dst_id)
 {
-  auto src_address = m_addressMap[src_id];
+auto  src_address = m_addressMap[src_id];
   auto dst_address = m_addressMap[dst_id];
   NS_LOG_UNCOND(
           "Route between " << src_id << "(" << (uint32_t)src_address.GetAsInt() << ") " << " and " << dst_id << "(" << (uint32_t)dst_address.GetAsInt() << ") " << ": " << (m_routingTable->DoesRouteExist (src_address, dst_address) ? "exists" : "does not exist"));
@@ -570,10 +573,10 @@ GhnPlcHelper::PrintCostTable (uint32_t dst_id)
       auto src_address = dit->second->GetDllManagement ()->GetAddress ();
       if (src_address == dst_address) continue;
       std::cout << std::setprecision (0) << (uint16_t) src_address.GetAsInt () << "\t" << (uint16_t) dst_address.GetAsInt ()
-              << "\t" << std::setprecision (20) << m_routingTable->GetRouteCost (src_address, dst_address) << std::endl;
+      << "\t" << std::setprecision (20) << m_routingTable->GetRouteCost (src_address, dst_address) << std::endl;
 
       f << std::setprecision (0) << (uint16_t) src_address.GetAsInt () << "\t" << (uint16_t) dst_address.GetAsInt () << "\t"
-              << std::setprecision (20) << m_routingTable->GetRouteCost (src_address, dst_address) << std::endl;
+      << std::setprecision (20) << m_routingTable->GetRouteCost (src_address, dst_address) << std::endl;
     }
   f.close ();
 }
@@ -734,25 +737,25 @@ GhnPlcHelper::GetGhnTransmitPSD (BandPlanType bandplan, Ptr<const SpectrumModel>
   Ptr<SpectrumValue> txPsd = Create<SpectrumValue> (sm);
   uint16_t iFL3 = ceil (
           m_ofdmParameters[bandplan].m_subcarriersNumber / 2
-                  - (0 + m_ofdmParameters[bandplan].m_fUs * 1000 - FL3) / m_ofdmParameters[bandplan].m_subcarrierSpacing);
+          - (0 + m_ofdmParameters[bandplan].m_fUs * 1000 - FL3) / m_ofdmParameters[bandplan].m_subcarrierSpacing);
   for (uint16_t i = 0; i < PERMANENTLY_MASKED_SUBCARRIERS; i++)
-    (*txPsd)[i] = -150; //dBm/Hz
+  (*txPsd)[i] = -150; //dBm/Hz
   for (uint16_t i = PERMANENTLY_MASKED_SUBCARRIERS; i <= iFL3; i++)
-    (*txPsd)[i] = -85; //dBm/Hz
+  (*txPsd)[i] = -85; //dBm/Hz
   uint16_t iFH1 = floor (
           m_ofdmParameters[bandplan].m_subcarriersNumber / 2
-                  - (0 + m_ofdmParameters[bandplan].m_fUs * 1000 - FH1) / m_ofdmParameters[bandplan].m_subcarrierSpacing);
+          - (0 + m_ofdmParameters[bandplan].m_fUs * 1000 - FH1) / m_ofdmParameters[bandplan].m_subcarrierSpacing);
   if (bandplan == GDOTHN_BANDPLAN_25MHZ)
     {
       for (uint16_t i = iFL3 + 1; i < m_ofdmParameters[bandplan].m_subcarriersNumber; i++)
-        (*txPsd)[i] = -55; //dBm/Hz
+      (*txPsd)[i] = -55; //dBm/Hz
     }
   else
     {
       for (uint16_t i = iFL3 + 1; i <= iFH1; i++)
-        (*txPsd)[i] = -55; //dBm/Hz
+      (*txPsd)[i] = -55; //dBm/Hz
       for (uint16_t i = iFH1 + 1; i < m_ofdmParameters[bandplan].m_subcarriersNumber; i++)
-        (*txPsd)[i] = -85; //dBm/Hz
+      (*txPsd)[i] = -85; //dBm/Hz
     }
 
   // convert to W/Hz
@@ -766,7 +769,7 @@ GhnPlcHelper::SetPhyParameters (BandPlanType bandPlanType)
   PLC_Phy::SetHeaderSymbolDuration (
           Time::FromInteger (
                   (uint64_t) ((m_ofdmParameters[bandPlanType].m_subcarriersNumber
-                          + m_ofdmParameters[bandPlanType].m_headerGuardInterval)
+                                  + m_ofdmParameters[bandPlanType].m_headerGuardInterval)
                           * m_ofdmParameters[bandPlanType].m_sampleDuration), Time::NS));
   PLC_Phy::SetSymbolDuration (NanoSeconds (42240));
   PLC_HalfDuplexOfdmPhy::SetGuardIntervalDuration (NanoSeconds (1280));
@@ -775,8 +778,8 @@ GhnPlcHelper::SetPhyParameters (BandPlanType bandPlanType)
   //Constants: N1 = 7, N2 = 2, k1 = k2 = 8
   Time preambleDuration = Time::FromInteger (
           (uint64_t) ((m_ofdmParameters[bandPlanType].m_windowSize
-                  + GDOTHN_PREAMBLE_N1 * (uint64_t) m_ofdmParameters[bandPlanType].m_subcarriersNumber / GDOTHN_PREAMBLE_K1
-                  + GDOTHN_PREAMBLE_N2 * (uint64_t) m_ofdmParameters[bandPlanType].m_subcarriersNumber / GDOTHN_PREAMBLE_K2)
+                          + GDOTHN_PREAMBLE_N1 * (uint64_t) m_ofdmParameters[bandPlanType].m_subcarriersNumber / GDOTHN_PREAMBLE_K1
+                          + GDOTHN_PREAMBLE_N2 * (uint64_t) m_ofdmParameters[bandPlanType].m_subcarriersNumber / GDOTHN_PREAMBLE_K2)
                   * m_ofdmParameters[bandPlanType].m_sampleDuration), Time::NS);
   PLC_Preamble::SetDuration (preambleDuration);
 

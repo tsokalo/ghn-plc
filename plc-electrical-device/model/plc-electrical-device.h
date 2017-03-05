@@ -67,6 +67,8 @@ public:
 
   void
   SetPhy (Ptr<PLC_Phy> phy);
+  Ptr<PLC_Phy>
+  GetPhy ();
 
   void
   Save (std::ostream &fo);

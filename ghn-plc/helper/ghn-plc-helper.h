@@ -50,8 +50,7 @@ public:
   static TypeId
   GetTypeId (void);
 
-  GhnPlcHelper (Ptr<const SpectrumModel> sm, Ptr<SpectrumValue> txPsd, PLC_NodeList& netdevices);
-
+  GhnPlcHelper (BandPlanType bandplan, Ptr<const SpectrumModel> sm);
   GhnPlcHelper (BandPlanType bandplan);
   void
   SetNodeList (PLC_NodeList& deviceNodes);

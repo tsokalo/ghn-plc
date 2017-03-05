@@ -16,7 +16,7 @@ class PlcElectricalDeviceHelper : public ghn::GhnPlcHelper
 public:
   static TypeId
   GetTypeId (void);
-  PlcElectricalDeviceHelper (ghn::BandPlanType bandplan);
+  PlcElectricalDeviceHelper (ghn::BandPlanType bandplan, Ptr<const SpectrumModel> sm);
 
   void
   Setup (void);
@@ -24,8 +24,12 @@ public:
   Save(std::ofstream &fo);
   void
   Load(std::ifstream &fi);
+  void
+  SetSwitchingIntesity(SwitchingIntesity si);
 
 private:
+
+  SwitchingIntesity m_switchingIntesity;
 
 };
 }
