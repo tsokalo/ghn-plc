@@ -27,7 +27,7 @@ PLC_CustomImpulsiveNoiseSource::GetTypeId (void)
 }
 
 PLC_CustomImpulsiveNoiseSource::PLC_CustomImpulsiveNoiseSource (Ptr<PLC_Node> src_node, PLC_TimeVaryingSpectrumValue tvSm) :
-  PLC_NoiseSource (src_node, tvSm.at (0), PLC_NoiseSource::TIMEVARIANT)
+        PLC_NoiseSource (src_node, tvSm.at (0), PLC_NoiseSource::TIMEVARIANT)
 {
   m_tvSm = tvSm;
   m_currSlot = 0;
@@ -103,8 +103,9 @@ InitImpedanceProperties (PLC_ImpedanceProperties &impedanceProperties)
           impedanceProperties.topLimitResonanceFrequency);
 
   impedanceProperties.openDuration = round (uniRV.GetValue (1, impedanceProperties.numSlots / 4)) * PLC_Time::GetResolutionS ();
-  impedanceProperties.openingMoment = round (uniRV.GetValue (0, impedanceProperties.numSlots / 2
-          - impedanceProperties.openDuration)) * PLC_Time::GetResolutionS ();
+  impedanceProperties.openingMoment = round (
+          uniRV.GetValue (0, impedanceProperties.numSlots / 2 - impedanceProperties.openDuration))
+          * PLC_Time::GetResolutionS ();
   impedanceProperties.phi = uniRV.GetValue (0, pi<double> ());
 }
 void
@@ -118,8 +119,8 @@ InitColouredNoiseProperties (PLC_ColouredNoiseProperties &noiseProperties)
   noiseProperties.changingPart = uniRV.GetValue (noiseProperties.bottomLimitChangingPart, noiseProperties.topLimitChangingPart);
 
   ExponentialRandomVariable expRV;
-  noiseProperties.frequencyFactor = expRV.GetValue (noiseProperties.firstMomemntFrequencyFactor, 100
-          * noiseProperties.firstMomemntFrequencyFactor) - noiseProperties.shiftFrequencyFactor;
+  noiseProperties.frequencyFactor = expRV.GetValue (noiseProperties.firstMomemntFrequencyFactor,
+          100 * noiseProperties.firstMomemntFrequencyFactor) - noiseProperties.shiftFrequencyFactor;
 }
 
 void
@@ -128,59 +129,60 @@ InitNarrowbandNoiseProperties (PLC_NarrowbandNoiseProperties &noiseProperties)
   UniformRandomVariable uniRV;
 
   NormalRandomVariable normRV1;
-  double val = round (normRV1.GetValue (noiseProperties.n0010.firstMomentSpreadFactor,
-          noiseProperties.n0010.secondMomentSpreadFactor));
+  double val = round (
+          normRV1.GetValue (noiseProperties.n0010.firstMomentSpreadFactor, noiseProperties.n0010.secondMomentSpreadFactor));
   noiseProperties.n0010.spreadFactor = (val < 0) ? 0 : val;
 
   for (uint16_t harmonic = 0; harmonic < noiseProperties.n0010.spreadFactor; harmonic++)
     {
-      noiseProperties.n0010.amplitude.push_back (uniRV.GetValue (noiseProperties.n0010.bottomLimitAmplitude,
-              noiseProperties.n0010.topLimitAmplitude));
+      noiseProperties.n0010.amplitude.push_back (
+              uniRV.GetValue (noiseProperties.n0010.bottomLimitAmplitude, noiseProperties.n0010.topLimitAmplitude));
 
       ExponentialRandomVariable expRV;
-      noiseProperties.n0010.bandwidth.push_back (expRV.GetValue (noiseProperties.n0010.firstMomentBandwidth, 100
-              * noiseProperties.n0010.firstMomentBandwidth) + noiseProperties.n0010.minBandwidth);
+      noiseProperties.n0010.bandwidth.push_back (
+              expRV.GetValue (noiseProperties.n0010.firstMomentBandwidth, 100 * noiseProperties.n0010.firstMomentBandwidth)
+                      + noiseProperties.n0010.minBandwidth);
 
-      noiseProperties.n0010.centerFrequency.push_back (uniRV.GetValue (noiseProperties.n0010.bottomLimitCenterFrequency,
-              noiseProperties.n0010.topLimitCenterFrequency));
+      noiseProperties.n0010.centerFrequency.push_back (
+              uniRV.GetValue (noiseProperties.n0010.bottomLimitCenterFrequency, noiseProperties.n0010.topLimitCenterFrequency));
     }
 
   NormalRandomVariable normRV2;
-  val
-          = round (normRV2.GetValue (noiseProperties.n1020.firstMomentSpreadFactor,
-                  noiseProperties.n1020.secondMomentSpreadFactor));
+  val = round (
+          normRV2.GetValue (noiseProperties.n1020.firstMomentSpreadFactor, noiseProperties.n1020.secondMomentSpreadFactor));
   noiseProperties.n1020.spreadFactor = (val < 0) ? 0 : val;
 
   for (uint16_t harmonic = 0; harmonic < noiseProperties.n0010.spreadFactor; harmonic++)
     {
-      noiseProperties.n1020.amplitude.push_back (uniRV.GetValue (noiseProperties.n1020.bottomLimitAmplitude,
-              noiseProperties.n1020.topLimitAmplitude));
+      noiseProperties.n1020.amplitude.push_back (
+              uniRV.GetValue (noiseProperties.n1020.bottomLimitAmplitude, noiseProperties.n1020.topLimitAmplitude));
 
       ExponentialRandomVariable expRV;
-      noiseProperties.n1020.bandwidth.push_back (expRV.GetValue (noiseProperties.n1020.firstMomentBandwidth, 100
-              * noiseProperties.n1020.firstMomentBandwidth) + noiseProperties.n1020.minBandwidth);
+      noiseProperties.n1020.bandwidth.push_back (
+              expRV.GetValue (noiseProperties.n1020.firstMomentBandwidth, 100 * noiseProperties.n1020.firstMomentBandwidth)
+                      + noiseProperties.n1020.minBandwidth);
 
-      noiseProperties.n1020.centerFrequency.push_back (uniRV.GetValue (noiseProperties.n1020.bottomLimitCenterFrequency,
-              noiseProperties.n1020.topLimitCenterFrequency));
+      noiseProperties.n1020.centerFrequency.push_back (
+              uniRV.GetValue (noiseProperties.n1020.bottomLimitCenterFrequency, noiseProperties.n1020.topLimitCenterFrequency));
     }
 
   NormalRandomVariable normRV3;
-  val
-          = round (normRV3.GetValue (noiseProperties.n2030.firstMomentSpreadFactor,
-                  noiseProperties.n2030.secondMomentSpreadFactor));
+  val = round (
+          normRV3.GetValue (noiseProperties.n2030.firstMomentSpreadFactor, noiseProperties.n2030.secondMomentSpreadFactor));
   noiseProperties.n2030.spreadFactor = (val < 0) ? 0 : val;
 
   for (uint16_t harmonic = 0; harmonic < noiseProperties.n2030.spreadFactor; harmonic++)
     {
-      noiseProperties.n2030.amplitude.push_back (uniRV.GetValue (noiseProperties.n2030.bottomLimitAmplitude,
-              noiseProperties.n2030.topLimitAmplitude));
+      noiseProperties.n2030.amplitude.push_back (
+              uniRV.GetValue (noiseProperties.n2030.bottomLimitAmplitude, noiseProperties.n2030.topLimitAmplitude));
 
       ExponentialRandomVariable expRV;
-      noiseProperties.n2030.bandwidth.push_back (expRV.GetValue (noiseProperties.n2030.firstMomentBandwidth, 100
-              * noiseProperties.n2030.firstMomentBandwidth) + noiseProperties.n2030.minBandwidth);
+      noiseProperties.n2030.bandwidth.push_back (
+              expRV.GetValue (noiseProperties.n2030.firstMomentBandwidth, 100 * noiseProperties.n2030.firstMomentBandwidth)
+                      + noiseProperties.n2030.minBandwidth);
 
-      noiseProperties.n2030.centerFrequency.push_back (uniRV.GetValue (noiseProperties.n2030.bottomLimitCenterFrequency,
-              noiseProperties.n2030.topLimitCenterFrequency));
+      noiseProperties.n2030.centerFrequency.push_back (
+              uniRV.GetValue (noiseProperties.n2030.bottomLimitCenterFrequency, noiseProperties.n2030.topLimitCenterFrequency));
     }
 }
 
@@ -206,16 +208,15 @@ InitImpulseNoiseProperties (PLC_ImpulseNoiseProperties &noiseProperties, PLC_Imp
   noiseProperties.frequency = normRV2.GetValue (noiseProperties.firstMomentFrequency, noiseProperties.secondMomentFrequency);
   if (noiseProperties.frequency > 200) noiseProperties.frequency = 200;
 
-  NS_LOG_DEBUG ("Switching frequency (kHz): " << noiseProperties.frequency
-          << ", Train duration (ms): " << noiseProperties.duration << ", Amplitude (mV): " << noiseProperties.amplitude
-          << ", Pulsation frequency (MHz): " << noiseProperties.pulsation
-          << ", Fading factor (1/ms): " << noiseProperties.attenuation << ", or fading factor: " << noiseProperties.attenuation);
+  NS_LOG_DEBUG(
+          "Switching frequency (kHz): " << noiseProperties.frequency << ", Train duration (ms): " << noiseProperties.duration << ", Amplitude (mV): " << noiseProperties.amplitude << ", Pulsation frequency (MHz): " << noiseProperties.pulsation << ", Fading factor (1/ms): " << noiseProperties.attenuation << ", or fading factor: " << noiseProperties.attenuation);
 }
 double
 GetColouredNoiseValue (PLC_ColouredNoiseProperties colouredNoiseProperties, uint64_t frequency)
 {
-  double noisedBmHz = colouredNoiseProperties.constantPart + colouredNoiseProperties.changingPart * std::exp (
-          -static_cast<long double> (frequency) / colouredNoiseProperties.frequencyFactor / pow (10, 6));
+  double noisedBmHz = colouredNoiseProperties.constantPart
+          + colouredNoiseProperties.changingPart
+                  * std::exp (-static_cast<long double> (frequency) / colouredNoiseProperties.frequencyFactor / pow (10, 6));
   return noisedBmHz;
 }
 double
@@ -226,9 +227,12 @@ GetNarrowbandNoiseValue (PLC_NarrowbandNoiseProperties noiseProperties, uint64_t
     {
       for (uint16_t harmonic = 0; harmonic < noiseProperties.n2030.spreadFactor; harmonic++)
         {
-          noisedBmHz += noiseProperties.n2030.amplitude.at (harmonic) * std::exp (-pow (static_cast<double> (frequency) / pow (
-                  10, 6) - noiseProperties.n2030.centerFrequency.at (harmonic), 2) / 2 / pow (
-                  noiseProperties.n2030.bandwidth.at (harmonic), 2));
+          noisedBmHz += noiseProperties.n2030.amplitude.at (harmonic)
+                  * std::exp (
+                          -pow (
+                                  static_cast<double> (frequency) / pow (10, 6)
+                                          - noiseProperties.n2030.centerFrequency.at (harmonic), 2) / 2
+                                  / pow (noiseProperties.n2030.bandwidth.at (harmonic), 2));
           //          NS_LOG_DEBUG("Harmonic[" << harmonic << "] -> amplitude: " << noiseProperties.n2030.amplitude.at (harmonic)
           //                  << ", frequency (Hz): " << frequency << ", center frequency (MHz): " << noiseProperties.n2030.centerFrequency.at (harmonic)
           //                  << ", noise bandwidth (MHz): " << noiseProperties.n2030.bandwidth.at (harmonic));
@@ -238,9 +242,12 @@ GetNarrowbandNoiseValue (PLC_NarrowbandNoiseProperties noiseProperties, uint64_t
     {
       for (uint16_t harmonic = 0; harmonic < noiseProperties.n1020.spreadFactor; harmonic++)
         {
-          noisedBmHz += noiseProperties.n1020.amplitude.at (harmonic) * std::exp (-pow (static_cast<double> (frequency) / pow (
-                  10, 6) - noiseProperties.n1020.centerFrequency.at (harmonic), 2) / 2 / pow (
-                  noiseProperties.n1020.bandwidth.at (harmonic), 2));
+          noisedBmHz += noiseProperties.n1020.amplitude.at (harmonic)
+                  * std::exp (
+                          -pow (
+                                  static_cast<double> (frequency) / pow (10, 6)
+                                          - noiseProperties.n1020.centerFrequency.at (harmonic), 2) / 2
+                                  / pow (noiseProperties.n1020.bandwidth.at (harmonic), 2));
           //          NS_LOG_DEBUG("Harmonic[" << harmonic << "] -> amplitude: " << noiseProperties.n1020.amplitude.at (harmonic)
           //                  << ", frequency (Hz): " << frequency << ", center frequency (MHz): " << noiseProperties.n1020.centerFrequency.at (harmonic)
           //                  << ", noise bandwidth (MHz): " << noiseProperties.n1020.bandwidth.at (harmonic));
@@ -250,9 +257,12 @@ GetNarrowbandNoiseValue (PLC_NarrowbandNoiseProperties noiseProperties, uint64_t
     {
       for (uint16_t harmonic = 0; harmonic < noiseProperties.n0010.spreadFactor; harmonic++)
         {
-          noisedBmHz += noiseProperties.n0010.amplitude.at (harmonic) * std::exp (-pow (static_cast<double> (frequency) / pow (
-                  10, 6) - noiseProperties.n0010.centerFrequency.at (harmonic), 2) / 2 / pow (
-                  noiseProperties.n0010.bandwidth.at (harmonic), 2));
+          noisedBmHz += noiseProperties.n0010.amplitude.at (harmonic)
+                  * std::exp (
+                          -pow (
+                                  static_cast<double> (frequency) / pow (10, 6)
+                                          - noiseProperties.n0010.centerFrequency.at (harmonic), 2) / 2
+                                  / pow (noiseProperties.n0010.bandwidth.at (harmonic), 2));
           //          NS_LOG_DEBUG("Harmonic[" << harmonic << "] -> amplitude: " << noiseProperties.n0010.amplitude.at (harmonic)
           //                  << ", frequency (Hz): " << frequency << ", center frequency (MHz): " << noiseProperties.n0010.centerFrequency.at (harmonic)
           //                  << ", noise bandwidth (MHz): " << noiseProperties.n0010.bandwidth.at (harmonic));
@@ -327,15 +337,14 @@ GetImpedanceValue (PLC_ImpedanceProperties impProp, uint64_t f, Time t)
   //            << ", real resistance (Ohm): " << impProp.realZ << ", off impedance value (Ohm): " << impProp.offStateImpedanceValue
   //            << ", f (Hz): " << f << ", open duration: " << openDuration.GetMilliSeconds() << ", actual time: " << t.GetMilliSeconds());
 
-
   PLC_Value value;
   Time halfMainsPeriod = Seconds (PLC_Time::GetPeriodS () / 2);
   if ((t >= halfMainsPeriod)) t = t - halfMainsPeriod;
 
   double k = f / impProp.resonanceFrequency / pow (10, 6);
   double resistanceBase = impProp.resonanceImpedance / (1 + pow (impProp.qualityFactor * (k - 1 / k), 2));
-  double reactanceBase = -impProp.resonanceImpedance * impProp.qualityFactor * (k - 1 / k) / (1 + pow (impProp.qualityFactor
-          * (k - 1 / k), 2));
+  double reactanceBase = -impProp.resonanceImpedance * impProp.qualityFactor * (k - 1 / k)
+          / (1 + pow (impProp.qualityFactor * (k - 1 / k), 2));
   switch (impProp.impedanceType)
     {
   case CONSTANT_TYPE:
@@ -429,7 +438,7 @@ CreateInhomeBackgroundNoise (Ptr<const SpectrumModel> sm)
   //      NS_LOG_DEBUG("Background noise f<" << carrierIndex << "> : " << (*value) << " dBm/Hz>");
   //      carrierIndex++;
   //    }
-  //  (*bckgNoise) = Pow (10.0, ((*bckgNoise) - 30) / 10.0);
+  (*bckgNoise) = Pow (10.0, ((*bckgNoise) - 30) / 10.0);
   return bckgNoise;
 }
 

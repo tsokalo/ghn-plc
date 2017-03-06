@@ -1,0 +1,48 @@
+\usepackage{tikz}
+\usepackage{pgf}
+\usetikzlibrary{backgrounds}
+\usepackage{xxcolor}
+\usetikzlibrary{calc, positioning}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{varwidth}
+\usepackage{fp}
+\usetikzlibrary{arrows,patterns}
+
+\usetikzlibrary{arrows,shadows,petri}
+%                              wg. tokens
+\newlength{\imagewidth}
+\newlength{\imagescale}
+
+\listfiles
+
+\definecolor{normal color}{HTML}{C9D5FF}
+\definecolor{side color}{HTML}{FFD382}
+\definecolor{patternhatch color}{HTML}{C0C0C0}
+\definecolor{el cable}{HTML}{707070}
+\definecolor{room backg}{HTML}{F2F2F2}
+
+\newcommand{\sizearrowleft}[3]
+{
+  \coordinate (x1) at ($#1+(-1.5,0)$);
+  \coordinate (x2) at ($#1+(-1.5,0)$);
+  \coordinate (y1) at ($#2+(-1.5,0)$);
+  \coordinate (y2) at ($#2+(-1.5,0)$);
+  \draw[-]#1 -- (x1);
+  \draw[-]#2 -- (y1);
+  \draw[latex'-latex'] (x2) -- node[left, rotate=90, anchor=south]{\Large #3} (y2);
+}
+
+\newcommand{\sizearrowbelow}[3]
+{
+  \coordinate (x1) at ($#1+(0,-1.5)$);
+  \coordinate (x2) at ($#1+(0,-1.5)$);
+  \coordinate (y1) at ($#2+(0,-1.5)$);
+  \coordinate (y2) at ($#2+(0,-1.5)$);
+  \draw[-]#1 -- (x1);
+  \draw[-]#2 -- (y1);
+  \draw[latex'-latex'] (x2) -- node[above]{\Large #3} (y2);
+}
+
+

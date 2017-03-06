@@ -22,6 +22,8 @@ def build(bld):
     headers.module = 'in-home-topology'
     headers.source = [
         'model/in-home-topology.h',
+        'model/in-home-latex.h',
+        'model/in-home-header.h',
         'helper/in-home-topology-helper.h',
         ]
 

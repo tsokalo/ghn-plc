@@ -259,14 +259,17 @@ InhomeTopology::SetupModems(PLC_NodeList &nodes, Ptr<PLC_Cable> cable)
       if (m_devs.at (devIndex).energy == 1)
         {
           NS_LOG_DEBUG("Device " << m_devs.at (devIndex).id << " is a PLC modem");
+          m_draw.AddModem(m_devs.at (devIndex).id, m_devs.at (devIndex).c);
         }
       else if (m_devs.at (devIndex).energy == 0)
         {
           NS_LOG_DEBUG("Device " << m_devs.at (devIndex).id << " is a distribution box");
+          m_draw.AddDisBx(m_devs.at (devIndex).id, m_devs.at (devIndex).c);
         }
       else
         {
           NS_LOG_DEBUG("Device " << m_devs.at (devIndex).id << " is an in-home appliance");
+          m_draw.AddElDev(m_devs.at (devIndex).id, m_devs.at (devIndex).c);
         }
 
     }
@@ -275,6 +278,7 @@ InhomeTopology::SetupModems(PLC_NodeList &nodes, Ptr<PLC_Cable> cable)
     {
       NS_LOG_DEBUG(
               m_devs.at (devIndex).id << "\t" << m_devs.at (devIndex).neighbour << "\t" << m_devs.at (devIndex).c.x << "\t" << m_devs.at (devIndex).c.y);
+      m_draw.Connect(m_devs.at (devIndex).id, m_devs.at (devIndex).neighbour);
     }
 
   //
@@ -364,6 +368,7 @@ InhomeTopology::CreateRooms (uint16_t roomNum)
       c.y = fmod (static_cast<double> (roomIndex), static_cast<double> (roomMatrixSize)) * m_L;
       m_rooms.at (roomIndex) = new Room (m_L);
       m_roomOrigins.at (roomIndex) = c;
+      m_draw.SetRoom(roomIndex, c, m_L);
       NS_LOG_DEBUG("Room " << roomIndex << ": width/length - " << m_L << ", orig.x: " << c.x << ", orig.y: " << c.y);
     }
 }
@@ -503,6 +508,11 @@ InhomeTopology::Load (PLC_NodeList &nodes, Ptr<PLC_Cable> cable, std::istream &f
     }
 
   SetupModems(nodes, cable);
+}
+void
+InhomeTopology::Draw(std::string path)
+{
+  m_draw.Draw(path);
 }
 
 }

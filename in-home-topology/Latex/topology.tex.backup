@@ -1,0 +1,44 @@
+\newcommand{\inhometopology}[0]{
+\begin{tikzpicture}
+[
+    scale=0.6, 
+    transform shape
+    ] 
+\draw [fill=room backg](0,0) rectangle (5.02476,5.02476);
+\draw [fill=room backg](0,5.02476) rectangle (5.02476,10.0495);
+\draw [fill=room backg](5.02476,0) rectangle (10.0495,5.02476);
+\draw[color=el cable, line width=2pt] (0.3649,0.245683) -- (6.12316,0.99068);
+\draw[color=el cable, line width=2pt] (0.0900897,0) -- (0.3649,0.245683);
+\draw[color=el cable, line width=2pt] (0,3.47042) -- (0.0900897,0);
+\draw[color=el cable, line width=2pt] (1.23896,5.78404) -- (6.12316,0.99068);
+\draw[color=el cable, line width=2pt] (5.02476,9.75786) -- (1.23896,5.78404);
+\draw[color=el cable, line width=2pt] (0.822652,10.0495) -- (1.23896,5.78404);
+\draw[color=el cable, line width=2pt] (6.12316,0.99068) -- (6.12316,0.99068);
+\draw[color=el cable, line width=2pt] (10.0495,2.34817) -- (6.12316,0.99068);
+\draw[color=el cable, line width=2pt] (10.0495,0.224972) -- (10.0495,2.34817);
+\node[inner sep=0pt] (n7) at (0.3649,0.245683) {\includegraphics[width=.1\textwidth]{dist_box.png}};
+\node[inner sep=0pt] (n1) at (0.0900897,0) {\includegraphics[width=.1\textwidth]{modem.png}};
+\node[inner sep=0pt] (n2) at (0,3.47042) {\includegraphics[width=.1\textwidth]{el_dev.png}};
+\node[inner sep=0pt] (n8) at (1.23896,5.78404) {\includegraphics[width=.1\textwidth]{dist_box.png}};
+\node[inner sep=0pt] (n3) at (5.02476,9.75786) {\includegraphics[width=.1\textwidth]{el_dev.png}};
+\node[inner sep=0pt] (n4) at (0.822652,10.0495) {\includegraphics[width=.1\textwidth]{modem.png}};
+\node[inner sep=0pt] (n0) at (6.12316,0.99068) {\includegraphics[width=.1\textwidth]{dist_box.png}};
+\node[inner sep=0pt] (n5) at (10.0495,2.34817) {\includegraphics[width=.1\textwidth]{modem.png}};
+\node[inner sep=0pt] (n6) at (10.0495,0.224972) {\includegraphics[width=.1\textwidth]{el_dev.png}};
+
+\newcommand{\sizearrowleft}[3]
+{
+  \coordinate (x1) at ($##1+(-1.5,0)$);
+  \coordinate (x2) at ($##1+(-1.5,0)$);
+  \coordinate (y1) at ($##2+(-1.5,0)$);
+  \coordinate (y2) at ($##2+(-1.5,0)$);
+  \draw[-]##1 -- (x1);
+  \draw[-]##2 -- (y1);
+  \draw[latex'-latex'] (x2) -- node[left]{##3} (y2);
+}
+
+\sizearrowright{(0,0)}{(0,10)}{10};
+
+
+\end{tikzpicture}
+}

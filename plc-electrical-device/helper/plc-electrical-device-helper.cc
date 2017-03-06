@@ -27,7 +27,7 @@ PlcElectricalDeviceHelper::PlcElectricalDeviceHelper (ghn::BandPlanType bandplan
         GhnPlcHelper (bandplan, sm)
 {
   m_phyTid == PLC_ChaseCombiningPhy::GetTypeId ();
-  m_switchingIntesity = SwitchingIntesity(1.0,0.0);
+  m_switchingIntesity = SwitchingIntesity (1.0, 0.0);
 }
 
 void
@@ -40,7 +40,7 @@ PlcElectricalDeviceHelper::Setup (void)
 
   for (auto &node : m_node_list)
     {
-      std::cout << "Init (electrical device) " << node->GetName() << std::endl;
+      std::cout << "Init (electrical device) " << node->GetName () << std::endl;
       node->GetObject<PLC_Electrical_Device> ()->InitDevice (m_spectrum_model);
 
       Ptr<PLC_Phy> phy = phyFactory.Create<PLC_Phy> ();
@@ -49,8 +49,6 @@ PlcElectricalDeviceHelper::Setup (void)
       node->GetObject<PLC_Electrical_Device> ()->SetPhy (phy);
       node->GetObject<PLC_Electrical_Device> ()->OnStart (m_switchingIntesity);
     }
-
-  AttachChannel ();
 }
 
 void
@@ -79,11 +77,9 @@ PlcElectricalDeviceHelper::Load (std::ifstream &fi)
       node->GetObject<PLC_Electrical_Device> ()->SetPhy (phy);
       node->GetObject<PLC_Electrical_Device> ()->OnStart (m_switchingIntesity);
     }
-
-  AttachChannel ();
 }
 void
-PlcElectricalDeviceHelper::SetSwitchingIntesity(SwitchingIntesity si)
+PlcElectricalDeviceHelper::SetSwitchingIntesity (SwitchingIntesity si)
 {
   m_switchingIntesity = si;
 }

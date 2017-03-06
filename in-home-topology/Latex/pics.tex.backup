@@ -1,0 +1,25 @@
+\usepackage{tikz}
+\usepackage{pgf}
+\usetikzlibrary{backgrounds}
+\usepackage{xxcolor}
+\usetikzlibrary{calc, positioning}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{varwidth}
+\usepackage{fp}
+\usetikzlibrary{arrows,patterns}
+
+\usetikzlibrary{arrows,shadows,petri}
+%                              wg. tokens
+\newlength{\imagewidth}
+\newlength{\imagescale}
+
+\listfiles
+
+\definecolor{normal color}{HTML}{C9D5FF}
+\definecolor{side color}{HTML}{FFD382}
+\definecolor{patternhatch color}{HTML}{C0C0C0}
+\definecolor{room backg}{HTML}{F2F2F2}
+
+

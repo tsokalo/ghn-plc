@@ -9,10 +9,13 @@
 #include <math.h>
 #include "ns3/plc-channel.h"
 
+#include "in-home-header.h"
+#include "in-home-latex.h"
+
 #define DERIVATION_BOX_ID       0
 #define PLC_MODEM_ENERGY        1
 
-#define DELIMITER '\t'
+
 
 namespace ns3
 {
@@ -28,72 +31,6 @@ namespace ns3
  * 3. Ausstattung mit Gebrauchsgütern. Ausstattung privater Haushalte mit Haushaltsß und sonstigen Geräten Deutschland. Statistisches Bundesamt.
  */
 
-struct Coordinate
-{
-  double x;
-  double y;
-
-  friend std::ostream&
-  operator<< (std::ostream& fo, const Coordinate& c)
-  {
-    fo << c.x << DELIMITER;
-    fo << c.y << DELIMITER;
-    return fo;
-  }
-
-  friend std::istream&
-  operator>> (std::istream& fi, Coordinate& c)
-  {
-    fi >> c.x;
-    fi >> c.y;
-    return fi;
-  }
-};
-
-struct Dev
-{
-  /*
-   * dev id
-   */
-  uint16_t id;
-  /*
-   * id of neighbour dev
-   */
-  uint16_t neighbour;
-  /*
-   * index of node that associates with this dev
-   */
-  int16_t nodeIndex;
-  Coordinate c;
-  double energy;
-
-  friend std::ostream&
-  operator<< (std::ostream& fo, const Dev& d)
-  {
-    fo << d.id << DELIMITER;
-    fo << d.neighbour << DELIMITER;
-    fo << d.nodeIndex << DELIMITER;
-    fo << d.c;
-    fo << d.energy << DELIMITER;
-    return fo;
-  }
-
-  friend std::istream&
-  operator>> (std::istream& fi, Dev& d)
-  {
-    fi >> d.id;
-    fi >> d.neighbour;
-    fi >> d.nodeIndex;
-    fi >> d.c;
-    fi >> d.energy;
-    return fi;
-  }
-};
-
-enum InhomeTopologyType
-{
-  START_TOPOLOGY_TYPE, START_PERIMETER_TOPOLOGY_TYPE, BUS_TOPOLOGY_TYPE
-};
 
 class Room
 {
@@ -191,6 +128,8 @@ public:
   Save (std::ostream &fo);
   void
   Load (PLC_NodeList &nodes, Ptr<PLC_Cable> cable, std::istream &fi);
+  void
+  Draw(std::string path);
 
 private:
 
@@ -231,6 +170,8 @@ private:
 
   uint16_t m_numModems;
   uint16_t m_numDevs;
+
+  TopologyDrawer m_draw;
 };
 
 }

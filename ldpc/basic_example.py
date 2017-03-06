@@ -11,13 +11,13 @@ import time
 
 from ghn_ldpc_matrix import *
 
-num_points = 10
+num_points = 4
 
 def DoWork(j, k, H, tG, min_snr, max_snr):
 
 	snr = min_snr + (max_snr - min_snr) / float(num_points * (j + 1))
 
-	num_iter=10
+	num_iter=1
 	e_bits = 0.0
 
 	for it in range(num_iter):
@@ -30,7 +30,7 @@ def DoWork(j, k, H, tG, min_snr, max_snr):
 		# encode, add errors and decode the original message
 		#
 		y = pyldpc.Coding(tG,v_orig,snr)
-		x_decoded = pyldpc.Decoding_logBP(H,y,snr,5)
+		x_decoded = pyldpc.Decoding_logBP(H,y,snr,30)
 		v_received = pyldpc.DecodedMessage(tG,x_decoded)
 
 		for i in range(len(v_orig)):
@@ -76,7 +76,7 @@ print("\n With G,H you can code messages of {} bits into codewords of {} bits be
 
 
 for j in range(num_points + 1):
-	p = Process(target=DoWork, args=(j, k, H, tG, 3.1, 3.2))
+	p = Process(target=DoWork, args=(j, k, H, tG, -9.0, -1))
 	p.start()
 	procList.append(p)				
 	time.sleep (2);
@@ -113,7 +113,7 @@ print("\n With G,H you can code messages of {} bits into codewords of {} bits be
 
 
 for j in range(num_points + 1):
-	p = Process(target=DoWork, args=(j, k, H, tG, 4.2, 4.3))
+	p = Process(target=DoWork, args=(j, k, H, tG, 4.1, 4.2))
 	p.start()
 	procList.append(p)				
 	time.sleep (2);
@@ -150,7 +150,7 @@ print("\n With G,H you can code messages of {} bits into codewords of {} bits be
 
 
 for j in range(num_points + 1):
-	p = Process(target=DoWork, args=(j, k, H, tG, 5.8, 5.9))
+	p = Process(target=DoWork, args=(j, k, H, tG, 5.7, 5.8))
 	p.start()
 	procList.append(p)				
 	time.sleep (2);
