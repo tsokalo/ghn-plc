@@ -144,6 +144,7 @@ def build(bld):
         'model/ghn-plc-phy-header.h',      
         'model/ghn-plc-dll-mac-backoff.h',  
         'model/ghn-plc-data-rate-calculator.h',
+        'model/ghn-plc-example-utility.h',
         'helper/ghn-plc-helper.h',
         'helper/ghn-plc-onoff-helper.h',
         'helper/ghn-plc-packet-sink-helper.h',

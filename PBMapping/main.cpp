@@ -59,9 +59,9 @@ binom_distr (uint16_t n, uint16_t k, double p)
 double
 binom_distr_r (uint16_t n, uint16_t k, double p)
 {
-  std::random_device rd;
-  std::mt19937 gen (rd ());
-  std::binomial_distribution<> d (n, p);
+  random_device rd;
+  mt19937 gen (rd ());
+  binomial_distribution<> d (n, p);
 
   uint32_t c = 100000, s = 0;
   for (uint32_t i = 0; i < c; i++)
@@ -150,9 +150,6 @@ int
 main ()
 {
   cout << "Start" << endl;
-  std::vector<cr_t> crs = boost::assign::list_of<cr_t> (cr_t (1.0, 4.0)) (cr_t (1.0, 2.0)) (cr_t (2.0, 3.0)) (cr_t (5.0, 6.0)) (
-          cr_t (16.0, 21.0)) (cr_t (16.0, 18.0)) (cr_t (20.0, 21.0));
-  uint16_t msg_size = 540;
 
   std::cout.flush ();
   auto print_progress = [](uint32_t m, uint32_t c)
@@ -173,77 +170,44 @@ main ()
       std::cout.flush();
     };
 
-  std::vector<PbMapping> ms;
-  uint16_t ber_digits = 5;
-  auto n = pow (10, ber_digits);
-  auto cr = cr_t (20.0, 21.0);
-  for (uint32_t i = 0; i < n; i++)
+  uint16_t msg_size = 540;
+  bool use_fec = false;
+
+  if (use_fec)
     {
-      uint16_t coded_msg_size = (double) msg_size * (double) cr.second / (double) cr.first * 8;
-      uint16_t elig_loss_size = coded_msg_size - msg_size * 8;
-      auto ber = (double) i / (double)n;
-      auto per = 1 - binom_distr_r (coded_msg_size, elig_loss_size, ber);
-      ms.push_back (PbMapping (cr, ber, per));
+      std::vector<cr_t> crs = boost::assign::list_of<cr_t> (cr_t (1.0, 4.0)) (cr_t (1.0, 2.0)) (cr_t (2.0, 3.0)) (
+              cr_t (5.0, 6.0)) (cr_t (16.0, 21.0)) (cr_t (16.0, 18.0)) (cr_t (20.0, 21.0));
 
-      if (fabs (per - 1.0) < 0.000001) break;
-      print_progress (n * 0.07, i);
+      std::vector<PbMapping> ms;
+      uint16_t ber_digits = 5;
+      uint32_t n = pow (10, ber_digits);
+      auto cr = cr_t (20.0, 21.0);
+      for (uint32_t i = 3400; i < n; i++)
+        {
+          uint16_t coded_msg_size = (double) msg_size * (double) cr.second / (double) cr.first * 8;
+          uint16_t elig_loss_size = coded_msg_size - msg_size * 8;
+          auto ber = (double) i / (double) n;
+          auto per = 1 - binom_distr_r (coded_msg_size, elig_loss_size, ber);
+          ms.push_back (PbMapping (cr, ber, per));
 
-//      std::cout << coded_msg_size << "\t" << elig_loss_size << "\t" << ber << "\t" << per << std::endl;
-    }
+          if (fabs (per - 1.0) < 0.000001) break;
+          print_progress (n, i);
+        }
 
-//  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////// TEST
-//  for (uint16_t i = 0; i < 10000; i++)
-//    {
-//      auto cr = cr_t (20.0, 21.0);
-//      uint16_t coded_msg_size = (double) msg_size * (double) cr.second / (double) cr.first * 8;
-//      uint16_t elig_loss_size = coded_msg_size - msg_size * 8;
-//      auto ber = (double) i / 10000.0;
-//      auto per = 1 - binom_distr_r (coded_msg_size, elig_loss_size, ber);
-//      if (fabs (per - 1.0) < 0.000001) break;
-//      std::cout << coded_msg_size << "\t" << elig_loss_size << "\t" << ber << "\t" << per << std::endl;
-//    }
-//
-//  return 0;
-//  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////// OLD STUFF
-//  std::vector<PbMapping> ms;
-//
-//  long double d = pow (10, -3);
-//  uint16_t ber_l = 1;
-//  uint16_t fidelity = 80;
-//  while (ber_l < 720 * fidelity)
-//    {
-//      print_progress (720 * fidelity, ber_l);
-//      long double ber = ber_l * d / (double) fidelity;
-//
-//      auto dr = [](PbMapping pbm)
+//      std::vector<PbMappingC> msfin;
+//      std::vector<double> per_ls =
+//        { 0.001, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9 };
+//      for (auto per_l : per_ls)
 //        {
-//          return (double)pbm.cr.first / (double)pbm.cr.second * (1 - pbm.per);
-//        };
-//
-//      double v = 0;
-//      PbMapping pbm;
-//
-//      for (auto cr : crs)
-//        {
-//          uint16_t coded_msg_size = (double) msg_size * (double) cr.second / (double) cr.first * 8;
-//          uint16_t elig_loss_size = coded_msg_size - msg_size * 8;
-//          double per = 1 - binom_distr_r (coded_msg_size, elig_loss_size, ber);
-//
-//          std::cout << ber << "\t" << cr.first << "/" << cr.second << "\t" << per << std::endl;
-//          double vv = dr (PbMapping (cr, ber, per));
-//          if (vv > v)
+//          for (auto m : ms)
 //            {
-//              pbm = PbMapping (cr, ber, per);
-//              v = vv;
-//            }
-//        };;
-//
-//      ms.push_back (pbm);
-//
-//      ber_l += 10;
-//    }
-//
-//  std::sort (ms.begin (), ms.end ());
+//              if (m.per < (double) per_l / 100.0 + 0.005 && m.per > (double) per_l / 100.0 - 0.0005)
+//                {
+//                  msfin.push_back (PbMappingC (m, (double) per_l / 100.0));
+//                  break;
+//                }
+//            };;
+//        }
 
   std::vector<PbMappingC> msfin;
   uint16_t per_l = 0;
@@ -259,13 +223,65 @@ main ()
         };;
     }
 
-  cout << endl << endl;
-  for (auto m : msfin)
-    {
+      cout << endl << endl;
+      for (auto m : msfin)
+        {
 //      cout << (double) (++per_l) / 1000 << "\t" << m.cr.first << "/" << m.cr.second << "\t" << m.ber << "\t" << m.per << endl;
-      cout << "<" << m.per_o << "\t" << m.cr.first << "/" << m.cr.second << "\t" << m.ber << "|\t" << m.per << ">" << endl;
+          cout << "<" << m.per_o << "\t" << m.cr.first << "/" << m.cr.second << "\t" << m.ber << "|\t" << m.per << ">" << endl;
+        }
     }
+  else
+    {
+//      std::vector<PbMapping> ms;
+//      uint16_t ber_digits = 6;
+//      uint32_t n = pow (10, ber_digits);
+//      for (uint32_t i = 0; i < n; i++)
+//        {
+//          uint16_t coded_msg_size = (double) msg_size * 8;
+//          uint16_t elig_loss_size = coded_msg_size - msg_size * 8;
+//          auto ber = (double) i / (double) n;
+//          auto per = 1 - binom_distr_r (coded_msg_size, elig_loss_size, ber);
+//          ms.push_back (PbMapping (cr_t (1.0, 1.0), ber, per));
+//
+//          if (fabs (per - 1.0) < 0.000001) break;
+//          if (per > 0.001) break;
+//
+//          print_progress (n, i);
+//        }
 
+      std::vector<PbMappingC> msfin;
+      std::vector<double> ber_ls =
+        { 0.000000001, 0.00000001, 0.0000001};
+      for (auto ber : ber_ls)
+        {
+          uint16_t coded_msg_size = (double) msg_size * 8;
+          uint16_t elig_loss_size = coded_msg_size - msg_size * 8;
+          auto per = 1 - binom_distr_r (coded_msg_size, elig_loss_size, ber);
+          auto m = PbMapping (cr_t (1.0, 1.0), ber, per);
+          msfin.push_back (PbMappingC (m, (double) per));
+        }
+
+//        std::vector<PbMappingC> msfin;
+//        uint16_t per_l = 0;
+//        while (per_l++ < 100)
+//          {
+//            for (auto m : ms)
+//              {
+//                if (m.per < (double) per_l / 100.0 + 0.005 && m.per > (double) per_l / 100.0 - 0.0005)
+//                  {
+//                    msfin.push_back (PbMappingC (m, (double) per_l / 100.0));
+//                    break;
+//                  }
+//              };;
+//          }
+
+      cout << endl << endl;
+      for (auto m : msfin)
+        {
+          //      cout << (double) (++per_l) / 1000 << "\t" << m.cr.first << "/" << m.cr.second << "\t" << m.ber << "\t" << m.per << endl;
+          cout << "PbMapping (" << m.per_o << ", CODING_RATE_RATELESS, " << m.ber << ", " << m.per << ")," << endl;
+        }
+    }
   cout << "End" << endl;
   return 0;
 }

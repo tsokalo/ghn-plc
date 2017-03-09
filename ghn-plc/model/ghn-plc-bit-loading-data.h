@@ -12,6 +12,8 @@
 #include <vector>
 #include "ns3/plc-defs.h"
 
+#include "ghn-plc-utilities.h"
+
 #include "comparison.h"
 
 //#define PER_BER_MAP_SIZE        500
@@ -49,46 +51,31 @@ struct PbMapping
   double per;
 };
 
+typedef std::map<CodingType, std::map<uint32_t, std::vector<PbMapping> > > PBMapping_t;
+
 class PbMappingList
 {
 public:
-  PbMappingList ()
-  {
-  }
+  PbMappingList (){}
 
   virtual
   ~PbMappingList ();
 
-  static PbMapping
-  get_val (double per)
-  {
+  static PBMapping_t CreatePbMapping();
 
-    assert(ncr::geq(per, MIN_PER_VAL));
-    assert(ncr::leq(per, MAX_PER_VAL));
-
-    for (auto pbm : m_pbMapping)
-      {
-        if (ncr::geq (pbm.per, per))
-          {
-            return pbm;
-          }
-      }
-    assert(0);
-//
-//    uint16_t i = per * 1000 - 1;
-//    assert(i < PER_BER_MAP_SIZE);
-//    return m_pbMapping.at (i);
-  }
 
   static double
-  get_per (double ber)
+  get_per (double ber, uint32_t pkt_size, CodingType ct)
   {
-    auto min_ber = m_pbMapping.begin()->ber;
-    auto max_ber = m_pbMapping.at(m_pbMapping.size() - 1).ber;
-    if(ber < min_ber)return 0;
-    if(ber > max_ber)return 1;
+    assert(m_pbMapping.find (ct) != m_pbMapping.end ());
+    assert(m_pbMapping[ct].find (pkt_size) != m_pbMapping[ct].end ());
 
-    for (auto pbm : m_pbMapping)
+    auto min_ber = m_pbMapping[ct][pkt_size].begin ()->ber;
+    auto max_ber = m_pbMapping[ct][pkt_size].at (m_pbMapping[ct][pkt_size].size () - 1).ber;
+    if (ber < min_ber) return 0;
+    if (ber > max_ber) return 1;
+
+    for (auto pbm : m_pbMapping[ct][pkt_size])
       {
         if (ncr::geq (pbm.ber, ber))
           {
@@ -99,14 +86,17 @@ public:
   }
 
   static double
-  get_ber (double per)
+  get_ber (double per, uint32_t pkt_size, CodingType ct)
   {
-    auto min_per = m_pbMapping.begin()->per;
-    auto max_per = m_pbMapping.at(m_pbMapping.size() - 1).per;
-    if(per < min_per)return 0;
-    if(per > max_per)return 1;
+    assert(m_pbMapping.find (ct) != m_pbMapping.end ());
+    assert(m_pbMapping[ct].find (pkt_size) != m_pbMapping[ct].end ());
 
-    for (auto pbm : m_pbMapping)
+    auto min_per = m_pbMapping[ct][pkt_size].begin ()->per;
+    auto max_per = m_pbMapping[ct][pkt_size].at (m_pbMapping[ct][pkt_size].size () - 1).per;
+    if (per < min_per) return 0;
+    if (per > max_per) return 1;
+
+    for (auto pbm : m_pbMapping[ct][pkt_size])
       {
         if (ncr::geq (pbm.per, per))
           {
@@ -117,7 +107,8 @@ public:
   }
 
 private:
-  static std::vector<PbMapping> m_pbMapping;
+
+  static PBMapping_t m_pbMapping;
 };
 }
 }

@@ -50,8 +50,6 @@ void
 ConfigureTrafficGenerator (GhnPlcOnOffHelper &onOff);
 void
 ConfigureIpRouting (Ipv4ListRoutingHelper &list, uint16_t numNodes);
-std::string
-ConstructResFoldName (int argc, char *argv[]);
 
 int
 main (int argc, char *argv[])
@@ -383,19 +381,5 @@ ConfigureIpRouting (Ipv4ListRoutingHelper &list, uint16_t numNodes)
   //   //
   //   Config::SetDefault ("ns3::ArpCache::AliveTimeout", TimeValue (Seconds (1000000)));
 }
-std::string
-ConstructResFoldName (int argc, char *argv[])
-{
-  std::stringstream ss;
-  std::string path = argv[0]; // get path from argument 0
-  path = path.substr (0, path.rfind ("/") + 1);
-  ss << path << "Results";
 
-  //  for (uint16_t i = 1; i < argc; i++)
-  //    {
-  //      ss << "_" << argv[1];
-  //    }
-  ss << "/";
-  return ss.str ();
-}
 

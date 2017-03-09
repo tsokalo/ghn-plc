@@ -54,6 +54,11 @@ public:
   GhnPlcHelper (BandPlanType bandplan);
   void
   SetNodeList (PLC_NodeList& deviceNodes);
+  PLC_NodeList
+  GetNodeList ()
+  {
+    return m_node_list;
+  }
   Ptr<const SpectrumModel>
   GetSpectrumModel ();
 
@@ -68,6 +73,11 @@ public:
   SetNoiseFloor (Ptr<const SpectrumValue> psd)
   {
     m_noiseFloor = psd;
+  }
+  Ptr<const SpectrumValue>
+  GetNoiseFloor()
+  {
+    return m_noiseFloor;
   }
   void
   SetTxPowerSpectralDensity (Ptr<SpectrumValue> txPsd)

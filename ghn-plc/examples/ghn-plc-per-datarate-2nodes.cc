@@ -104,9 +104,9 @@ main (int argc, char *argv[])
 
       double ofdm_symb_duration = PLC_Phy::GetSymbolDuration ().GetDouble();
       uint32_t bits_per_ofdm_symb = bl->CalcBitsPerSymbol (bat);
-      double d = (double) bits_per_ofdm_symb / ofdm_symb_duration;
+      double d = (double) bits_per_ofdm_symb / ofdm_symb_duration * 1000;
 
-      std::cout << per << "\t" << d << std::endl;
+      std::cout << per << "\t" << d << "\t" << d*(1-per) << std::endl;
     }
 
   return EXIT_SUCCESS;

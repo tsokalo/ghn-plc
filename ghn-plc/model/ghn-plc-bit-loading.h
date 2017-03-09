@@ -142,6 +142,7 @@ private:
  * year={2016}
  * }
  */
+
 class NcBlVarBatMap: public GhnPlcBitLoading {
 public:
 
@@ -159,7 +160,7 @@ public:
         uint32_t CalcBitsPerSymbol(BitAllocationTable bat);
         double GetOfdmSymbolCapacity(BitAllocationTable bat, SpectrumValue sinr);
 
-private:
+protected:
 
 	void CalcModulationAndCodingScheme();
 	double GetNumEffBits(ModulationAndCodingScheme mcs, SpectrumValue sinr);
@@ -168,6 +169,22 @@ private:
 	double CalcSer(ModulationType m, double sinr);
 
 	std::map<uint16_t, double> m_desiredPer;
+};
+
+
+class NcBlFlatBatMap: public NcBlVarBatMap {
+public:
+
+        static TypeId GetTypeId(void);
+
+        NcBlFlatBatMap(){}
+        virtual ~NcBlFlatBatMap(){}
+
+        BitAllocationTable CalculateBat(double p, SpectrumValue sinr);
+
+private:
+
+
 };
 }
 }

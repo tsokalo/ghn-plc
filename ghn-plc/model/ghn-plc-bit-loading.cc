@@ -127,7 +127,8 @@ GhnPlcBitLoading::GetDataAmount (Time txTime, uint8_t src_id, uint8_t dst_id)
   NS_LOG_FUNCTION(this << txTime << (uint32_t)src_id << (uint32_t)dst_id);
 
   NS_ASSERT_MSG(m_bitsPerSymbol.find (src_id) != m_bitsPerSymbol.end (), (uint16_t)src_id << " and " << (uint16_t)dst_id);
-  NS_ASSERT_MSG(m_bitsPerSymbol[src_id].find (dst_id) != m_bitsPerSymbol[src_id].end (), (uint16_t)src_id << " and " << (uint16_t)dst_id);
+  NS_ASSERT_MSG(m_bitsPerSymbol[src_id].find (dst_id) != m_bitsPerSymbol[src_id].end (),
+          (uint16_t)src_id << " and " << (uint16_t)dst_id);
 
   NS_ASSERT(m_mcs.size () > src_id);
   NS_ASSERT(m_mcs.at (src_id).size () > dst_id);
@@ -140,7 +141,7 @@ GhnPlcBitLoading::GetDataAmount (Time txTime, uint8_t src_id, uint8_t dst_id)
   NS_LOG_LOGIC(
           headerSymbDuration << " / " << PLC_Preamble::GetDuration () << " / " << (txTime.GetInteger () - headerSymbDuration.GetInteger () - PLC_Preamble::GetDuration ().GetInteger ()) << " / " << payloadSymbols << " / " << m_bitsPerSymbol[src_id][dst_id]);
 
-  return payloadSymbols * m_bitsPerSymbol[src_id][dst_id] / 8 * ModToDouble(m_mcs.at (src_id).at(dst_id).ct);
+  return payloadSymbols * m_bitsPerSymbol[src_id][dst_id] / 8 * ModToDouble (m_mcs.at (src_id).at (dst_id).ct);
 }
 Ptr<PLC_ChannelTransferImpl>
 GhnPlcBitLoading::GetChannalTransferImpl (uint16_t src_id, uint16_t dst_id)
@@ -494,6 +495,8 @@ NcBlVarBatMap::CalcModulationAndCodingScheme ()
           std::vector<ModulationAndCodingScheme> (UanAddress::GetBroadcast ().GetAsInt () + 1, ModulationAndCodingScheme ()));
   m_capacityPerSymbol.resize (m_nodes.size (), std::vector<double> (UanAddress::GetBroadcast ().GetAsInt () + 1, 0));
 
+  CodingType ct = CODING_RATE_20_21;
+
   for (std::vector<Ptr<PLC_Node> >::iterator it1 = m_nodes.begin (); it1 != m_nodes.end (); it1++)
     {
       for (std::vector<Ptr<PLC_Node> >::iterator it2 = m_nodes.begin (); it2 != m_nodes.end (); it2++)
@@ -504,11 +507,10 @@ NcBlVarBatMap::CalcModulationAndCodingScheme ()
 
           m_mcs[src_id][dst_id].use_bat = true;
           m_mcs[src_id][dst_id].mt = NOMOD;
-          assert(ncr::geq(m_desiredPer[src_id],MIN_PER_VAL));
-          PbMapping pbm = PbMappingList::get_val (m_desiredPer[src_id]);
-          std::cout << "Projected BER " << pbm.ber << " between " << (uint16_t)src_id << " and " << (uint16_t)dst_id << std::endl;
-          m_mcs[src_id][dst_id].bat = CalculateBat (pbm.ber, *m_sinr[src_id][dst_id]);
-          m_mcs[src_id][dst_id].ct = pbm.ct;
+          auto ber = PbMappingList::get_ber (m_desiredPer[src_id], 540, ct);
+          std::cout << "Projected BER " << ber << " between " << (uint16_t) src_id << " and " << (uint16_t) dst_id << std::endl;
+          m_mcs[src_id][dst_id].bat = CalculateBat (ber, *m_sinr[src_id][dst_id]);
+          m_mcs[src_id][dst_id].ct = ct;
           m_bitsPerSymbol[src_id][dst_id] = CalcBitsPerSymbol (m_mcs[src_id][dst_id].bat);
           m_capacityPerSymbol[src_id][dst_id] = GetNumEffBits (m_mcs[src_id][dst_id], *m_sinr[src_id][dst_id]);
         }
@@ -670,7 +672,7 @@ NcBlVarBatMap::CalculateCapMap (SpectrumValue sinr)
   return cap_map;
 }
 double
-NcBlVarBatMap::GetOfdmSymbolCapacity(BitAllocationTable bat, SpectrumValue sinr)
+NcBlVarBatMap::GetOfdmSymbolCapacity (BitAllocationTable bat, SpectrumValue sinr)
 {
   SpectrumValue sinr_db = 20 * Log10 (sinr); // - m_mcs.gap2Capacity_dB;
   double sum_bit = 0;
@@ -687,7 +689,7 @@ NcBlVarBatMap::GetOfdmSymbolCapacity(BitAllocationTable bat, SpectrumValue sinr)
 double
 NcBlVarBatMap::GetOfdmSymbolCapacity (ModulationAndCodingScheme mcs, SpectrumValue sinr)
 {
-  return GetOfdmSymbolCapacity(mcs.bat, sinr);
+  return GetOfdmSymbolCapacity (mcs.bat, sinr);
 }
 uint32_t
 NcBlVarBatMap::CalcBitsPerSymbol (BitAllocationTable bat)
@@ -752,6 +754,105 @@ NcBlVarBatMap::CalcSer (ModulationType m, double sinr)
     }
   //        std::cout << "SINR: " << sinr << ", modulation: " << m << ", SER: " << ser << std::endl;
   return ser;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////              NcBlFlatBatMap           ///////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+NS_OBJECT_ENSURE_REGISTERED(NcBlFlatBatMap);
+TypeId
+NcBlFlatBatMap::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::NcBlFlatBatMap").SetParent<NcBlVarBatMap> ().AddConstructor<NcBlFlatBatMap> ();
+  return tid;
+}
+BitAllocationTable
+NcBlFlatBatMap::CalculateBat (double P_t, SpectrumValue sinr)
+{
+  SpectrumValue sinr_db = 20 * Log10 (sinr); // - m_mcs.gap2Capacity_dB;
+
+  uint32_t bps_final = 0;
+  BitAllocationTable bat_final (sinr.GetSpectrumModel ()->GetNumBands (), NOMOD);
+  for (uint16_t m_i = (uint16_t) QAM4096; m_i != 0; m_i--)
+    {
+      ModulationType m = ModulationType (m_i);
+      typedef std::pair<double, uint16_t> carrier_ber_t;
+      BitAllocationTable bat (sinr.GetSpectrumModel ()->GetNumBands (), m);
+      uint16_t num_to_notch = 300;
+      //
+      // permanently notch
+      //
+      for (uint16_t i = 0; i < num_to_notch; i++)
+        {
+          bat[i] = NOMOD;
+        }
+
+      std::priority_queue<carrier_ber_t> ber_set;
+      double P_bar_nom = 0;
+      double P_bar_denom = 0;
+      for (uint16_t i = 0; i < sinr.GetSpectrumModel ()->GetNumBands (); i++)
+        {
+          double b = m;
+          double ber = (b - GetCapPerChannel (sinr_db[i], m)) / b;
+          P_bar_nom += ber * b;
+          P_bar_denom += b;
+          carrier_ber_t carrier_ber = std::make_pair (ber, i);
+          ber_set.push (carrier_ber);
+        }
+      assert(P_bar_denom > 0);
+      //
+      // notch particular subcarriers
+      //
+      while (P_bar_nom / P_bar_denom > P_t && !ber_set.empty ())
+        {
+          carrier_ber_t carrier_ber = ber_set.top (); // get the bitloading of the worst carrier
+          double ber = carrier_ber.first;
+          uint16_t i = carrier_ber.second;
+          ber_set.pop ();
+          double b = m;
+          P_bar_nom -= b * ber; // substract the removed SER from the sum
+          P_bar_denom -= b;
+          bat[i] = NOMOD;
+        }
+      uint32_t bps = bat.get_total_bits ();
+      if (bps > bps_final)
+        {
+          std::copy (bat.begin (), bat.end (), bat_final.begin ());
+          bps_final = bps;
+        }
+      else
+        {
+          break;
+        }
+    }
+  assert(!bat_final.empty());
+
+  SpectrumValue CapacityPerHertz = GetCapacity (sinr_db, bat_final);
+//  NS_LOG_LOGIC ("(GHN module) BAT: " << bat);
+//  std::cout << std::endl;
+//  std::cout << std::endl;
+//  std::cout << std::endl;
+//  NS_LOG_LOGIC ("(GHN module) Capacity per hertz: " << CapacityPerHertz);
+
+  if (0)
+    {
+      double projected = 0, loaded = 0;
+//      std::cout << "Tone Map: ";
+      for (uint16_t i = 0; i < bat_final.size (); i++)
+        {
+          auto cap = GetCapPerChannel (sinr_db[i], bat_final.at (i));
+//          std::cout << i << "\t" << (uint16_t) bat.at (i) << "\t" << cap << "\n";
+          loaded += (uint16_t) bat_final.at (i);
+          projected += cap;
+        }
+      std::cout << std::endl;
+      std::cout << "Projected: " << projected << ", Loaded: " << loaded << ", planned BER: " << (loaded - projected) / loaded
+              << std::endl;
+    }
+
+  return bat_final;
+
 }
 }
 }

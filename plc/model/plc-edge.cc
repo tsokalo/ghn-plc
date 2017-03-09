@@ -619,7 +619,7 @@ PLC_Line::CalculateEdgeTransferFactor (PLC_Node *dst_node)
 
 		PLC_LOG_LOGIC("Destination node is leaf and open circuit");
 
-		NS_ASSERT(dst_node->IsOpenCircuit());
+		NS_ASSERT_MSG(dst_node->IsOpenCircuit(), dst_node->GetName());
 		NS_ASSERT(dst_node->GetNumEdges() == 1);
 
 		Ptr<PLC_FreqSelectiveValue> etv = CreateObject<PLC_FreqSelectiveValue> (2 / (e_valp + e_valm));

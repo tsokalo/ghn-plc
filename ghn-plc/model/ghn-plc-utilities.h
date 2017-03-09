@@ -83,6 +83,9 @@ std::vector<uint8_t> ConvertPacketToVec(Ptr<Packet> pkt);
 GhnBuffer ConvertVecsToBuffer(std::vector<std::vector<uint8_t> > vec);
 
 void ThrowToFile(std::string line, std::string path);
+
+std::string
+ConstructResFoldName (int argc, char *argv[]);
 }
 }
 #endif /* GHN_PLC_UTILIITES_H_ */

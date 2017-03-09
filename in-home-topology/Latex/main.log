@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2016.12.13)  6 MAR 2017 18:33
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2016.12.13)  7 MAR 2017 11:25
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1058,36 +1058,36 @@ File: modem.png Graphic file (type png)
  <use modem.png>
 Package pdftex.def Info: modem.png used on input line 380.
 (pdftex.def)             Requested size: 46.85977pt x 40.02156pt.
-File: modem.png Graphic file (type png)
- <use modem.png>
-Package pdftex.def Info: modem.png used on input line 380.
-(pdftex.def)             Requested size: 46.85977pt x 40.02156pt.
+
+<el_dev.png, id=32, 387.16072pt x 387.16072pt>
+File: el_dev.png Graphic file (type png)
+ <use el_dev.png>
+Package pdftex.def Info: el_dev.png used on input line 380.
+(pdftex.def)             Requested size: 46.85977pt x 46.859pt.
 File: dist_box.png Graphic file (type png)
 
 <use dist_box.png>
 Package pdftex.def Info: dist_box.png used on input line 380.
 (pdftex.def)             Requested size: 46.85977pt x 46.09978pt.
- <el_dev.png, id=32, 387.16072pt x 387.16072pt>
-File: el_dev.png Graphic file (type png)
-
-<use el_dev.png>
-Package pdftex.def Info: el_dev.png used on input line 380.
-(pdftex.def)             Requested size: 46.85977pt x 46.859pt.
 File: modem.png Graphic file (type png)
  <use modem.png>
 Package pdftex.def Info: modem.png used on input line 380.
 (pdftex.def)             Requested size: 46.85977pt x 40.02156pt.
-File: dist_box.png Graphic file (type png)
- <use dist_box.png>
-Package pdftex.def Info: dist_box.png used on input line 380.
-(pdftex.def)             Requested size: 46.85977pt x 46.09978pt.
 File: el_dev.png Graphic file (type png)
  <use el_dev.png>
 Package pdftex.def Info: el_dev.png used on input line 380.
 (pdftex.def)             Requested size: 46.85977pt x 46.859pt.
-File: el_dev.png Graphic file (type png)
+File: dist_box.png Graphic file (type png)
+ <use dist_box.png>
+Package pdftex.def Info: dist_box.png used on input line 380.
+(pdftex.def)             Requested size: 46.85977pt x 46.09978pt.
+File: modem.png Graphic file (type png)
 
-<use el_dev.png>
+<use modem.png>
+Package pdftex.def Info: modem.png used on input line 380.
+(pdftex.def)             Requested size: 46.85977pt x 40.02156pt.
+File: el_dev.png Graphic file (type png)
+ <use el_dev.png>
 Package pdftex.def Info: el_dev.png used on input line 380.
 (pdftex.def)             Requested size: 46.85977pt x 46.859pt.
 
@@ -1215,12 +1215,12 @@ topology.tex
 supp-pdf.mkii
 dist_box.png    Graphic file (type png)
    modem.png    Graphic file (type png)
-   modem.png    Graphic file (type png)
-dist_box.png    Graphic file (type png)
   el_dev.png    Graphic file (type png)
-   modem.png    Graphic file (type png)
 dist_box.png    Graphic file (type png)
+   modem.png    Graphic file (type png)
   el_dev.png    Graphic file (type png)
+dist_box.png    Graphic file (type png)
+   modem.png    Graphic file (type png)
   el_dev.png    Graphic file (type png)
  ***********
 
@@ -1228,14 +1228,14 @@ dist_box.png    Graphic file (type png)
 Here is how much of TeX's memory you used:
  18372 strings out of 493029
  350884 string characters out of 6136233
- 416418 words of memory out of 6250000
+ 416403 words of memory out of 6250000
  21492 multiletter control sequences out of 15000+600000
  95750 words of font info for 97 fonts, out of 8000000 for 9000
  1144 hyphenation exceptions out of 8191
- 59i,8n,80p,416b,737s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 59i,8n,80p,416b,735s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/share/texliv
 e/texmf-dist/fonts/type1/urw/times/utmr8a.pfb>
-Output written on main.pdf (1 page, 367729 bytes).
+Output written on main.pdf (1 page, 366991 bytes).
 PDF statistics:
  47 PDF objects out of 1000 (max. 8388607)
  20 compressed objects within 1 object stream

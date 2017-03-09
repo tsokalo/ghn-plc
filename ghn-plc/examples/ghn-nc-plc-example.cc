@@ -28,7 +28,8 @@ using namespace std;
 //CXXFLAGS="-std=c++0x" ./waf configure --disable-python --with-nsc /home/tsokalo/workspace/ns3sims/ns-3-dev/nsc
 //CXXFLAGS="-std=c++0x" ./waf configure --disable-python --enable-examples --with-nsc /home/tsokalo/workspace/ns3sims/ns-3-dev/nsc
 //export 'NS_LOG=*=level_info|prefix_time|prefix_node|prefix_func'
-//export 'NS_LOG=GhnPlcGreedyUdpClient=level_info|prefix_time|prefix_node|prefix_func'
+//export 'NS_LOG=GhnPlcDllMac=level_all|prefix_time|prefix_node|prefix_func'
+//export 'NS_LOG=GhnPlcPhyPmdFullD=level_all|prefix_time|prefix_node:PLC_FullDuplexOfdmPhy=level_all|prefix_time|prefix_node:PLC_InfRateFDPhy=level_all|prefix_time|prefix_node|prefix_func'
 //export 'NS_LOG=GhnPlcLlcFlow=level_all|prefix_time|prefix_node|prefix_func:GhnPlcLlcCodedFlow=level_all|prefix_time|prefix_node|prefix_func:GhnPlcPhyManagement=level_all|prefix_time|prefix_node|prefix_func'
 //export 'NS_LOG=GhnPlcNetDevice=level_debug|prefix_time|prefix_node|prefix_func:PLC_Electrical_Device=level_debug|prefix_time|prefix_node|prefix_func:GhnPlcMacBackoff=level_debug|prefix_time|prefix_node|prefix_func:GhnPlcDllMac=level_debug|prefix_time|prefix_node|prefix_func:GhnPlcDllLlc=level_debug|prefix_time|prefix_node|prefix_func:GhnPlcDllApc=level_debug|prefix_time|prefix_node|prefix_func:GhnPlcPhyPmd=level_debug|prefix_time|prefix_node|prefix_func:GhnPlcPhyPma=level_debug|prefix_time|prefix_node|prefix_func:GhnPlcPhyPcs=level_debug|prefix_time|prefix_node|prefix_func:GhnPlcPhyManagement=level_debug|prefix_time|prefix_node|prefix_func:PLC_INHOME_TOPOLOGY=level_debug|prefix_time|prefix_node|prefix_func'
 //export 'NS_LOG=GhnPlcNetDevice=level_logic|prefix_time|prefix_node|prefix_func:PLC_Electrical_Device=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcMacBackoff=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcDllMac=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcDllLlc=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcDllApc=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcPhyPmd=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcPhyPma=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcPhyPcs=level_logic|prefix_time|prefix_node|prefix_func:GhnPlcPhyManagement=level_logic|prefix_time|prefix_node|prefix_func:PLC_INHOME_TOPOLOGY=level_logic|prefix_time|prefix_node|prefix_func:PLC_Phy=level_logic|prefix_time|prefix_node|prefix_func:PLC_LinkPerformanceModel=level_logic|prefix_time|prefix_node|prefix_func:PLC_Channel=level_logic|prefix_time|prefix_node|prefix_func:NcHelper=level_logic|prefix_time|prefix_node|prefix_func'
@@ -71,8 +72,8 @@ main (int argc, char *argv[])
   //
   TopologyType topologyType = LINE_TOPOLOGY_TYPE;
   std::vector<uint32_t> distance;
-  uint32_t distance_ptp = 1;
-  uint16_t num_modems = 2;
+  uint32_t distance_ptp = 700;
+  uint16_t num_modems = 3;
   if (argc > 1)
     {
       num_modems = atoi (argv[1]);
@@ -83,13 +84,14 @@ main (int argc, char *argv[])
   double load = 1.0; //no units
   double dr = 200 * 1000 * 1000; //unit [bps]
   double nodeRate = load * dr / (double) (num_modems - 1); //unit [bps]
-  double simDuration = 1.0; //unit [s]
+  double simDuration = 1.0 + 2 * GHN_WARMUP_PERIOD; //unit [s]
   double minSimDuration = 0.1; //unit [s]
-  uint16_t maxCwSize = 10;
+  uint16_t maxCwSize = 6;
   if (argc > 2)
     {
       maxCwSize = atoi (argv[2]);
     }
+
   BandPlanType bandplan = GDOTHN_BANDPLAN_25MHZ;
   GhnPlcDllMacProtocol macMode = CSMA_CD;
   if (argc > 3)
@@ -159,6 +161,7 @@ main (int argc, char *argv[])
   devHelper.AllowCooperation ();
   devHelper.StickToMainPath();
   devHelper.SetImmediateFeedback();
+  devHelper.SetLowerSrcPriority();
   auto addressMap = devHelper.Setup ();
   cout << "Created communication devices.." << endl;
 

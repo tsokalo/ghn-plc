@@ -100,6 +100,38 @@ main (int argc, char *argv[])
   auto sinr13 = get_sinr (txIf1, rxIf3);
   auto sinr23 = get_sinr (txIf2, rxIf3);
 
+  auto get_max_achievable_rate = [](double d0, double d1, double e1, double e2, double e3)
+    {
+      if(d1 * (1 - e2) < d0 * (1 - e3))
+        {
+          return d0 * (1 - e3);
+        }
+      else
+        {
+          auto a = d0 * d1 * (1 - e2)*(1 - e1*e3);
+          auto b = d1 * (1 - e2) + d0 * e3 * (1 - e1);
+          return a / b;
+        }
+    };
+
+  auto get_lrp_achievalbe_rate = [](double d0, double d1, double e1, double e2, double e3)
+    {
+      auto v1 = d0 * (1 - e3);
+      auto a = d0 * d1 * (1 - e1)*(1 - e2);
+      auto b = d1 * (1 - e2) + d0 * (1 - e1);
+      auto v2 = a / b;
+
+      return (v1 > v2) ? v1 : v2;
+    };
+
+  auto get_gain = [&](double d0, double d1, double e1, double e2, double e3)
+    {
+      auto v1 = get_max_achievable_rate(d0, d1, e1, e2, e3);
+      auto v2 = get_lrp_achievalbe_rate(d0, d1, e1, e2, e3);
+
+      return (v1 - v2) / v2;
+    };
+
   //
   // Calculate BAT
   //
@@ -113,28 +145,31 @@ main (int argc, char *argv[])
       //
       // calculate reception data rate of the destination when the source sends
       //
-      double e13 = per;
-      BitAllocationTable bat = bl->CalculateBat (e13, *sinr13);
+      double e1 = per;
+      double ber1 = PbMappingList::get_ber (e1);
+      BitAllocationTable bat = bl->CalculateBat (ber1, *sinr12);
       double ofdm_symb_duration = PLC_Phy::GetSymbolDuration ().GetDouble ();
       uint32_t bits_per_ofdm_symb = bl->CalcBitsPerSymbol (bat);
-      double d13 = (double) bits_per_ofdm_symb / ofdm_symb_duration;
+      double d0 = (double) bits_per_ofdm_symb / ofdm_symb_duration;
       //
       // calculate PER for the relay
       //
-      double cap = bl->GetOfdmSymbolCapacity (bat, sinr12);
-      bits_per_ofdm_symb = bl->CalcBitsPerSymbol (bat);
-      double ber = (cap > bits_per_ofdm_symb) ? 0 : ((double)bits_per_ofdm_symb - cap)  / (double)bits_per_ofdm_symb;
-      double e12 = PbMappingList::get_per(ber);
-      double d23 = d13;
+      double cap13 = bl->GetOfdmSymbolCapacity (bat, *sinr13);
+      double ber3 = (cap13 > bits_per_ofdm_symb) ? 0 : ((double) bits_per_ofdm_symb - cap13) / (double) bits_per_ofdm_symb;
+      double e3 = PbMappingList::get_per (ber3);
       //
       // calculate reception data rate of the destination when the relay sends
       //
-      double e23 = 0.00001;
-      bat = bl->CalculateBat (e23, *sinr23);
+      double e2 = 0.00001;
+      double ber2 = PbMappingList::get_ber (e2);
+      bat = bl->CalculateBat (ber2, *sinr23);
       bits_per_ofdm_symb = bl->CalcBitsPerSymbol (bat);
-      double d23 = (double) bits_per_ofdm_symb / ofdm_symb_duration;
+      double d1 = (double) bits_per_ofdm_symb / ofdm_symb_duration;
 
-      std::cout << e13 << "\t" << e12 << "\t" << e23 << "\t" << d13 << "\t" << d12 << "\t" << d23 << std::endl;
+      std::cout << e3 << "\t" << e1 << "\t" << e2 << "\t" << d0 << "\t" << d1 << "\t"
+              << get_max_achievable_rate (d0, d1, e1, e2, e3)<< "\t"
+              << get_lrp_achievalbe_rate (d0, d1, e1, e2, e3)<< "\t"
+              << get_gain (d0, d1, e1, e2, e3) << std::endl;
     }
 
   return EXIT_SUCCESS;

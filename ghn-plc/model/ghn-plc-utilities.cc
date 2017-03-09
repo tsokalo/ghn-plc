@@ -331,7 +331,7 @@ double
 ConvertCodingTypeToDouble (CodingType ct)
 {
   std::array<double, 8> fec_rate =
-    { 1.0 / 4.0, 1.0 / 2.0, 2.0 / 3.0, 16.0 / 21.0, 5.0 / 6.0, 16.0 / 18.0, 20.0 / 21.0, 0 };
+    { 1.0 / 4.0, 1.0 / 2.0, 2.0 / 3.0, 16.0 / 21.0, 5.0 / 6.0, 16.0 / 18.0, 20.0 / 21.0, 1.0 };
 
   assert(ct - 1 < fec_rate.size ());
   return fec_rate.at (ct - 1);
@@ -635,6 +635,22 @@ ThrowToFile (std::string line, std::string path)
   std::ofstream f (path, std::ios_base::out | std::ios_base::app);
   f << line << std::endl;
   f.close ();
+}
+
+std::string
+ConstructResFoldName (int argc, char *argv[])
+{
+  std::stringstream ss;
+  std::string path = argv[0]; // get path from argument 0
+  path = path.substr (0, path.rfind ("/") + 1);
+  ss << path << "Results";
+
+  //  for (uint16_t i = 1; i < argc; i++)
+  //    {
+  //      ss << "_" << argv[1];
+  //    }
+  ss << "/";
+  return ss.str ();
 }
 
 }

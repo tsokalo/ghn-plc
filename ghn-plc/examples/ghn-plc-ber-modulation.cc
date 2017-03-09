@@ -23,8 +23,8 @@ main (int argc, char *argv[])
     { BPSK, QAM4, QAM8, QAM16, QAM32, QAM64, QAM128, QAM256, QAM512, QAM1024, QAM2048, QAM4096 };
 
   double min_sinr_db = -5;
-  double max_sinr_db = 20;
-  double step_sinr_db = 1;
+  double max_sinr_db = 40;
+  double step_sinr_db = 0.1;
 
   for(auto mt : mts)
     {
