@@ -48,7 +48,7 @@ main (int argc, char *argv[])
   Ptr<SpectrumValue> txPsd = devHelper.GetTxPsd ();
 
   std::vector<uint32_t> distance;
-  uint32_t distance_ptp = 350;
+  uint32_t distance_ptp = 580;
   for (uint16_t i = 0; i < num_modems - 1; i++)
     distance.push_back (distance_ptp); //unit [meters]
   CreateLineTopology (node_list, cable, sm, distance);

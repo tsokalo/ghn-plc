@@ -28,20 +28,19 @@
 using namespace ns3;
 using namespace ghn;
 
-
 std::string
 ConstructScenarioFolderName (int argc, char *argv[]);
 std::string
-GetScenarioFileName();
+GetScenarioFileName (int argc, char *argv[]);
 
 void
-CreateInhomeTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, uint16_t num_modems,
-        uint16_t num_el_devs, double totalSquare, std::ostream &fo);
+CreateInhomeTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, uint16_t num_modems, uint16_t num_el_devs,
+        double totalSquare, std::ostream &fo);
 void
 SaveBackgroundNoise (Ptr<SpectrumValue> noiseFloor, std::ostream &fo);
 void
-LoadInhomeTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, uint16_t &num_modems,
-        uint16_t &num_el_devs, double &totalSquare, std::istream &fi);
+LoadInhomeTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, uint16_t &num_modems, uint16_t &num_el_devs,
+        double &totalSquare, std::istream &fi);
 Ptr<SpectrumValue>
 LoadInhomeBackgroundNoise (Ptr<const SpectrumModel> sm, std::istream &fi);
 
@@ -62,11 +61,12 @@ main (int argc, char *argv[])
   ghn::RemoveDirectory (resDir);
   ghn::CreateDirectory (resDir);
 
-  std::string scenDir = ConstructScenarioFolderName(argc, argv);
+  std::string scenDir = ConstructScenarioFolderName (argc, argv);
   ghn::CreateDirectory (scenDir);
 
-  bool create_new = false;
-  std::string path = scenDir + "/" + GetScenarioFileName();
+  bool create_new = true;
+  std::string path = scenDir + "/" + GetScenarioFileName (argc, argv);
+  std::cout << "Using scenario file " << path << std::endl;
   uint16_t num_modems = 0;
   uint16_t num_el_devs = 0;
   double totalSquare = 0;
@@ -90,6 +90,10 @@ main (int argc, char *argv[])
       std::ofstream fo (path, std::ios::out);
       num_modems = 3;
       num_el_devs = 3;
+      if (argc > 1)
+        {
+          num_el_devs = atoi (argv[1]);
+        }
       totalSquare = 60;
 
       CreateInhomeTopology (node_list, cable, num_modems, num_el_devs, totalSquare, fo);
@@ -101,7 +105,7 @@ main (int argc, char *argv[])
       // Select background noise
       //
       noiseFloor = CreateInhomeBackgroundNoise (sm);
-      std::cout << *noiseFloor << std::endl;
+//      std::cout << *noiseFloor << std::endl;
       SaveBackgroundNoise (noiseFloor, fo);
       cout << "Created background noise.." << endl;
       //
@@ -116,7 +120,7 @@ main (int argc, char *argv[])
       elDevHelper.SetNodeList (eldev_list);
       devHelper.SetNoiseFloor (noiseFloor);
       elDevHelper.SetChannel (channel);
-      elDevHelper.GetObject<PlcElectricalDeviceHelper>()->Setup ();
+      elDevHelper.GetObject<PlcElectricalDeviceHelper> ()->Setup ();
 
       elDevHelper.Save (fo);
       cout << "Created electrical devices.." << endl;
@@ -137,7 +141,7 @@ main (int argc, char *argv[])
       // Load background noise
       //
       noiseFloor = LoadInhomeBackgroundNoise (sm, fi);
-      *noiseFloor *= 10000;
+//      *noiseFloor *= 10000;
       cout << "Loaded background noise.." << endl;
       //
       // Create channel
@@ -165,7 +169,7 @@ main (int argc, char *argv[])
       devHelper.DefinePhyType (GhnPlcPhyPmdFullD::GetTypeId ());
       devHelper.DefineMacType (GhnPlcDllMacCsmaCd::GetTypeId ());
     }
-  devHelper.SetNodeList(modem_list);
+  devHelper.SetNodeList (modem_list);
   devHelper.SetNoiseFloor (noiseFloor);
   devHelper.SetChannel (channel);
   devHelper.SetTxImpedance (CreateObject<PLC_ConstImpedance> (sm, PLC_Value (50, 0)));
@@ -178,15 +182,14 @@ main (int argc, char *argv[])
 //  devHelper.StickToMainPath ();
 //  devHelper.SetImmediateFeedback ();
 //  devHelper.SetLowerSrcPriority ();
-  auto addressMap = devHelper.Setup ();
+//  auto addressMap = devHelper.Setup ();
 
   cout << "Created communication devices.." << endl;
 
-  Utility::Evaluate(devHelper, resDir, macMode);
+//  Utility::Evaluate (devHelper, resDir, macMode);
 
   return EXIT_SUCCESS;
 }
-
 
 std::string
 ConstructScenarioFolderName (int argc, char *argv[])
@@ -204,16 +207,27 @@ ConstructScenarioFolderName (int argc, char *argv[])
   return ss.str ();
 }
 std::string
-GetScenarioFileName()
+GetScenarioFileName (int argc, char *argv[])
 {
   UniformRandomVariable uniRV;
   auto v = uniRV.GetValue (0, 1000000);
-//  return "scenario_" + std::to_string(v) + ".txt";
-  return "scenario.txt";
+
+  std::stringstream ss;
+  ss << "Scenario";
+
+  for (uint16_t i = 1; i < argc; i++)
+    {
+      ss << "_" << argv[i];
+    }
+  ss << "_" << v;
+  ss << "_.txt";
+
+//  return "scenario.txt";
+  return ss.str ();
 }
 void
-CreateInhomeTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, uint16_t num_modems,
-        uint16_t num_el_devs, double totalSquare, std::ostream &fo)
+CreateInhomeTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, uint16_t num_modems, uint16_t num_el_devs,
+        double totalSquare, std::ostream &fo)
 {
   fo << num_modems << DELIMITER;
   fo << num_el_devs << DELIMITER;
@@ -228,7 +242,7 @@ CreateInhomeTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, uint16_t nu
     {
       node_list.at (i) = CreateObject<PLC_Node> ();
       node_list.at (i)->SetName (std::string ("Node ") + std::to_string (i + 1));
-      std::cout << "Creating " << node_list.at (i)->GetName() << std::endl;
+      std::cout << "Creating " << node_list.at (i)->GetName () << std::endl;
     }
 
   //
@@ -238,7 +252,7 @@ CreateInhomeTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, uint16_t nu
     {
       node_list.at (i) = CreateObject<PLC_Electrical_Device> ();
       node_list.at (i)->SetName (std::string ("El.Dev. ") + std::to_string (i + 1 - num_modems));
-      std::cout << "Creating " << node_list.at (i)->GetName() << std::endl;
+      std::cout << "Creating " << node_list.at (i)->GetName () << std::endl;
     }
 
   //
@@ -247,8 +261,8 @@ CreateInhomeTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, uint16_t nu
   //
   InhomeTopology topology (totalSquare, num_modems, num_el_devs);
   topology.Create (node_list, cable);
-  topology.Save(fo);
-  topology.Draw("/home/tsokalo/workspace/ns-allinone-3.25/ns-3.25/src/in-home-topology/Latex/");
+  topology.Save (fo);
+  topology.Draw ("/home/tsokalo/workspace/ns-allinone-3.25/ns-3.25/src/in-home-topology/Latex/");
 
   //
   // Let the distribution boxes do not have any impedance and create no noise
@@ -259,51 +273,52 @@ CreateInhomeTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, uint16_t nu
     }
 }
 void
-LoadInhomeTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, uint16_t &num_modems,
-        uint16_t &num_el_devs, double &totalSquare, std::istream &fi)
+LoadInhomeTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, uint16_t &num_modems, uint16_t &num_el_devs,
+        double &totalSquare, std::istream &fi)
 {
   fi >> num_modems;
   fi >> num_el_devs;
   fi >> totalSquare;
 
-  std::cout << "Loading.. number of modems: " << num_modems << ", number of el.devs: " << num_el_devs << ", total square: " << totalSquare << std::endl;
+  std::cout << "Loading.. number of modems: " << num_modems << ", number of el.devs: " << num_el_devs << ", total square: "
+          << totalSquare << std::endl;
 
   node_list.resize (num_modems + num_el_devs);
 
-    //
-    // Create node_list
-    //
-    for (uint16_t i = 0; i < num_modems; i++)
-      {
-        std::cout << "Creating a modem " << i << std::endl;
-        node_list.at (i) = CreateObject<PLC_Node> ();
-        node_list.at (i)->SetName (std::string ("Node ") + std::to_string (i + 1));
-      }
+  //
+  // Create node_list
+  //
+  for (uint16_t i = 0; i < num_modems; i++)
+    {
+      std::cout << "Creating a modem " << i << std::endl;
+      node_list.at (i) = CreateObject<PLC_Node> ();
+      node_list.at (i)->SetName (std::string ("Node ") + std::to_string (i + 1));
+    }
 
-    //
-    // Create electrical devices
-    //
-    for (uint16_t i = num_modems; i < num_modems + num_el_devs; i++)
-      {
-        std::cout << "Creating an electrical device " << i << std::endl;
-        node_list.at (i) = CreateObject<PLC_Electrical_Device> ();
-        node_list.at (i)->SetName (std::string ("El.Dev. ") + std::to_string (i + 1 - num_modems));
-      }
+  //
+  // Create electrical devices
+  //
+  for (uint16_t i = num_modems; i < num_modems + num_el_devs; i++)
+    {
+      std::cout << "Creating an electrical device " << i << std::endl;
+      node_list.at (i) = CreateObject<PLC_Electrical_Device> ();
+      node_list.at (i)->SetName (std::string ("El.Dev. ") + std::to_string (i + 1 - num_modems));
+    }
 
-    //
-    // Set node_list positions and connect them with cables
-    // Here are additional node_list created - distribution boxes
-    //
-    InhomeTopology topology (totalSquare, num_modems, num_el_devs);
-    topology.Load (node_list, cable, fi);
+  //
+  // Set node_list positions and connect them with cables
+  // Here are additional node_list created - distribution boxes
+  //
+  InhomeTopology topology (totalSquare, num_modems, num_el_devs);
+  topology.Load (node_list, cable, fi);
 
-    //
-    // Let the distribution boxes do not have any impedance and create no noise
-    //
-    for (uint16_t i = num_modems + num_el_devs; i < node_list.size (); i++)
-      {
-        node_list.at (i)->GetObject<PLC_Node> ()->OpenCircuit ();
-      }
+  //
+  // Let the distribution boxes do not have any impedance and create no noise
+  //
+  for (uint16_t i = num_modems + num_el_devs; i < node_list.size (); i++)
+    {
+      node_list.at (i)->GetObject<PLC_Node> ()->OpenCircuit ();
+    }
 }
 
 void
@@ -311,7 +326,7 @@ SaveBackgroundNoise (Ptr<SpectrumValue> noiseFloor, std::ostream &fo)
 {
   auto it = noiseFloor->ValuesBegin ();
 
-  while(it != noiseFloor->ValuesEnd())
+  while (it != noiseFloor->ValuesEnd ())
     {
       fo << *it << DELIMITER;
       it++;
@@ -321,9 +336,9 @@ SaveBackgroundNoise (Ptr<SpectrumValue> noiseFloor, std::ostream &fo)
 Ptr<SpectrumValue>
 LoadInhomeBackgroundNoise (Ptr<const SpectrumModel> sm, std::istream &fi)
 {
-  Ptr<SpectrumValue> noiseFloor = Create<SpectrumValue>(sm);
+  Ptr<SpectrumValue> noiseFloor = Create<SpectrumValue> (sm);
   uint32_t n = sm->GetNumBands ();
-  for(uint32_t i = 0; i < n; i++)
+  for (uint32_t i = 0; i < n; i++)
     {
       fi >> (*noiseFloor)[i];
     }
