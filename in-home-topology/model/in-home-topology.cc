@@ -184,7 +184,7 @@ InhomeTopology::Create (PLC_NodeList &nodes, Ptr<PLC_Cable> cable)
   InitModems ();
 
   uint16_t numDevPerRoom = ceil (static_cast<double> (m_devEnergy.size ()) / static_cast<double> (m_rooms.size ()));
-  NS_LOG_DEBUG("Number of devices per room " << numDevPerRoom);
+  NS_LOG_UNCOND("Number of devices per room " << numDevPerRoom);
   uint16_t roomIndex = 0;
   for (uint16_t devIndex = 0; devIndex < m_devEnergy.size (); devIndex++)
     {
@@ -430,14 +430,15 @@ InhomeTopology::InitDevs ()
   double devEnergy = 0;
   uint16_t counter = 0;
   double totalkWh = 0;
-  do
+  while (counter != m_numDevs)
     {
       devEnergy = expRV.GetValue (709.7424, 100 * 709.7424);
       m_devEnergy.push_back (devEnergy);
       totalkWh += devEnergy;
       NS_LOG_DEBUG("Power for the device (W): " << (m_devEnergy.size() - 1) << ": " << devEnergy);
+      ++counter;
     }
-  while (++counter != m_numDevs);NS_LOG_DEBUG("Total power (W): " << totalkWh);
+  NS_LOG_DEBUG("Total power (W): " << totalkWh);
 }
 
 void
@@ -446,7 +447,8 @@ InhomeTopology::InitModems ()
   UniformRandomVariable uniRV;
   for (uint16_t modemIndex = 0; modemIndex < m_numModems; modemIndex++)
     {
-      m_devEnergy.insert (m_devEnergy.begin () + uniRV.GetInteger (0, m_devEnergy.size () - 1), (double) PLC_MODEM_ENERGY);
+      auto dev_it = (m_devEnergy.empty()) ? m_devEnergy.begin () : m_devEnergy.begin () + uniRV.GetInteger (0, m_devEnergy.size () - 1);
+      m_devEnergy.insert (dev_it, (double) PLC_MODEM_ENERGY);
     }
 }
 

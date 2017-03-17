@@ -61,7 +61,7 @@ encoding=UTF-8
 highlight=LaTeX
 line=370
 mode=LaTeX
-open=true
+open=false
 order=0
 
 [item:pics.tex]
@@ -71,7 +71,7 @@ encoding=UTF-8
 highlight=LaTeX
 line=44
 mode=LaTeX
-open=true
+open=false
 order=1
 
 [item:topology.kilepr]

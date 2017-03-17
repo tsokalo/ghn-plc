@@ -96,7 +96,7 @@ GhnPlcPhyPma::StartTx (Ptr<Packet> txPhyFrame, GhnPlcPhyFrameType frameType)
     //    m_fecConcatenationFactorZ = GetFecConcatenationFactorZFromHeader (header202.GetFecConcatenationFactor ());
     m_payloadEncodedBits = GetPayloadEncodedBits (m_fecBlockSize, m_kFecPayloadBlocks, m_payloadFecRate, m_repetitionsNumber);
     m_payloadSymbols = ceil ((double) m_payloadEncodedBits /  (double)GetBitsPerSymbol ());
-    NS_LOG_UNCOND ("MSG Payload symbols: " << m_payloadSymbols);
+    NS_LOG_DEBUG ("MSG Payload symbols: " << m_payloadSymbols);
     break;
   case PHY_FRAME_ACK:
   case PHY_FRAME_RTS:

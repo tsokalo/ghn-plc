@@ -7,6 +7,7 @@
 
 #include "ns3/assert.h"
 #include "ns3/log.h"
+#include "ns3/random-variable-stream.h"
 
 #include <algorithm>
 #include <string>
@@ -153,7 +154,7 @@ GroupEncAckInfoToPkt (GroupEncAckInfo info)
   //
   if (!info.brrFeedback.empty ())
     {
-      NS_LOG_UNCOND("Send ANChOR ACK!");
+      NS_LOG_DEBUG("Send ANChOR ACK!");
       auto it = info.brrFeedback.begin ();
       while (it != info.brrFeedback.end ())
         {
@@ -163,7 +164,7 @@ GroupEncAckInfoToPkt (GroupEncAckInfo info)
     }
   else
     {
-      NS_LOG_UNCOND("Send NO ANChOR ACK!");
+      NS_LOG_DEBUG("Send NO ANChOR ACK!");
     }
 
   return pkt;
@@ -218,7 +219,7 @@ PktToGroupEncAckInfo (Ptr<Packet> pkt)
   //
   if (pkt->GetSize () > n_bs * bs)
     {
-      NS_LOG_UNCOND("Receive ANChOR ACK!");
+      NS_LOG_DEBUG("Receive ANChOR ACK!");
       auto start = n_bs * bs;
       while (start != pkt->GetSize ())
         {
@@ -230,7 +231,7 @@ PktToGroupEncAckInfo (Ptr<Packet> pkt)
     }
   else
     {
-      NS_LOG_UNCOND("Receive NO ANChOR ACK!");
+      NS_LOG_DEBUG("Receive NO ANChOR ACK!");
     }
 
   delete[] buffer;
@@ -417,9 +418,12 @@ RemoveDirectory (std::string folderPath)
 std::string
 GetLogIdent (std::vector<double> vals)
 {
+  UniformRandomVariable uniRV;
+  auto w = uniRV.GetValue (0, 1000000);
   std::stringstream ss;
   for (auto v : vals)
     ss << "_" << v;
+  ss << "_" << w;
   return ss.str ();
 }
 

@@ -173,7 +173,9 @@ bool
 GhnPlcNetDevice::Receive (Ptr<Packet> packet, const UanAddress& source, const UanAddress& dest)
 {
   NS_LOG_FUNCTION (this << source << dest << packet->GetSize());
+
   LlcSnapHeader llc;
+  if(packet->GetSize() < llc.GetSerializedSize())return false;
   packet->RemoveHeader (llc);
 
   m_receive_cb (this, packet, llc.GetType (), source);

@@ -10,6 +10,7 @@
 #include "ns3/ghn-plc-lpdu-header.h"
 #include <ns3/object-factory.h>
 
+
 #include "ghn-plc-dll-llc.h"
 #include "ghn-plc-llc-coded-flow.h"
 #include "ghn-plc-lpdu-header.h"
@@ -26,6 +27,7 @@ GhnPlcDllLlc::GhnPlcDllLlc ()
 {
   m_flowIdCounter = 0;
   m_allowCooperation = false;
+
 }
 
 GhnPlcDllLlc::~GhnPlcDllLlc ()
@@ -242,7 +244,7 @@ GhnPlcDllLlc::IsQueueEmpty ()
           auto f = m_flowMap.at (i).second;
           if (!f.IsQueueEmpty ())
             {
-              NS_LOG_UNCOND("Node " << m_dllMac->GetDllManagement ()->GetAddress () << ": has NON-empty queue");
+              NS_LOG_DEBUG("Node " << m_dllMac->GetDllManagement ()->GetAddress () << ": has NON-empty queue");
               return false;
             }
         }
@@ -255,13 +257,13 @@ GhnPlcDllLlc::IsQueueEmpty ()
           auto f = m_flowMap.at (i).second;
           if (!f.IsQueueEmpty ())
             {
-              NS_LOG_UNCOND("Node " << m_dllMac->GetDllManagement ()->GetAddress () << ": has NON-empty queue");
+              NS_LOG_DEBUG("Node " << m_dllMac->GetDllManagement ()->GetAddress () << ": has NON-empty queue");
               return false;
             }
         }
     }
 
-  NS_LOG_UNCOND("Node " << m_dllMac->GetDllManagement ()->GetAddress () << ": has empty queue");
+  NS_LOG_DEBUG("Node " << m_dllMac->GetDllManagement ()->GetAddress () << ": has empty queue");
 
   return true;
 }

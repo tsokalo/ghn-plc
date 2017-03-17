@@ -36,7 +36,7 @@ CsmaCdMac::CollisionDetection ()
 {
   NS_LOG_FUNCTION (this);
 
-  NS_LOG_UNCOND ("Collision detected");
+  NS_LOG_DEBUG ("Collision detected");
   if (m_ackPacket != 0 && m_txQueue->IsEmpty())
     {
       StartCsmaCa ();

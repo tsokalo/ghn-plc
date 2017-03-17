@@ -41,7 +41,7 @@ typedef std::pair<double, double> st_pair_t;
 st_pair_t
 CalcStats (rv_t vals)
 {
-  std::cout << "vals size: " << vals.size () << std::endl;
+//  std::cout << "vals size: " << vals.size () << std::endl;
   uint16_t num_batches = NUM_BATCHES;
   std::size_t batch_size = floor ((double) vals.size () / (double) (num_batches + 1)), j = 0;
   rv_t v;
@@ -145,9 +145,9 @@ CalcStatsByFieller (bi_rv_t vals)
   double m = (f2 > 0) ? f1 / f2 : m1 / m2;
   double ci = (f2 > 0) ? sqrt (D) / f2 : 0;
 
-  std::cout << "m1: " << m1 << ", m2: " << m2 << ", sig1: " << sig1 << ", sig2: " << sig2 << ", t: " << t << ", cov: " << cov
-          << std::endl;
-  std::cout << "f0: " << f0 << ", f1: " << f1 << ", f2: " << f2 << ", D: " << D << ", m: " << m << ", ci: " << ci << std::endl;
+//  std::cout << "m1: " << m1 << ", m2: " << m2 << ", sig1: " << sig1 << ", sig2: " << sig2 << ", t: " << t << ", cov: " << cov
+//          << std::endl;
+//  std::cout << "f0: " << f0 << ", f1: " << f1 << ", f2: " << f2 << ", D: " << D << ", m: " << m << ", ci: " << ci << std::endl;
 
   return st_pair_t (m, ci);
 }
@@ -220,9 +220,9 @@ CalcStatsByDelta (bi_rv_t vals)
   assert(A >= 0);
   double ci = t * sqrt (A);
 
-  std::cout << "m1: " << m1 << ", m2: " << m2 << ", sig1: " << sig1 << ", sig2: " << sig2 << ", t: " << t << ", cov: " << cov
-          << std::endl;
-  std::cout << "A: " << A << ", m: " << m << ", ci: " << ci << std::endl;
+//  std::cout << "m1: " << m1 << ", m2: " << m2 << ", sig1: " << sig1 << ", sig2: " << sig2 << ", t: " << t << ", cov: " << cov
+//          << std::endl;
+//  std::cout << "A: " << A << ", m: " << m << ", ci: " << ci << std::endl;
 
   return st_pair_t (m, ci);
 }

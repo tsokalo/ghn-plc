@@ -171,6 +171,8 @@ public:
   SetImmediateFeedback(bool v = true);
   void
   SetLowerSrcPriority(bool v = true);
+  void
+  SetForcePer(bool v = true);
 
   void
   SetAppMap(std::map<UanAddress, Ptr<Application> > appMap);
@@ -219,6 +221,7 @@ protected:
   bool m_stickToMainPath;
   bool m_immediateFeedback;
   bool m_useLowerSrcPriority;
+  bool m_forcePer;
 
   AddressMap m_addressMap;
 

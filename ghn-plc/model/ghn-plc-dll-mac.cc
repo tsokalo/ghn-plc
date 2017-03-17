@@ -128,7 +128,7 @@ GhnPlcDllMac::SendAck (ConnId connId)
 
   NS_ASSERT(!m_setMcsCallback.IsNull () && !m_setTxPsdCallback.IsNull ());
 
-  NS_LOG_UNCOND("ACK packet size: " << m_transPacket->GetSize () << ", connId: " << connId);
+  NS_LOG_DEBUG("ACK packet size: " << m_transPacket->GetSize () << ", connId: " << connId);
 
   m_sentAck = true;
   SetState (SEND_ACK);
@@ -419,7 +419,7 @@ GhnPlcDllMacCsma::EndTxFailure (void)
   NS_LOG_FUNCTION(this);
   NS_LOG_DEBUG("Simulation time: " << Simulator::Now ().GetNanoSeconds () << " ns");
 
-  NS_LOG_UNCOND(
+  NS_LOG_DEBUG(
           "Simulation time: " << Simulator::Now () << ", Node " << (uint16_t)GetDllManagement()->GetAddress().GetAsInt() << " end TX failure");
   if (!m_dllMan->GetDllLlc ()->IsQueueEmpty () || m_transPacket != 0)
     {
@@ -578,12 +578,12 @@ GhnPlcDllMacCsma::DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, c
         {
           m_transPacket = 0;
           m_askedForAck = false;
-          NS_LOG_UNCOND("GhnPlcDllMacCsma: Received my ACK (or I simply cooperate).");
+          NS_LOG_DEBUG("GhnPlcDllMacCsma: Received my ACK (or I simply cooperate).");
           m_ncDllLlc->ReceiveAck (PktToGroupEncAckInfo (packet), connId);
         }
       else
         {
-          NS_LOG_UNCOND("GhnPlcDllMacCsma: Received not my ACK.");
+          NS_LOG_DEBUG("GhnPlcDllMacCsma: Received not my ACK.");
         }
       DoNotifyReceiptionEnd (MicroSeconds (GDOTHN_MIN_TIFG_DURATION));
       break;
@@ -617,7 +617,7 @@ GhnPlcDllMacCsma::DoStartTx (void)
     {
       m_sendTuple = m_ncDllLlc->SendDown ();
 
-      NS_LOG_UNCOND(
+      NS_LOG_DEBUG(
               "Node " << m_dllMan->GetAddress() << " TX buffer size: " << m_sendTuple.get_buffer().size() << ", connId: " << m_sendTuple.get_conn_id() << ", next hop: " << m_sendTuple.GetNextHopAddress());
 
       m_transPacket = AssembleMpdu (m_sendTuple.get_buffer ());
@@ -708,7 +708,7 @@ GhnPlcDllMacCsma::ConfigurePhy (SendTuple st)
   ModulationAndCodingScheme mcs (bl->GetModulationAndCodingScheme (src, nextId));
   m_setMcsCallback (mcs);
 
-  NS_LOG_UNCOND("Setting MCS: " << mcs);
+  NS_LOG_DEBUG("Setting MCS: " << mcs);
   m_phyMan->SetTxPayloadFecRate (ConvertPlcRateToGhnRate (mcs.ct));
   m_phyMan->SetTxRepetitionsNumber (ENCODING_REPETITIONS_1);
 
@@ -746,7 +746,7 @@ GhnPlcDllMacCsmaCd::CollisionDetection ()
 
   NS_LOG_LOGIC("Collision detected");
 
-  NS_ASSERT_MSG(GetState () == TX || GetState () == SEND_ACK, "MAC State: " << GetState ());
+  NS_ASSERT_MSG(GetState () == TX || GetState () == SEND_ACK || GetState () == GAP, "MAC State: " << GetState ());
 
   DoNotifyTransmissionFailure ();
 }

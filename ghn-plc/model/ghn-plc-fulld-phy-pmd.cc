@@ -75,15 +75,15 @@ GhnPlcPhyPmdFullD::Send (Ptr<Packet> txPhyFrame, GhnPlcPhyFrameType frameType, u
   metaInfo->SetPayloadMcs (GetPayloadModulationAndCodingScheme ());
 
   Time tx_duration = metaInfo->GetHeaderDuration () + metaInfo->GetPayloadDuration () + PLC_Preamble::GetDuration ();
-  NS_LOG_LOGIC("header_duration: " << metaInfo->GetHeaderDuration ());
-  NS_LOG_LOGIC("payload_duration: " << metaInfo->GetPayloadDuration ());
-  NS_LOG_LOGIC("preamble_duration: " << PLC_Preamble::GetDuration ());
-  NS_LOG_UNCOND("tx_duration: " << tx_duration);
+  NS_LOG_DEBUG("header_duration: " << metaInfo->GetHeaderDuration ());
+  NS_LOG_DEBUG("payload_duration: " << metaInfo->GetPayloadDuration ());
+  NS_LOG_DEBUG("preamble_duration: " << PLC_Preamble::GetDuration ());
+  NS_LOG_DEBUG("tx_duration: " << tx_duration);
 
   auto src = m_ghnPhyPma->GetPhyManagement ()->GetAddress ().GetAsInt();
   m_txDurationLogTrace (src, tx_duration.GetMicroSeconds ());
 
-  NS_LOG_UNCOND("Starting frame sending... State: " << GetState());
+  NS_LOG_DEBUG("Starting frame sending... State: " << GetState());
 
   return DoStartTx (metaInfo);
 }
@@ -105,7 +105,7 @@ GhnPlcPhyPmdFullD::StartReception (uint32_t txId, Ptr<const SpectrumValue> rxPsd
         Ptr<const PLC_TrxMetaInfo> metaInfo)
 {
   NS_LOG_FUNCTION(this << txId << rxPsd << duration << metaInfo);
-  NS_LOG_UNCOND("Starting frame reception... State: " << GetState());
+  NS_LOG_DEBUG("Starting frame reception... State: " << GetState());
 
   // Determine uncoded header bits
   ModulationAndCodingScheme header_mcs = metaInfo->GetHeaderMcs ();
@@ -221,7 +221,7 @@ GhnPlcPhyPmdFullD::EndRxHeader (uint32_t txId, Ptr<const SpectrumValue> rxPsd, P
               || (frameType == PHY_FRAME_FTE)) uncoded_payload_bits = 0;
 
       NS_LOG_LOGIC("Starting payload reception: " << payload_duration << payload_mcs << uncoded_payload_bits);
-      //      NS_LOG_UNCOND ("Starting payload reception: " << payload_duration << payload_mcs << uncoded_payload_bits);
+      //      NS_LOG_DEBUG ("Starting payload reception: " << payload_duration << payload_mcs << uncoded_payload_bits);
 
       m_incoming_frame->AddHeader (header3);
 

@@ -88,6 +88,8 @@ private:
   ProcessRetransRequest (ncr::FeedbackInfo f);
   void
   UpdateFeedback();
+  void
+  GenerateGreedy();
 
   routing_rules_ptr m_brr;
   encoder_queue_ptr m_encQueue;

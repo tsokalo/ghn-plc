@@ -32,7 +32,7 @@ GhnPlcLlcCodedFlow::GetTypeId (void)
 }
 GhnPlcLlcCodedFlow::GhnPlcLlcCodedFlow ()
 {
-  NS_LOG_UNCOND("Creating coded G.hn LLC flow");
+  NS_LOG_DEBUG("Creating coded G.hn LLC flow");
 }
 GhnPlcLlcCodedFlow::~GhnPlcLlcCodedFlow ()
 {
@@ -49,7 +49,7 @@ GhnPlcLlcCodedFlow::Configure (ncr::NodeType type, ncr::UanAddress dst, ncr::Sim
   //
   auto coding_header_size = ncr::coder_overhead::get (m_sp.genSize);
   GhnPlcLpduHeader header;
-  NS_LOG_UNCOND("LLC headers sizes: " << header.GetSerializedSize () << "\t" << GHN_CRC_LENGTH << "\t" << coding_header_size);
+  NS_LOG_DEBUG("LLC headers sizes: " << header.GetSerializedSize () << "\t" << GHN_CRC_LENGTH << "\t" << coding_header_size);
   m_rxSegmenter = segmenter_ptr (
           new GhnPlcSegmenter (m_blockSize - header.GetSerializedSize () - GHN_CRC_LENGTH - coding_header_size));
   m_txSegmenter = segmenter_ptr (
@@ -92,6 +92,7 @@ GhnPlcLlcCodedFlow::Configure (ncr::NodeType type, ncr::UanAddress dst, ncr::Sim
       SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " type " << m_nodeType);
     }
 }
+
 void
 GhnPlcLlcCodedFlow::SetNextHopVertex (UanAddress addr)
 {
@@ -117,7 +118,6 @@ GhnPlcLlcCodedFlow::NotifyRcvUp (ncr::GenId genId)
 {
   m_brr->UpdateRcvd (genId, m_id);
 }
-
 SendTuple
 GhnPlcLlcCodedFlow::SendDown ()
 {
@@ -136,7 +136,7 @@ GhnPlcLlcCodedFlow::SendDown ()
 
   if (m_nodeType != ncr::DESTINATION_NODE_TYPE)
     {
-      NS_LOG_UNCOND("Node " << (uint16_t)src << ", Connection " << m_connId << " SEND!");
+      NS_LOG_DEBUG("Node " << (uint16_t)src << ", Connection " << m_connId << " SEND!");
       if (nh == -1) nh = rt->GetNextHopAddress (src, dst).GetAsInt ();
       NS_ASSERT(src != nh);
       m_brr->SetSendingRate (bt->GetNumEffBits (src, nh));
@@ -147,28 +147,12 @@ GhnPlcLlcCodedFlow::SendDown ()
           uint32_t pushedPkts = 0, maxPkts = floor ((double) dataAmount / (double) m_blockSize);
           assert(maxPkts > 0);
 
-          NS_LOG_UNCOND(
+          NS_LOG_DEBUG(
                   "Node " << m_id << ", Flow " << m_connId << ": " << "dataAmount: " << dataAmount << ", maxPkts: " << maxPkts);
-
-          if (m_nodeType == ncr::SOURCE_NODE_TYPE)
-            {
-              //
-              // get required number of packets to be generated; maxPkts includes redundancy; genBuf does not include redundancy
-              //
-              auto genBuf = m_brr->GetGenBufSize (maxPkts);
-              //
-              // generate data on application layer
-              //
-              assert(!m_genCallback.IsNull ());
-              m_genCallback (genBuf * m_sp.symbolSize);
-              //
-              // segment, code the newly generated data and pass it to BRR
-              //
-              PrepareForSend ();
-            }
 
           uint32_t max_el_brr = m_brr->GetAmountTxData ();
           maxPkts = (maxPkts > max_el_brr) ? max_el_brr : maxPkts;
+//          maxPkts = (maxPkts > GHN_ACK_MAX_WINDOW_SIZE_DATA(m_blockSize)) ? GHN_ACK_MAX_WINDOW_SIZE_DATA(m_blockSize) : maxPkts;
 
           assert(m_nodeType != ncr::DESTINATION_NODE_TYPE);
           ncr::TxPlan plan = m_brr->GetTxPlan ();
@@ -202,7 +186,7 @@ GhnPlcLlcCodedFlow::SendDown ()
               p_it = plan.next_orig_order (p_it);
             }
 
-          SIM_LOG_N (BRR_LOG || TEMP_LOG, m_id,
+          SIM_LOG_N (1, m_id,
                   "[max_el_brr " << max_el_brr << "],[maxPkts " << maxPkts << "],[pushedPkts " << pushedPkts << "]");
 
           if (m_nodeType == ncr::SOURCE_NODE_TYPE)
@@ -212,29 +196,34 @@ GhnPlcLlcCodedFlow::SendDown ()
                   SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " pushed pkts: " << pushedPkts << ", max pkts: " << maxPkts);
                 }
             }
-          NS_LOG_UNCOND("Node " << m_id << ", Flow " << m_connId << ": " << " Tx Plan: " << planI);
+          NS_LOG_DEBUG("Node " << m_id << ", Flow " << m_connId << ": " << " Tx Plan: " << planI);
 
           auto hBuf = ConvertBrrHeaderToPkt (planI);
           toTransmit.insert (toTransmit.begin (), hBuf.begin (), hBuf.end ());
+
+          NS_LOG_UNCOND(
+                  Simulator::Now().GetSeconds() << " " << m_id << " >>>>>>>>>>>>>>>>>>> BRR transmit buffer of  " << toTransmit.size() << " segments");
         }
       else
         {
-          NS_LOG_UNCOND("Flow " << m_connId << ": " << " Warm-up phase is not over yet");
+          NS_LOG_DEBUG("Flow " << m_connId << ": " << " Warm-up phase is not over yet");
           auto hBuf = ConvertBrrHeaderToPkt (ncr::TxPlan ());
           toTransmit.insert (toTransmit.begin (), hBuf.begin (), hBuf.end ());
         }
     }
   else
     {
-      SIM_LOG (1, "Flow " << m_connId << ": " << "I am the destination. I can send the feedback only");
+      SIM_LOG (BRR_LOG, "Flow " << m_connId << ": " << "I am the destination. I can send the feedback only");
       nh = rt->GetNextHopAddress (src, m_connId.src).GetAsInt ();
       m_brr->SetSendingRate (bt->GetNumEffBits (src, m_connId.src.GetAsInt ()));
 
       auto hBuf = ConvertBrrHeaderToPkt (ncr::TxPlan ());
       toTransmit.insert (toTransmit.begin (), hBuf.begin (), hBuf.end ());
+      NS_LOG_UNCOND(
+              Simulator::Now().GetSeconds() << " " << m_id << " >>>>>>>>>>>>>>>>>>> BRR transmit buffer of  " << toTransmit.size() << " segments");
     }
 
-  NS_LOG_UNCOND("Flow " << m_connId << ": " << "Segments number to be transmitted: " << toTransmit.size());
+  NS_LOG_DEBUG("Flow " << m_connId << ": " << "Segments number to be transmitted: " << toTransmit.size());
 
   //
   // add CRC
@@ -267,7 +256,7 @@ GhnPlcLlcCodedFlow::PrepareForSend ()
       m_frameBuffer.clear ();
 
       auto s = m_nonindexedSegs.size () * m_nonindexedSegs.begin ()->pkt->GetSize ();
-      NS_LOG_UNCOND("Segmented buffer contains " << s << " bytes");
+      NS_LOG_DEBUG("Segmented buffer contains " << s << " bytes");
 
       //
       // index segments
@@ -291,7 +280,7 @@ GhnPlcLlcCodedFlow::PrepareForSend ()
 GhnBuffer
 GhnPlcLlcCodedFlow::ConvertBrrHeaderToPkt (ncr::TxPlan plan)
 {
-  SIM_LOG_N (1, m_id, "Send ACK " << m_feedback.ackInfo);
+  SIM_LOG_N (BRR_LOG, m_id, "Send ACK " << m_feedback.ackInfo);
   auto str = m_brr->GetHeader (plan, m_feedback).Serialize ();
   m_feedback.Reset ();
   auto bs = m_blockSize - GHN_CRC_LENGTH;
@@ -302,7 +291,7 @@ GhnPlcLlcCodedFlow::ConvertBrrHeaderToPkt (ncr::TxPlan plan)
   pkt->AddAtEnd (Create<Packet> ((const uint8_t*) str.c_str (), str.size ()));
 
   auto padding_length = n_bs * bs - pkt->GetSize ();
-  NS_LOG_UNCOND("Adding " << (uint16_t)n_bs << " BRR header blocks");
+  NS_LOG_DEBUG("Adding " << (uint16_t)n_bs << " BRR header blocks");
 
   if (padding_length != 0) pkt->AddPaddingAtEnd (padding_length);
 
@@ -362,7 +351,7 @@ GhnPlcLlcCodedFlow::Receive (GhnBuffer buffer, ConnId connId)
 {
   NS_LOG_FUNCTION(this << connId);
 
-  NS_LOG_UNCOND(
+  NS_LOG_DEBUG(
           "Node " << (uint16_t)m_dllMac->GetDllManagement()->GetAddress().GetAsInt() << ", Connection " << connId << " RECEIVE!");
 
   NS_ASSERT(buffer.size () > 0);
@@ -384,7 +373,7 @@ GhnPlcLlcCodedFlow::Receive (GhnBuffer buffer, ConnId connId)
       //
       if (*(state.begin ()) != DONE_SEGMENT_STATE)
         {
-          NS_LOG_UNCOND(
+          NS_LOG_DEBUG(
                   "Node " << (uint16_t)m_dllMac->GetDllManagement()->GetAddress().GetAsInt() << ", Connection " << connId << " Header recpetion fails!");
           return GroupEncAckInfo ();
         }
@@ -461,7 +450,7 @@ GhnPlcLlcCodedFlow::ReceiveAck (GroupEncAckInfo info, ConnId connId)
 {
   SIM_LOG_FUNC (COMM_NODE_LOG);
 
-  NS_LOG_UNCOND("Connection: " << m_connId << " " << m_id << ", Processing ACK");
+  NS_LOG_DEBUG("Connection: " << m_connId << " " << m_id << ", Processing ACK");
 
   auto buffer = info.brrFeedback;
   assert(!buffer.empty ());
@@ -489,9 +478,11 @@ GhnPlcLlcCodedFlow::IsQueueEmpty ()
 
   if (Simulator::Now () < 2 * GHN_WARMUP_PERIOD) return true;
 
+  GenerateGreedy ();
+
   //  double dr = m_drCalc.Get ();
   //  double rel_dr = dr * PLC_Phy::GetSymbolDuration ().GetSeconds ();
-  //  NS_LOG_UNCOND(
+  //  NS_LOG_DEBUG(
   //          "Connection: " << m_connId << " " << m_id << ", data rate: " << dr << " bps, relative data rate: " << rel_dr << " bits");
 
   return (!m_brr->MaySendData ());
@@ -708,7 +699,7 @@ GhnPlcLlcCodedFlow::UpdateFeedback ()
 void
 GhnPlcLlcCodedFlow::ProcessFeedback (ncr::FeedbackInfo f)
 {
-  SIM_LOG (1, "Node " << m_id << " receive feedback symbol");
+  SIM_LOG (BRR_LOG, "Node " << m_id << " receive feedback symbol");
   m_brr->RcvFeedbackInfo (f);
 
   if (f.ttl != 0)
@@ -724,7 +715,7 @@ GhnPlcLlcCodedFlow::ProcessFeedback (ncr::FeedbackInfo f)
     }
   else
     {
-      SIM_LOG (1, "Node " << m_id << " TTL has expired");
+      SIM_LOG (BRR_LOG, "Node " << m_id << " TTL has expired");
     }
 
 }
@@ -732,16 +723,16 @@ GhnPlcLlcCodedFlow::ProcessFeedback (ncr::FeedbackInfo f)
 void
 GhnPlcLlcCodedFlow::ProcessNetDiscovery (ncr::FeedbackInfo f)
 {
-  SIM_LOG (1, "Node " << m_id << " receive the network discovery message with TTL " << f.ttl);
+  SIM_LOG (BRR_LOG, "Node " << m_id << " receive the network discovery message with TTL " << f.ttl);
 
   if (m_brr->MaySendNetDiscovery (f.ttl))
     {
-      SIM_LOG (1, "Node " << m_id << " sends the network discovery message with TTL " << f.ttl - 1);
+      SIM_LOG (BRR_LOG, "Node " << m_id << " sends the network discovery message with TTL " << f.ttl - 1);
       m_feedback = m_brr->GetNetDiscoveryInfo (f.ttl - 1);
     }
   else
     {
-      SIM_LOG (1, "Node " << m_id << " refuses to send the network discovery message");
+      SIM_LOG (BRR_LOG, "Node " << m_id << " refuses to send the network discovery message");
     }
 }
 
@@ -767,6 +758,44 @@ GhnPlcLlcCodedFlow::ProcessRetransRequest (ncr::FeedbackInfo f)
       SIM_LOG (COMM_NODE_LOG, "Node " << m_id << ". Retransmission request is either not set or I should not forward it");
     }
 
+}
+void
+GhnPlcLlcCodedFlow::GenerateGreedy ()
+{
+  if (m_nodeType == ncr::SOURCE_NODE_TYPE)
+    {
+      auto dll = m_dllMac->GetDllManagement ();
+      auto src = dll->GetAddress ().GetAsInt ();
+      auto dst = m_connId.dst.GetAsInt ();
+      auto rt = dll->GetRoutingTable ();
+      auto bt = dll->GetBitLoadingTable ();
+      auto nh = (m_sp.mutualPhyLlcCoding) ? m_brr->GetSinkVertex () : rt->GetNextHopAddress (src, dst).GetAsInt ();
+
+      NS_LOG_DEBUG("Node " << (uint16_t)src << ", Connection " << m_connId << " SEND!");
+      if (nh == -1) nh = rt->GetNextHopAddress (src, dst).GetAsInt ();
+      NS_ASSERT(src != nh);
+
+      auto dataAmount = bt->GetDataAmount (Seconds (GHN_CYCLE_MAX), src, nh);
+      uint32_t maxPkts = floor ((double) dataAmount / (double) m_blockSize);
+      assert(maxPkts > 0);
+
+      NS_LOG_DEBUG(
+              "Node " << m_id << ", Flow " << m_connId << ": " << "dataAmount: " << dataAmount << ", maxPkts: " << maxPkts);
+
+      //
+      // get required number of packets to be generated; maxPkts includes redundancy; genBuf does not include redundancy
+      //
+      auto genBuf = m_brr->GetGenBufSize (maxPkts);
+      //
+      // generate data on application layer
+      //
+      assert(!m_genCallback.IsNull ());
+      m_genCallback (genBuf * m_sp.symbolSize);
+      //
+      // segment, code the newly generated data and pass it to BRR
+      //
+      PrepareForSend ();
+    }
 }
 
 }

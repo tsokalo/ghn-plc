@@ -13,6 +13,7 @@
 
 #include "ns3/object.h"
 #include "ns3/stats-module.h"
+#include "ns3/random-variable-stream.h"
 
 #include "ghn-plc-ack-info.h"
 #include "ghn-plc-segmenter.h"
@@ -143,6 +144,9 @@ protected:
   NcSeqNum m_rxBcSeqNum;
   ConnId m_connId;
 
+  UniformRandomVariable m_perRv;
+  double m_artificialPer;
+
   Ptr<GhnPlcDllMacCsma> m_dllMac;
   Ptr<GhnPlcDllApc> m_dllApc;
   Ptr<GhnPlcDllLlc> m_dllLlc;
@@ -154,6 +158,10 @@ protected:
   // <destination ID> <source ID> <received from ID> <LLC frame index>
   //
   TracedCallback<double, double, double, double> m_llcRcvLogTrace;
+  //
+  // <destination ID> <source ID> <received from ID>
+  //
+  TracedCallback<double, double, double> m_llcRcvDownLogTrace;
   //
   // <destination ID> <source ID> <my ID> <LLC frame index>
   //

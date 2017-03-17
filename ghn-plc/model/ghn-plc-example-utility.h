@@ -38,7 +38,7 @@ struct Utility
 //    CODING_RATE_20_21
 //    CODING_RATE_RATELESS
     CodingType ct = CODING_RATE_RATELESS;
-    uint32_t pkt_size = 4;  //bytes
+    uint32_t pkt_size = 32;  //bytes
 
     auto get_ber = std::bind (&PbMappingList::get_ber, std::placeholders::_1, pkt_size, ct);
     auto get_per = std::bind (&PbMappingList::get_per, std::placeholders::_1, pkt_size, ct);

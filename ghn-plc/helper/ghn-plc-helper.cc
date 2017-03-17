@@ -60,6 +60,7 @@ GhnPlcHelper::GhnPlcHelper (BandPlanType bandplan, Ptr<const SpectrumModel> sm)
   m_stickToMainPath = false;
   m_immediateFeedback = true;
   m_useLowerSrcPriority = false;
+  m_forcePer = false;
 }
 GhnPlcHelper::GhnPlcHelper (BandPlanType bandplan)
 {
@@ -87,6 +88,7 @@ GhnPlcHelper::GhnPlcHelper (BandPlanType bandplan)
   m_stickToMainPath = false;
   m_immediateFeedback = true;
   m_useLowerSrcPriority = false;
+  m_forcePer = false;
 }
 AddressMap
 GhnPlcHelper::Setup (void)
@@ -448,7 +450,7 @@ GhnPlcHelper::CreateBitLoadingTable ()
       for (nit = m_node_list.begin (); nit != m_node_list.end (); nit++)
         {
 
-          auto per = m_sp->mutualPhyLlcCoding ? m_sp->per : MIN_PER_VAL;
+          auto per = (m_sp->mutualPhyLlcCoding || m_forcePer) ? m_sp->per : MIN_PER_VAL;
           m_bitLoadingTable->GetObject<NcBlVarBatMap> ()->SetPer ((*nit)->GetVertexId (), per);
           std::cout << "Setting PER " << per << " for node " << (*nit)->GetVertexId () << std::endl;
         }
@@ -721,6 +723,11 @@ void
 GhnPlcHelper::SetLowerSrcPriority (bool v)
 {
   m_useLowerSrcPriority = v;
+}
+void
+GhnPlcHelper::SetForcePer(bool v)
+{
+  m_forcePer = v;
 }
 void
 GhnPlcHelper::SetAppMap (std::map<UanAddress, Ptr<Application> > appMap)

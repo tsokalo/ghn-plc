@@ -171,7 +171,7 @@ PLC_InfRateFDPhy::GetTransmissionRateLimit (Ptr<SpectrumValue> rxPsd)
 void
 PLC_InfRateFDPhy::AbortReception ()
 {
-  NS_LOG_UNCOND(m_rxInterface->GetNode ()->GetName () << " Aborting reception");
+  NS_LOG_DEBUG(m_rxInterface->GetNode ()->GetName () << " Aborting reception");
   if (m_preambleDetectionEvent.IsRunning ()) m_preambleDetectionEvent.Cancel ();
   if (m_stateChangeEvent.IsRunning ()) m_stateChangeEvent.Cancel ();
   if (m_receptionEndEvent.IsRunning ()) m_receptionEndEvent.Cancel ();
@@ -255,7 +255,7 @@ PLC_InfRateFDPhy::DoStartRx (uint32_t txId, Ptr<const SpectrumValue> rxPsd, Time
 
   NS_LOG_LOGIC("PHY frame transmission time: " << duration);
 
-  NS_LOG_UNCOND(m_rxInterface->GetNode ()->GetName () << " PHY frame transmission time: " << duration);
+  NS_LOG_DEBUG(m_rxInterface->GetNode ()->GetName () << " PHY frame transmission time: " << duration);
 
   if (txId == m_txInterface->GetTxIfIdx ()) return;
 
@@ -343,7 +343,7 @@ PLC_InfRateFDPhy::PreambleDetectionSuccessful (uint32_t txId, Ptr<const Spectrum
   NS_LOG_FUNCTION(this << txId << rxPsd << duration << metaInfo);
 
   NS_LOG_INFO("Preamble detection successful");
-  NS_LOG_UNCOND("Preamble detection successful");
+  NS_LOG_DEBUG("Preamble detection successful");
 
   if (GetState () != RX && GetState () != TXRX)
     {
@@ -370,7 +370,7 @@ PLC_InfRateFDPhy::PreambleCollisionDetection ()
   NS_LOG_FUNCTION(this);
 
   NS_LOG_INFO("Collision detection");
-  NS_LOG_UNCOND("Collision detection");
+  NS_LOG_DEBUG("Collision detection");
 
   //
   // stop other events for collision check in future
@@ -405,7 +405,7 @@ PLC_InfRateFDPhy::PreambleCollisionDetection ()
       auto rxInterface = m_txInterface->GetChannel ()->GetRxInterface (i);
       if (rxInterface != m_rxInterface)
         {
-          NS_LOG_UNCOND(
+          NS_LOG_DEBUG(
                   "I am " << m_rxInterface->GetNode ()->GetName () << " do abort reception for " << rxInterface->GetNode ()->GetName ());
           Ptr<PLC_Phy> phy = rxInterface->GetPhy ();
           phy->GetObject<PLC_FullDuplexOfdmPhy> ()->NoiseStop (m_txInterface->GetTxIfIdx ());

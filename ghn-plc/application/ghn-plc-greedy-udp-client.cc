@@ -107,7 +107,7 @@ GhnPlcGreedyUdpClient::SendBatch (uint32_t numBytes)
   NS_LOG_FUNCTION (this);
   NS_ASSERT (m_sendEvent.IsExpired ());
 
-  NS_LOG_UNCOND("Prepare to send the batch of " << numBytes << " bytes");
+  NS_LOG_DEBUG("Prepare to send the batch of " << numBytes << " bytes");
 
   std::stringstream peerAddressStringStream;
   if (Ipv4Address::IsMatchingType (m_peerAddress))
@@ -142,7 +142,7 @@ GhnPlcGreedyUdpClient::SendBatch (uint32_t numBytes)
                   << peerAddressStringStream.str ());
         }
     }
-  NS_LOG_UNCOND("Sent batch of " << ceil((double) numBytes / (double)m_size) * m_size << " bytes");
+  NS_LOG_DEBUG("Sent batch of " << ceil((double) numBytes / (double)m_size) * m_size << " bytes");
 }
 
 void

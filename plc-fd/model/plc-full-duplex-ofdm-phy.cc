@@ -372,7 +372,7 @@ PLC_FullDuplexOfdmPhy::ChangeState (State newState)
   NS_LOG_FUNCTION(this);
   if (newState != GetState ())
     {
-      NS_LOG_UNCOND(this << " state: " << GetState () << " -> " << newState);
+      NS_LOG_DEBUG(this << " state: " << GetState () << " -> " << newState);
       NS_ASSERT_MSG(m_outlet, "PHY's outlet is not set!");
 
       if (newState == TX || newState == TXRX)

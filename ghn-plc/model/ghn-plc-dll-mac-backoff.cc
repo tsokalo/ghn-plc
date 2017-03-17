@@ -318,7 +318,7 @@ GhnPlcMacBackoff::RecalculateCw (Time backoffTime)
   if (m_Cw < 1)
       m_Cw = 1;
 
-  NS_LOG_UNCOND( "Slot time: " <<  m_slotTime << " MIN slots: " <<  m_minSlots << " MAX slots: " << m_maxSlots);
+  NS_LOG_DEBUG( "Slot time: " <<  m_slotTime << " MIN slots: " <<  m_minSlots << " MAX slots: " << m_maxSlots);
 }
 }
 } // namespace ns3

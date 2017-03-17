@@ -779,14 +779,18 @@ NcBlFlatBatMap::CalculateBat (double P_t, SpectrumValue sinr)
       ModulationType m = ModulationType (m_i);
       typedef std::pair<double, uint16_t> carrier_ber_t;
       BitAllocationTable bat (sinr.GetSpectrumModel ()->GetNumBands (), m);
-      uint16_t num_to_notch = 300;
+      uint16_t num_to_notch = 36;
       //
       // permanently notch
       //
-      for (uint16_t i = 0; i < num_to_notch; i++)
+      for (uint16_t i = 100+num_to_notch; i < sinr.GetSpectrumModel ()->GetNumBands (); i++)
         {
           bat[i] = NOMOD;
         }
+      for (uint16_t i = 0; i < 100; i++)
+             {
+               bat[i] = NOMOD;
+             }
 
       std::priority_queue<carrier_ber_t> ber_set;
       double P_bar_nom = 0;
