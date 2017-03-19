@@ -467,7 +467,7 @@ typedef std::deque<Ptr<Packet> > GhnBuffer;
 //
 #define GHN_CRC_LENGTH	4
 
-#define MAX_LLC_QUEUE_LENGTH	10000
+#define MAX_LLC_QUEUE_LENGTH	100000
 struct GhnSeg
 {
   Ptr<Packet> pkt;

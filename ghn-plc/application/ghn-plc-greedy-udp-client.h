@@ -113,6 +113,7 @@ private:
 
   Ptr<GhnPlcCutLog> m_cutLog;
   std::string m_resDir;
+
 };
 }
 } // namespace ns3

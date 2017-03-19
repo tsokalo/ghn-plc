@@ -177,6 +177,8 @@ protected:
 
   std::string m_resDir;
 
+  uint64_t m_nTemp;
+
 };
 
 }

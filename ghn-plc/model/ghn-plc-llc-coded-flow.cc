@@ -49,11 +49,11 @@ GhnPlcLlcCodedFlow::Configure (ncr::NodeType type, ncr::UanAddress dst, ncr::Sim
   //
   auto coding_header_size = ncr::coder_overhead::get (m_sp.genSize);
   GhnPlcLpduHeader header;
-  NS_LOG_DEBUG("LLC headers sizes: " << header.GetSerializedSize () << "\t" << GHN_CRC_LENGTH << "\t" << coding_header_size);
-  m_rxSegmenter = segmenter_ptr (
-          new GhnPlcSegmenter (m_blockSize - header.GetSerializedSize () - GHN_CRC_LENGTH - coding_header_size));
-  m_txSegmenter = segmenter_ptr (
-          new GhnPlcSegmenter (m_blockSize - header.GetSerializedSize () - GHN_CRC_LENGTH - coding_header_size));
+  NS_LOG_UNCOND("LLC headers sizes: " << header.GetSerializedSize () << "\t" << GHN_CRC_LENGTH << "\t" << coding_header_size);
+  m_rxSegmenter = segmenter_ptr (new GhnPlcSegmenter (m_blockSize - header.GetSerializedSize () - GHN_CRC_LENGTH
+          - coding_header_size));
+  m_txSegmenter = segmenter_ptr (new GhnPlcSegmenter (m_blockSize - header.GetSerializedSize () - GHN_CRC_LENGTH
+          - coding_header_size));
   m_sp.symbolSize = m_blockSize - GHN_CRC_LENGTH - coding_header_size;
   m_sp.numGen = (m_nodeType == ncr::SOURCE_NODE_TYPE) ? 2 * m_sp.numGen : m_sp.numGen;
 
@@ -72,11 +72,10 @@ GhnPlcLlcCodedFlow::Configure (ncr::NodeType type, ncr::UanAddress dst, ncr::Sim
       m_encQueue->set_notify_callback (std::bind (&GhnPlcLlcCodedFlow::NotifyRcvUp, this, std::placeholders::_1));
       m_getRank = std::bind (&ncr::encoder_queue::rank, m_encQueue, std::placeholders::_1);
       m_brr->SetGetRankCallback (m_getRank);
-      m_brr->SetCoderHelpInfoCallback (
-              std::bind (&ncr::encoder_queue::get_help_info, m_encQueue, std::placeholders::_1, std::placeholders::_2,
-                      std::placeholders::_3));
+      m_brr->SetCoderHelpInfoCallback (std::bind (&ncr::encoder_queue::get_help_info, m_encQueue, std::placeholders::_1,
+              std::placeholders::_2, std::placeholders::_3));
 
-      SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " type " << m_nodeType);
+      NS_LOG_DEBUG("Node " << m_id << " type " << m_nodeType);
     }
   else
     {
@@ -85,11 +84,10 @@ GhnPlcLlcCodedFlow::Configure (ncr::NodeType type, ncr::UanAddress dst, ncr::Sim
       m_brr->SetGetRankCallback (m_getRank);
       m_brr->SetGetCodingMatrixCallback (std::bind (&ncr::decoder_queue::get_coding_matrix, m_decQueue, std::placeholders::_1));
       m_brr->SetGetCoderInfoCallback (std::bind (&ncr::decoder_queue::get_coder_info, m_decQueue, std::placeholders::_1));
-      m_brr->SetCoderHelpInfoCallback (
-              std::bind (&ncr::decoder_queue::get_help_info, m_decQueue, std::placeholders::_1, std::placeholders::_2,
-                      std::placeholders::_3));
+      m_brr->SetCoderHelpInfoCallback (std::bind (&ncr::decoder_queue::get_help_info, m_decQueue, std::placeholders::_1,
+              std::placeholders::_2, std::placeholders::_3));
 
-      SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " type " << m_nodeType);
+      NS_LOG_DEBUG("Node " << m_id << " type " << m_nodeType);
     }
 }
 
@@ -152,7 +150,7 @@ GhnPlcLlcCodedFlow::SendDown ()
 
           uint32_t max_el_brr = m_brr->GetAmountTxData ();
           maxPkts = (maxPkts > max_el_brr) ? max_el_brr : maxPkts;
-//          maxPkts = (maxPkts > GHN_ACK_MAX_WINDOW_SIZE_DATA(m_blockSize)) ? GHN_ACK_MAX_WINDOW_SIZE_DATA(m_blockSize) : maxPkts;
+          //          maxPkts = (maxPkts > GHN_ACK_MAX_WINDOW_SIZE_DATA(m_blockSize)) ? GHN_ACK_MAX_WINDOW_SIZE_DATA(m_blockSize) : maxPkts;
 
           assert(m_nodeType != ncr::DESTINATION_NODE_TYPE);
           ncr::TxPlan plan = m_brr->GetTxPlan ();
@@ -160,7 +158,7 @@ GhnPlcLlcCodedFlow::SendDown ()
 
           if (plan.empty ())
             {
-              SIM_LOG (COMM_NODE_LOG, "Flow " << m_connId << ": " << "Sending the message with feedback only");
+              NS_LOG_DEBUG("Flow " << m_connId << ": " << "Sending the message with feedback only");
             }
 
           auto p_it = plan.begin_orig_order ();
@@ -172,7 +170,7 @@ GhnPlcLlcCodedFlow::SendDown ()
               for (; i < n;)
                 {
                   auto contents =
-                          (m_nodeType == ncr::SOURCE_NODE_TYPE) ? m_encQueue->get_coded (genId) : m_decQueue->get_coded (genId);
+                  (m_nodeType == ncr::SOURCE_NODE_TYPE) ? m_encQueue->get_coded (genId) : m_decQueue->get_coded (genId);
                   auto pkt = Create<Packet> ((uint8_t const*) contents.data (), contents.size ());
                   toTransmit.push_back (pkt);
                   pushedPkts++;
@@ -186,22 +184,22 @@ GhnPlcLlcCodedFlow::SendDown ()
               p_it = plan.next_orig_order (p_it);
             }
 
-          SIM_LOG_N (1, m_id,
+          NS_LOG_DEBUG("Node " << m_id <<
                   "[max_el_brr " << max_el_brr << "],[maxPkts " << maxPkts << "],[pushedPkts " << pushedPkts << "]");
 
           if (m_nodeType == ncr::SOURCE_NODE_TYPE)
             {
               if (pushedPkts != maxPkts)
                 {
-                  SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " pushed pkts: " << pushedPkts << ", max pkts: " << maxPkts);
+                  NS_LOG_DEBUG("Node " << m_id << " pushed pkts: " << pushedPkts << ", max pkts: " << maxPkts);
                 }
             }
-          NS_LOG_DEBUG("Node " << m_id << ", Flow " << m_connId << ": " << " Tx Plan: " << planI);
+          NS_LOG_UNCOND("Node " << m_id << ", Flow " << m_connId << ": " << " Tx Plan: " << planI);
 
           auto hBuf = ConvertBrrHeaderToPkt (planI);
           toTransmit.insert (toTransmit.begin (), hBuf.begin (), hBuf.end ());
 
-          NS_LOG_UNCOND(
+          NS_LOG_DEBUG(
                   Simulator::Now().GetSeconds() << " " << m_id << " >>>>>>>>>>>>>>>>>>> BRR transmit buffer of  " << toTransmit.size() << " segments");
         }
       else
@@ -213,13 +211,13 @@ GhnPlcLlcCodedFlow::SendDown ()
     }
   else
     {
-      SIM_LOG (BRR_LOG, "Flow " << m_connId << ": " << "I am the destination. I can send the feedback only");
+      NS_LOG_UNCOND("Flow " << m_connId << ": " << "I am the destination. I can send the feedback only");
       nh = rt->GetNextHopAddress (src, m_connId.src).GetAsInt ();
       m_brr->SetSendingRate (bt->GetNumEffBits (src, m_connId.src.GetAsInt ()));
 
       auto hBuf = ConvertBrrHeaderToPkt (ncr::TxPlan ());
       toTransmit.insert (toTransmit.begin (), hBuf.begin (), hBuf.end ());
-      NS_LOG_UNCOND(
+      NS_LOG_DEBUG(
               Simulator::Now().GetSeconds() << " " << m_id << " >>>>>>>>>>>>>>>>>>> BRR transmit buffer of  " << toTransmit.size() << " segments");
     }
 
@@ -237,16 +235,20 @@ GhnPlcLlcCodedFlow::SendDown ()
 
   m_drCalc.Update (toTransmit.size () * m_blockSize * 8);
 
-  SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " Tx buffer size: " << toTransmit.size ());
+  NS_LOG_DEBUG("Node " << m_id << " Tx buffer size: " << toTransmit.size ());
 
   return SendTuple (toTransmit, m_connId, UanAddress (nh));
 }
+
+
 void
 GhnPlcLlcCodedFlow::PrepareForSend ()
 {
   if (!m_frameBuffer.empty ())
     {
       assert(m_nodeType == ncr::SOURCE_NODE_TYPE);
+
+      NS_LOG_UNCOND("Prepare for send the frame buffer  " << m_frameBuffer.size());
 
       //
       // create non-indexed segments
@@ -255,7 +257,7 @@ GhnPlcLlcCodedFlow::PrepareForSend ()
       m_nonindexedSegs.insert (m_nonindexedSegs.end (), addNonIndexed.begin (), addNonIndexed.end ());
       m_frameBuffer.clear ();
 
-      auto s = m_nonindexedSegs.size () * m_nonindexedSegs.begin ()->pkt->GetSize ();
+auto      s = m_nonindexedSegs.size () * m_nonindexedSegs.begin ()->pkt->GetSize ();
       NS_LOG_DEBUG("Segmented buffer contains " << s << " bytes");
 
       //
@@ -277,10 +279,11 @@ GhnPlcLlcCodedFlow::PrepareForSend ()
         }
     }
 }
+
 GhnBuffer
 GhnPlcLlcCodedFlow::ConvertBrrHeaderToPkt (ncr::TxPlan plan)
 {
-  SIM_LOG_N (BRR_LOG, m_id, "Send ACK " << m_feedback.ackInfo);
+  SIM_LOG_N (1, m_id, "Send ACK " << m_feedback.ackInfo << ", RR is" << (m_feedback.rrInfo.empty() ? " NOT" : "") << " present" << ", TTL: " << m_feedback.ttl);
   auto str = m_brr->GetHeader (plan, m_feedback).Serialize ();
   m_feedback.Reset ();
   auto bs = m_blockSize - GHN_CRC_LENGTH;
@@ -326,7 +329,7 @@ GhnPlcLlcCodedFlow::ConvertPktToBrrHeader (GhnBuffer &buffer, std::deque<Segment
   pkt->RemoveAtStart (1);
 
   for (uint16_t i = 1; i < n_bs; i++)
-    pkt->AddAtEnd (*(buffer.begin () + i));
+  pkt->AddAtEnd (*(buffer.begin () + i));
 
   buffer.erase (buffer.begin (), buffer.begin () + n_bs);
 
@@ -389,7 +392,7 @@ GhnPlcLlcCodedFlow::Receive (GhnBuffer buffer, ConnId connId)
   //
   // process data packets
   //
-  SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " Rx buffer size: " << buffer.size () << ", Tx plan: " << header.h.txPlan);
+  NS_LOG_DEBUG("Node " << m_id << " Rx buffer size: " << buffer.size () << ", Tx plan: " << header.h.txPlan);
   auto tx_it = header.h.txPlan.begin_orig_order ();
   auto it = state.begin ();
 
@@ -426,11 +429,8 @@ GhnPlcLlcCodedFlow::Receive (GhnBuffer buffer, ConnId connId)
   GroupEncAckInfo info;
   if (m_id == nh)
     {
-      NS_LOG_UNCOND("Connection: " << m_connId << " " << m_id << ", Attaching ACK");
-      if (!m_feedback.updated)
-        {
-          m_feedback = m_brr->GetFeedbackInfo ();
-        }
+      m_feedback = m_brr->GetRetransRequestInfo ();
+      NS_LOG_UNCOND("Connection: " << m_connId << " " << m_id << ", Attaching ACK " << m_feedback.ackInfo);
       auto hBuf = ConvertBrrHeaderToPkt (ncr::TxPlan ());
       //
       // add CRC
@@ -462,13 +462,13 @@ GhnPlcLlcCodedFlow::ReceiveAck (GroupEncAckInfo info, ConnId connId)
   auto header = ConvertPktToBrrHeader (buffer, state);
 
   m_brr->RcvHeaderInfo (header.h);
+  SIM_LOG_N (1, m_id, "Rcv ACK " << header.f.ackInfo << ", RR is" << (header.f.rrInfo.empty() ? " NOT" : "") << " present");
   ProcessFeedback (header.f);
   //
   // form own feedback if needed
   //
   UpdateFeedback ();
 }
-
 bool
 GhnPlcLlcCodedFlow::IsQueueEmpty ()
 {
@@ -487,12 +487,12 @@ GhnPlcLlcCodedFlow::IsQueueEmpty ()
 
   return (!m_brr->MaySendData ());
 }
-
 void
 GhnPlcLlcCodedFlow::SetLogCallback (add_log_func addLog)
 {
   m_addLog = addLog;
 }
+
 void
 GhnPlcLlcCodedFlow::ProcessDecoded (GhnBuffer buffer, ConnId connId)
 {
@@ -505,115 +505,121 @@ GhnPlcLlcCodedFlow::ProcessDecoded (GhnBuffer buffer, ConnId connId)
   //
   // remove LPDU header
   //
-  SegGhnBuffer segmentBuffer;
-  std::deque<Ssn> ssns = RemoveLpduHeaders (buffer, state, segmentBuffer);
-
+  SegGhnBuffer segBuf;
+  std::deque<Ssn> ssns = RemoveLpduHeaders (buffer, state, segBuf);
+  for(auto a : ssns)m_llcUncondedLogTrace (connId.dst.GetAsInt (), connId.src.GetAsInt (), a);
   //
-  // add/update segments to/in the receive buffer
+  // save received segements
   //
-  UpdateRcvdSegments (segmentBuffer);
-
-  assert(ssns.size () == state.size ());
-  std::deque<Ssn> ackedSegs;
-  for (uint32_t i = 0; i < ssns.size (); i++)
-    {
-      if (state.at (i) == DONE_SEGMENT_STATE) ackedSegs.push_back (ssns.at (i));
-    }
-
-  for (auto a : ackedSegs)
-    {
-      m_llcUncondedLogTrace (connId.dst.GetAsInt (), connId.src.GetAsInt (), a);
-    }
+  m_segmentBuffer.insert(m_segmentBuffer.begin(), segBuf.begin(), segBuf.end());
   //
   // mark the received segments
   //
-  m_oQueue->insert (ackedSegs);
+  m_oQueue->insert (ssns);
+  NS_LOG_DEBUG("OQ: " << *m_oQueue);
   //
   // get SSNs of all continuously correctly received segments, which are still present in the confirmed window
   //
   ssns = m_oQueue->get ();
-
   if (ssns.empty ()) return;
-  //  std::cout << "SSNs: ";
-  //  for (auto ssn : ssns)
-  //    {
-  //      std::cout << ssn << " ";
-  //    }
-  //  std::cout << std::endl;
+
+  std::stringstream ss;
+  ss << Simulator::Now().GetSeconds() << " SSNs: ";
+  for (auto ssn : ssns)
+    {
+      ss << ssn << " ";
+    }
+  NS_LOG_UNCOND(ss.str());
 
   //
   // De-segment the segments with such ssns
   //
   if (!ssns.empty ())
     {
-      segmentBuffer.clear ();
-      NS_LOG_DEBUG(
-              "Flow " << m_connId << ": " << "Number of continuously acknowledged segments: " << ssns.size() << ", first: " << (*ssns.begin ()) << ", last: " << ssns.at(ssns.size() - 1));
-      //
-      // add segments which were acknowledged earlier but were de-segmented neither partially nor completely
-      //
-      AddNotDesegmented (ssns, segmentBuffer);
+      ssns.insert(ssns.begin(), m_notDesegm.begin(), m_notDesegm.end());
+      segBuf.clear();
+
+      for(auto s : ssns)
+        {
+          uint16_t si = segBuf.size();
+          for(auto seg : m_segmentBuffer)
+            {
+              if(seg.ssn == s)
+                { segBuf.push_back(seg);
+                  break;
+                }
+            }
+          NS_ASSERT_MSG(si + 1 == segBuf.size(), "Segment with SSN " << s << " not found");
+        }
+      assert(segBuf.size() == ssns.size());
 
       //
-      // add segments which are acknowledged now
+      // the first part of the first segment (if any) in this case was already used for de-segmentation
+      // therefore we ignore it; we do it indirectly adding a not valid segment to the buffer
       //
-      AddJustAcknowledged (ssns, segmentBuffer);
+      if (!segBuf.empty () && !m_notDesegm.empty())
+        {
+          GhnSeg seg;
+          seg.pkt = Create<Packet> (m_blockSize);
+          seg.posLlcFrame = 0;
+          seg.validSeg = false;
+          seg.ssn = 0;
+          segBuf.push_front (seg);
+          NS_LOG_DEBUG("Flow " << m_connId << ": " << "Add dummy segment");
+        }
+      m_notDesegm.clear();
 
       //
       // create LLC frames from the received data
       //
-      buffer = ConvertSegsToLlcFrames (segmentBuffer);
+      buffer = ConvertSegsToLlcFrames (segBuf);
 
-      if (!buffer.empty ())
+      m_notDesegm.push_back(*(ssns.end() - 1));
+
+      for(uint16_t i = 0; i < ssns.size() - 1; i++)
         {
-          //
-          // get last segment(s) from the end of the buffer, which contain only piece(s) of the last LLC frame,
-          // and push them back to the receive buffer
-          //
-          SaveNotFullyDesegmented (segmentBuffer);
-
-          //
-          // remove LLC frame header and send the packets to the top
-          //
-          ProcessDeseqmented (buffer, connId);
+          auto s_it = m_segmentBuffer.begin();
+          while(s_it != m_segmentBuffer.end())
+            {
+              if(s_it->ssn == ssns.at(i))
+                {
+                  m_segmentBuffer.erase(s_it, s_it + 1);
+                  break;
+                }
+              s_it++;
+            }
         }
+
+      //
+      // remove LLC frame header and send the packets to the top
+      //
+      ProcessDeseqmented (buffer, connId);
+
     }
   else
     {
       NS_LOG_DEBUG("Flow " << m_connId << ": " << "Number of continuously acknowledged segments: " << ssns.size());
     }
 
-  //    GroupEncAckInfo info;
-  //    m_rxArq->GetAck (info);
-  if (m_connId.dst == UanAddress::GetBroadcast ())
-    {
-      //
-      // we expect no acknowledgment for broadcast packets
-      // therefore we reset the Tx ARQ like if we would receive the complete ACK
-      //
-      NS_LOG_DEBUG("Flow " << m_connId << ": " << "Reseting Rx ARQ");
-      m_rxArq->Reset ();
-      m_nonindexedSegs.clear ();
-      m_indexedSegs.clear ();
-    }
-
+  NS_ASSERT(m_connId.dst != UanAddress::GetBroadcast ());
 }
+
 void
 GhnPlcLlcCodedFlow::ProcessRcvdPacket (std::vector<uint8_t> vec, bool crc, ncr::UanAddress addr, ncr::TxPlan::iterator item,
-        ConnId connId)
+      ConnId connId)
 {
   ncr::GenId genId = item->first;
 
   if (!crc)
     {
-      SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " loosing segment");
+      NS_LOG_DEBUG("Node " << m_id << " loosing segment");
       m_brr->UpdateLoss (genId, addr);
       return;
     }
 
   if (m_nodeType == ncr::SOURCE_NODE_TYPE) return;
 
-  SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " receives packet from generation " << genId);
+  NS_LOG_DEBUG("Node " << m_id << " receives packet from generation " << genId);
 
   auto rank_b = m_decQueue->rank (genId);
   m_decQueue->enque (vec, genId);
@@ -626,53 +632,58 @@ GhnPlcLlcCodedFlow::ProcessRcvdPacket (std::vector<uint8_t> vec, bool crc, ncr::
       if (addr == connId.dst)
         {
           if (!pkts.empty ()) ProcessDecoded (ConvertVecsToBuffer (pkts), connId);
+          NS_LOG_DEBUG("Node " << m_id << " receive. GenId " << genId << ", got uncoded (num) " << pkts.size());
         }
     }
   else
     {
       m_brr->UpdateRcvd (genId, addr, true);
     }
+  if(rank_a == m_sp.genSize)
+    {
+      NS_LOG_DEBUG("Node " << m_id << ". Gen " << genId << " is full");
+    }
   //
   // --->
   //
   if (m_brr->MaySendNetDiscovery ())
     {
-      SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " sends the network discovery message with maximum TTL");
+      NS_LOG_DEBUG("Node " << m_id << " sends the network discovery message with maximum TTL");
 
       m_feedback = m_brr->GetNetDiscoveryInfo ();
 
     }
   else
     {
-      SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " refuses to send the network discovery message");
+      NS_LOG_DEBUG("Node " << m_id << " refuses to send the network discovery message");
 
       //
       // --->
       //
       if (m_brr->MaySendRetransRequest (m_decQueue->get_ranks (), addr, genId, item->second.all_prev_acked))
         {
-          SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " sends the retransmission request");
+          NS_LOG_DEBUG("Node " << m_id << " sends the retransmission request");
 
           m_feedback = m_brr->GetRetransRequestInfo ();
 
         }
       else
         {
-          SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " refuses to send the retransmission request");
+          NS_LOG_DEBUG("Node " << m_id << " refuses to send the retransmission request");
 
           //
           // --->
           //
           if (m_brr->MaySendFeedback ())
             {
-              SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " sends the feedback");
+              NS_LOG_DEBUG("Node " << m_id << " sends the feedback");
 
               m_feedback = m_brr->GetFeedbackInfo ();
 
             }
           else
             {
-              SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " refuses to send the feedback");
+              NS_LOG_DEBUG("Node " << m_id << " refuses to send the feedback");
             }
         }
     }
@@ -686,20 +697,21 @@ GhnPlcLlcCodedFlow::UpdateFeedback ()
   //
   if (m_brr->MaySendFeedback ())
     {
-      SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " sends the feedback");
+      NS_LOG_DEBUG("Node " << m_id << " sends the feedback");
 
       m_feedback = m_brr->GetFeedbackInfo ();
 
     }
   else
     {
-      SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " refuses to send the feedback");
+      NS_LOG_DEBUG("Node " << m_id << " refuses to send the feedback");
     }
 }
+
 void
 GhnPlcLlcCodedFlow::ProcessFeedback (ncr::FeedbackInfo f)
 {
-  SIM_LOG (BRR_LOG, "Node " << m_id << " receive feedback symbol");
+  NS_LOG_UNCOND("Node " << m_id << " receive feedback symbol");
   m_brr->RcvFeedbackInfo (f);
 
   if (f.ttl != 0)
@@ -710,12 +722,20 @@ GhnPlcLlcCodedFlow::ProcessFeedback (ncr::FeedbackInfo f)
         }
       else
         {
-          if (m_brr->HasRetransRequest (f)) ProcessRetransRequest (f);
+          NS_LOG_UNCOND("Node " << m_id << " check if RR is present");
+          if (m_brr->HasRetransRequest (f))
+            {
+              ProcessRetransRequest (f);
+            }
+          else
+            {
+              NS_LOG_UNCOND("Node " << m_id << " RR is not present");
+            }
         }
     }
   else
     {
-      SIM_LOG (BRR_LOG, "Node " << m_id << " TTL has expired");
+      NS_LOG_DEBUG("Node " << m_id << " TTL has expired");
     }
 
 }
@@ -723,39 +743,39 @@ GhnPlcLlcCodedFlow::ProcessFeedback (ncr::FeedbackInfo f)
 void
 GhnPlcLlcCodedFlow::ProcessNetDiscovery (ncr::FeedbackInfo f)
 {
-  SIM_LOG (BRR_LOG, "Node " << m_id << " receive the network discovery message with TTL " << f.ttl);
+  NS_LOG_DEBUG("Node " << m_id << " receive the network discovery message with TTL " << f.ttl);
 
   if (m_brr->MaySendNetDiscovery (f.ttl))
     {
-      SIM_LOG (BRR_LOG, "Node " << m_id << " sends the network discovery message with TTL " << f.ttl - 1);
+      NS_LOG_DEBUG("Node " << m_id << " sends the network discovery message with TTL " << f.ttl - 1);
       m_feedback = m_brr->GetNetDiscoveryInfo (f.ttl - 1);
     }
   else
     {
-      SIM_LOG (BRR_LOG, "Node " << m_id << " refuses to send the network discovery message");
+      NS_LOG_DEBUG("Node " << m_id << " refuses to send the network discovery message");
     }
 }
 
 void
 GhnPlcLlcCodedFlow::ProcessRetransRequest (ncr::FeedbackInfo f)
 {
-  SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " processing retransission request");
+  NS_LOG_UNCOND("Node " << m_id << " processing retransission request");
 
   if (m_brr->ProcessRetransRequest (f))
     {
       if (m_nodeType != ncr::SOURCE_NODE_TYPE)
         {
-          SIM_LOG (COMM_NODE_LOG, "Node " << m_id << " forward retransmission request. TTL " << f.ttl);
+          NS_LOG_DEBUG("Node " << m_id << " forward retransmission request. TTL " << f.ttl);
           m_feedback = m_brr->GetRetransRequestInfo (f.ttl - 1);
         }
       else
         {
-          SIM_LOG (COMM_NODE_LOG, "Node " << m_id << ". The source does not forward retransmission requests");
+          NS_LOG_DEBUG("Node " << m_id << ". The source does not forward retransmission requests");
         }
     }
   else
     {
-      SIM_LOG (COMM_NODE_LOG, "Node " << m_id << ". Retransmission request is either not set or I should not forward it");
+      NS_LOG_DEBUG("Node " << m_id << ". Retransmission request is either not set or I should not forward it");
     }
 
 }

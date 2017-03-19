@@ -28,6 +28,7 @@ GhnPlcDllApc::GetTypeId (void)
 GhnPlcDllApc::GhnPlcDllApc ()
 {
   NS_LOG_FUNCTION (this);
+  m_rcvdSize = 0;
 }
 
 GhnPlcDllApc::~GhnPlcDllApc()
@@ -70,7 +71,9 @@ bool
 GhnPlcDllApc::Receive (Ptr<Packet> packet, const UanAddress& source, const UanAddress& dest)
 {
   NS_LOG_FUNCTION (this << packet->GetSize());
+  m_rcvdSize += packet->GetSize();
   NS_LOG_LOGIC("Receive packet with size " << packet->GetSize() << ", src " << source << ", dst " << dest);
+  NS_LOG_DEBUG("APC received " << m_rcvdSize);
   return m_forwardUp (packet, source, dest);
 }
 

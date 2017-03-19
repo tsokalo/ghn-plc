@@ -617,8 +617,8 @@ GhnPlcDllMacCsma::DoStartTx (void)
     {
       m_sendTuple = m_ncDllLlc->SendDown ();
 
-      NS_LOG_DEBUG(
-              "Node " << m_dllMan->GetAddress() << " TX buffer size: " << m_sendTuple.get_buffer().size() << ", connId: " << m_sendTuple.get_conn_id() << ", next hop: " << m_sendTuple.GetNextHopAddress());
+      NS_LOG_UNCOND(
+              Simulator::Now().GetSeconds() << " Node " << m_dllMan->GetAddress() << " TX buffer size: " << m_sendTuple.get_buffer().size() << ", connId: " << m_sendTuple.get_conn_id() << ", next hop: " << m_sendTuple.GetNextHopAddress());
 
       m_transPacket = AssembleMpdu (m_sendTuple.get_buffer ());
 

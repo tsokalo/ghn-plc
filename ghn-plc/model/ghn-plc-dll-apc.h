@@ -55,6 +55,8 @@ protected:
 
   ApduForwardDownCallback m_forwardDown;
   AdpForwardUpCallback m_forwardUp;
+
+  uint64_t m_rcvdSize;
 };
 
 } // namespace ns3

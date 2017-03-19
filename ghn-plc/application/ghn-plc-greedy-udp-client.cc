@@ -125,7 +125,7 @@ GhnPlcGreedyUdpClient::SendBatch (uint32_t numBytes)
     {
       Ptr<Packet> p = Create<Packet> (m_size);
       m_cutLog->AddLogData (p, this->GetNode ()->GetId ());
-
+      NS_LOG_DEBUG("App sent " << m_sent << " packets");
       if ((m_socket->Send (p)) >= 0)
         {
           ++m_sent;
@@ -140,6 +140,7 @@ GhnPlcGreedyUdpClient::SendBatch (uint32_t numBytes)
         {
           NS_LOG_INFO ("Error while sending " << m_size << " bytes to "
                   << peerAddressStringStream.str ());
+          NS_ASSERT(0);
         }
     }
   NS_LOG_DEBUG("Sent batch of " << ceil((double) numBytes / (double)m_size) * m_size << " bytes");

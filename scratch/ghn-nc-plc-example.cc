@@ -88,7 +88,7 @@ main (int argc, char *argv[])
   TopologyType topologyType = INHOME_TOPOLOGY_TYPE;
   std::vector<uint32_t> distance;
   uint32_t distance_ptp = 700;
-  uint16_t num_modems = 2;
+  uint16_t num_modems = 3;
   if (argc > 1)
     {
       num_modems = atoi (argv[1]);
@@ -99,7 +99,7 @@ main (int argc, char *argv[])
   double load = 1.0; //no units
   double dr = 200 * 1000 * 1000; //unit [bps]
   double nodeRate = load * dr / (double) (num_modems - 1); //unit [bps]
-  double simDuration = 2.0 + 2 * GHN_WARMUP_PERIOD; //unit [s]
+  double simDuration = 1.0 + 2 * GHN_WARMUP_PERIOD; //unit [s]
   double minSimDuration = 0.1; //unit [s]
   uint16_t maxCwSize = 20;
   if (argc > 2)

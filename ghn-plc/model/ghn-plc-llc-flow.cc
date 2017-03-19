@@ -58,6 +58,7 @@ GhnPlcLlcFlow::GhnPlcLlcFlow ()
   Time blockLifeTime = Seconds (1.0);
   m_llcFrameSeqNum = 0;
   m_rxBcSeqNum = 0;
+  m_nTemp = 0;
 
   m_txArq = tx_ack_ptr (new GhnPlcTxAckInfo (LSS_N_MAX, m_blockSize, m_winConfSize, blockLifeTime));
   m_rxArq = rx_ack_ptr (new GhnPlcRxAckInfo (LSS_N_MAX, m_blockSize, m_winConfSize, NO_ACK_COMPRESS, blockLifeTime));
@@ -66,7 +67,8 @@ GhnPlcLlcFlow::GhnPlcLlcFlow ()
   m_rxSegmenter = segmenter_ptr (new GhnPlcSegmenter (m_blockSize - header.GetSerializedSize () - GHN_CRC_LENGTH));
   m_txSegmenter = segmenter_ptr (new GhnPlcSegmenter (m_blockSize - header.GetSerializedSize () - GHN_CRC_LENGTH));
 
-  m_artificialPer = m_perRv.GetValue (0.05, 0.4);
+//  m_artificialPer = m_perRv.GetValue (0.05, 0.4);
+  m_artificialPer = 0.3;
 
   NS_LOG_DEBUG("Creating original G.hn LLC flow");
 }
@@ -144,6 +146,8 @@ GhnPlcLlcFlow::Enqueue (Ptr<Packet> packet, ConnId connId)
       return false;
     }
   m_frameBuffer.push_back (packet);
+  m_nTemp++;
+  NS_LOG_DEBUG("Flow received " << m_nTemp << " packets");
   m_dllMac->TriggerSend ();
   return true;
 }
@@ -385,7 +389,7 @@ GhnPlcLlcFlow::AddNotDesegmented (std::deque<Ssn> &ssns, SegGhnBuffer &segmentBu
       seg.validSeg = false;
       seg.ssn = 0;
       segmentBuffer.push_front (seg);
-      NS_LOG_DEBUG("Flow " << m_connId << ": " << "Add dummy segment");
+      NS_LOG_UNCOND("Flow " << m_connId << ": " << "Add dummy segment");
     }
   m_containPartDesegm = false;
 }
@@ -451,6 +455,8 @@ void
 GhnPlcLlcFlow::ProcessDeseqmented (GhnBuffer buffer, ConnId connId)
 {
   NS_LOG_FUNCTION(this);
+  if(buffer.empty())return;
+
   GhnPlcLlcFrameHeader header;
   auto dll = m_dllMac->GetDllManagement ();
   if (m_aggr.empty ()) CreateLogger ();
