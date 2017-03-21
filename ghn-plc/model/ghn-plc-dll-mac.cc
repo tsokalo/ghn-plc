@@ -503,7 +503,7 @@ bool
 GhnPlcDllMacCsma::DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, const UanAddress& source, const UanAddress& dest,
         uint8_t flowId)
 {
-  ConnId connId (source, dest, flowId);
+  ConnId connId (source, dest, UanAddress(m_phyMan->GetRxDomainId ()), flowId);
   NS_LOG_FUNCTION(this << connId << packet->GetSize ());
 
   if (m_aggr.empty ()) CreateLogger ();
@@ -511,8 +511,7 @@ GhnPlcDllMacCsma::DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, c
   m_txAllowed = false;
   SetState (RX);
 
-  m_backoff->RecalculateCw (NanoSeconds (m_phyMan->GetRxDomainId () * GDOTHN_IST));
-
+//  m_backoff->RecalculateCw (NanoSeconds (m_phyMan->GetRxDomainId () * GDOTHN_IST));
   uint16_t padlen;
 
   switch (frameType)
@@ -699,11 +698,13 @@ GhnPlcDllMacCsma::ConfigurePhy (SendTuple st)
 
   m_phyMan->SetTxMulticastIndication (m_lastTxMulticastIndication);
   m_phyMan->SetTxReplyRequired (m_lastTxReplyRequired);
-  m_phyMan->SetTxDomainId (m_lastBackoffTime.GetNanoSeconds () / GDOTHN_IST); //used to send the current winner backoff
+//  m_phyMan->SetTxDomainId (m_lastBackoffTime.GetNanoSeconds () / GDOTHN_IST); //used to send the current winner backoff
   m_phyMan->SetTxSourceId (m_lastTxSourceId);
   m_phyMan->SetTxDestinationId (m_destinationId);
   m_phyMan->SetTxConnectionIdentifier (connId.flowId);
   m_phyMan->SetMcAckSlotsNumber (m_mpduSeqNum++);
+  // used not on purpose
+  m_phyMan->SetTxDomainId(src);
 
   uint32_t nextId = rt->GetIdByAddress (nh);
   ModulationAndCodingScheme mcs (bl->GetModulationAndCodingScheme (src, nextId));

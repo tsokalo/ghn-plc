@@ -15,8 +15,6 @@ namespace ns3
 namespace ghn
 {
 
-//using namespace ncr;
-
 typedef uint8_t local_msg_t;
 typedef uint16_t local_size_t;
 

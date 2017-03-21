@@ -145,7 +145,7 @@ protected:
   ConnId m_connId;
 
   UniformRandomVariable m_perRv;
-  double m_artificialPer;
+  std::map<UanAddress, double> m_artificialPer;
 
   Ptr<GhnPlcDllMacCsma> m_dllMac;
   Ptr<GhnPlcDllApc> m_dllApc;

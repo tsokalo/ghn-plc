@@ -178,7 +178,7 @@ GhnPlcPhyPcs::ReceiveSuccess (Ptr<const Packet> txPhyFrame, uint16_t msgId)
   NS_LOG_LOGIC ("Source ID: " << sourceId);
   uint8_t destinationId = header1.GetDestinationId ();
   NS_LOG_LOGIC ("Destination ID: " << destinationId);
-  uint8_t domainId = header1.GetDomainId (); //used for winner backoff here
+  uint8_t domainId = header1.GetDomainId ();
   NS_LOG_LOGIC ("Domain ID: " << domainId);
   m_ghnPhyManagement->SetRxDomainId (domainId);
 

@@ -67,9 +67,6 @@ GhnPlcLlcFlow::GhnPlcLlcFlow ()
   m_rxSegmenter = segmenter_ptr (new GhnPlcSegmenter (m_blockSize - header.GetSerializedSize () - GHN_CRC_LENGTH));
   m_txSegmenter = segmenter_ptr (new GhnPlcSegmenter (m_blockSize - header.GetSerializedSize () - GHN_CRC_LENGTH));
 
-  m_artificialPer = m_perRv.GetValue (0.05, 0.4);
-//  m_artificialPer = 0.001;
-
   NS_LOG_DEBUG("Creating original G.hn LLC flow");
 }
 void
@@ -77,7 +74,7 @@ GhnPlcLlcFlow::SetConnId (ConnId connId)
 {
   m_connId = connId;
   NS_LOG_DEBUG(
-          "Node " << (uint16_t) m_dllMac->GetDllManagement()->GetAddress().GetAsInt() << ": Setting LLC flow ID " << connId << " PER: " << m_artificialPer);
+          "Node " << (uint16_t) m_dllMac->GetDllManagement()->GetAddress().GetAsInt() << ": Setting LLC flow ID " << connId);
 }
 
 GhnPlcLlcFlow::~GhnPlcLlcFlow ()
@@ -253,6 +250,15 @@ GhnPlcLlcFlow::CheckCrc (GhnBuffer &buffer, ConnId connId)
   std::deque<SegmentState> state;
   auto phym = m_dllMac->GetDllManagement ()->GetPhyManagement ();
 
+  if(m_artificialPer.find(connId.sender) == m_artificialPer.end())
+    {
+      m_artificialPer[connId.sender] = m_perRv.GetValue (0.05, 0.4);
+//      m_artificialPer[connId.sender] = 0.3;
+      NS_LOG_DEBUG("Flow " << m_connId << ", own address " << m_dllMac->GetDllManagement()->GetAddress()
+              << ", sender " << connId.sender << ": loss ratio " << m_artificialPer[connId.sender]);
+    }
+  auto lr =  m_artificialPer[connId.sender];
+
   ncr::bitset crc;
   for (auto &packet : buffer)
     {
@@ -262,7 +268,7 @@ GhnPlcLlcFlow::CheckCrc (GhnBuffer &buffer, ConnId connId)
       // assume that the management messages are coded good enough to have no bit errors after PHY decoding
       //
       bool blockSuccess = (connId.flowId == MANAGMENT_CONN_ID) ? 1 : phym->IsBlockSuccess ();
-      blockSuccess = (blockSuccess && connId.flowId != MANAGMENT_CONN_ID) ? (m_artificialPer < m_perRv.GetValue (0.0, 1.0)) : blockSuccess;
+      blockSuccess = (blockSuccess && connId.flowId != MANAGMENT_CONN_ID) ? (lr < m_perRv.GetValue (0.0, 1.0)) : blockSuccess;
 
       crc.add (blockSuccess);
       if (blockSuccess)
@@ -389,7 +395,7 @@ GhnPlcLlcFlow::AddNotDesegmented (std::deque<Ssn> &ssns, SegGhnBuffer &segmentBu
       seg.validSeg = false;
       seg.ssn = 0;
       segmentBuffer.push_front (seg);
-      NS_LOG_UNCOND("Flow " << m_connId << ": " << "Add dummy segment");
+      NS_LOG_DEBUG("Flow " << m_connId << ": " << "Add dummy segment");
     }
   m_containPartDesegm = false;
 }

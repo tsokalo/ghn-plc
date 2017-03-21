@@ -68,6 +68,7 @@ struct ConnId
   {
     src = 0;
     dst = 0;
+    sender = 0;
     this->flowId = 0;
   }
   ConnId (const UanAddress& source, const UanAddress& dest, int16_t flowId = -1)
@@ -76,10 +77,18 @@ struct ConnId
     dst = dest;
     this->flowId = flowId;
   }
+  ConnId (const UanAddress& source, const UanAddress& dest, const UanAddress& sender, int16_t flowId = -1)
+    {
+      src = source;
+      dst = dest;
+      this->sender = sender;
+      this->flowId = flowId;
+    }
   ConnId (const ConnId& arg)
   {
     src = arg.src;
     dst = arg.dst;
+    sender = arg.sender;
     flowId = arg.flowId;
   }
   ConnId&
@@ -87,6 +96,7 @@ struct ConnId
   {
     src = arg.src;
     dst = arg.dst;
+    sender = arg.sender;
     flowId = arg.flowId;
     return *this;
   }
@@ -142,7 +152,7 @@ struct ConnId
   friend std::ostream&
   operator<< (std::ostream& os, const ConnId& connId)
   {
-    os << "<" << connId.src << "," << connId.dst << "," << connId.flowId << ">";
+    os << "<" << connId.src << "," << connId.dst << "," << connId.flowId << "," << connId.sender << ">";
     return os;
   }
   bool
@@ -165,6 +175,7 @@ struct ConnId
 
   UanAddress src;
   UanAddress dst;
+  UanAddress sender;//optional
   int16_t flowId;
 };
 
