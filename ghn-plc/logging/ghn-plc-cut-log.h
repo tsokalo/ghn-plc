@@ -27,6 +27,8 @@
 #include "ns3/ghn-plc-defs.h"
 #include "ns3/ghn-plc-logger.h"
 
+#include "ssn.h"
+
 namespace ns3
 {
 namespace ghn
@@ -95,10 +97,10 @@ private:
   GetNcSeqNumCallback m_externalNcSeqNum;
   GetTimeStampCallback m_externalTimeStamp;
 
-  std::map<uint16_t, NcSeqNum> m_seqNum;
+  std::map<uint16_t, ncr::symb_ssn_t> m_seqNum;
   LoggerPtr m_logger;
 
-  TracedValue<NcSeqNum> m_seqNumTrace;
+  TracedValue<uint32_t> m_seqNumTrace;
   TracedValue<Time> m_delayTrace;
   TracedValue<uint32_t> m_pktSizeTrace;// unit [bytes]
 

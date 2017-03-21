@@ -5,7 +5,6 @@
  *      Author: tsokalo
  */
 
-
 #include "ns3/log.h"
 
 #include "ghn-plc-segmenter.h"
@@ -15,9 +14,10 @@ NS_LOG_COMPONENT_DEFINE("GhnPlcSegmenter");
 
 namespace ns3
 {
-namespace ghn {
+namespace ghn
+{
 GhnPlcSegmenter::GhnPlcSegmenter (uint16_t segSize) :
-  m_segSize (segSize)
+        m_segSize (segSize)
 {
   m_paddingAmount = 0;
   m_partialDesegm = NO_PARTIAL_DESEGEMENTED;
@@ -49,7 +49,8 @@ GhnPlcSegmenter::SegmentData (GhnBuffer buffer)
       uint16_t paddingSize = m_segSize - bigpack->GetSize () % m_segSize;
       paddingSize = (paddingSize == m_segSize) ? 0 : paddingSize;
 
-      NS_LOG_DEBUG("Packet " << bufI << " has size " << buffer.at (bufI)->GetSize() << ", possible padding: " << paddingSize << ", segment size: " << m_segSize);
+      NS_LOG_DEBUG(
+              "Packet " << bufI << " has size " << buffer.at (bufI)->GetSize() << ", possible padding: " << paddingSize << ", segment size: " << m_segSize);
 
       if (paddingSize < header.GetSerializedSize () && paddingSize > 0)
         {
@@ -95,8 +96,8 @@ GhnPlcSegmenter::SegmentData (GhnBuffer buffer)
       //      NS_LOG_DEBUG("Size of all packets till " << bufI << " (inclusive): " << pktSizes.at(bufI) << ", size of " << segBuffer.size() << " segments: " << (segBuffer.size() + 1) * m_segSize);
       if (pktSizes.at (bufI) <= (segBuffer.size () + 1) * m_segSize)
         {
-          NS_ASSERT(bufI < pktSizes.size());
-          NS_ASSERT(pktSizes.at(bufI) >= segBuffer.size() * m_segSize);
+          NS_ASSERT(bufI < pktSizes.size ());
+          NS_ASSERT(pktSizes.at (bufI) >= segBuffer.size () * m_segSize);
 
           seg.posLlcFrame = pktSizes.at (bufI) - segBuffer.size () * m_segSize;
           seg.posLlcFrame = (seg.posLlcFrame == m_segSize) ? 0 : seg.posLlcFrame;
@@ -105,7 +106,7 @@ GhnPlcSegmenter::SegmentData (GhnBuffer buffer)
             {
               if (bufI++ == pktSizes.size () - 1)
                 {
-                  NS_ASSERT (pktSizes.at (bufI - 1) == (segBuffer.size () + 1) * m_segSize);
+                  NS_ASSERT(pktSizes.at (bufI - 1) == (segBuffer.size () + 1) * m_segSize);
                   NS_LOG_DEBUG("Perfect size match.");
                   break;
                 }
@@ -116,20 +117,20 @@ GhnPlcSegmenter::SegmentData (GhnBuffer buffer)
         {
           seg.posLlcFrame = 0;
         }
-      NS_ASSERT(bigpack->GetSize() >= m_segSize);
+      NS_ASSERT(bigpack->GetSize () >= m_segSize);
       seg.pkt = bigpack->CreateFragment (0, m_segSize);
       bigpack->RemoveAtStart (m_segSize);
       segBuffer.push_back (seg);
       NS_LOG_DEBUG("Packet " << bufI << " is included in segment " << segBuffer.size() - 1);
       NS_LOG_DEBUG("Remaining bigpack->GetSize (): " << bigpack->GetSize () << ", seg.posLlcFrame: " << seg.posLlcFrame);
-      NS_ASSERT_MSG(bigpack->GetSize() == 0 || bigpack->GetSize() >= m_segSize, "bigpack->GetSize(): " << bigpack->GetSize());
+      NS_ASSERT_MSG(bigpack->GetSize () == 0 || bigpack->GetSize () >= m_segSize, "bigpack->GetSize(): " << bigpack->GetSize());
     }
   return segBuffer;
 }
 GhnBuffer
 GhnPlcSegmenter::DesegmentData (SegGhnBuffer segBuffer)
 {
-  NS_LOG_DEBUG("Size of buffer to be desegmented: " << segBuffer.size() << " Use segment size (deseg): " << m_segSize );
+  NS_LOG_DEBUG("Size of buffer to be desegmented: " << segBuffer.size() << " Use segment size (deseg): " << m_segSize);
   GhnBuffer buffer;
   if (segBuffer.empty ()) return buffer;
 
@@ -143,9 +144,9 @@ GhnPlcSegmenter::DesegmentData (SegGhnBuffer segBuffer)
   ss << "SSNs (segmenter): ";
   for (uint32_t bufI = 0; bufI < segBuffer.size (); bufI++)
     {
-    ss << segBuffer.at(bufI).ssn << " ";
+      ss << segBuffer.at (bufI).ssn << " ";
     }
-  NS_LOG_DEBUG(ss.str());
+  NS_LOG_DEBUG(ss.str ());
 
   for (uint32_t bufI = 0; bufI < segBuffer.size (); bufI++)
     {
@@ -158,7 +159,8 @@ GhnPlcSegmenter::DesegmentData (SegGhnBuffer segBuffer)
           previousInvalid = true;
           continue;
         }
-      NS_ASSERT_MSG(segBuffer.at (bufI).posLlcFrame <= segBuffer.at(bufI).pkt->GetSize(), "Packet size: " << segBuffer.at(bufI).pkt->GetSize());
+      NS_ASSERT_MSG(segBuffer.at (bufI).posLlcFrame <= segBuffer.at (bufI).pkt->GetSize (),
+              "LLC frame position: " << segBuffer.at(bufI).posLlcFrame << ", Packet size: " << segBuffer.at(bufI).pkt->GetSize());
 
       //
       // if segment contains the data of only one LLC frame
@@ -171,20 +173,22 @@ GhnPlcSegmenter::DesegmentData (SegGhnBuffer segBuffer)
               //
               // if previousInvalid we look for the beginning of the next frame
               //
-            NS_LOG_DEBUG("We ignore this segment because we still look for the next frame start after the last segment failure");
+              NS_LOG_DEBUG(
+                      "We ignore this segment because we still look for the next frame start after the last segment failure");
               continue;
             }
-          NS_LOG_DEBUG("Add complete segment " << bufI << " with SSN " << segBuffer.at(bufI).ssn << " at end of packet " << buffer.size());
+          NS_LOG_DEBUG(
+                  "Add complete segment " << bufI << " with SSN " << segBuffer.at(bufI).ssn << " at end of packet " << buffer.size());
           if (pkt->GetSize () == 0)
             {
               m_partialDesegm = bufI;
             }
           pkt->AddAtEnd (segBuffer.at (bufI).pkt->Copy ());
-          NS_ASSERT(pkt->GetSize() >= frameHeader.GetSerializedSize());
+          NS_ASSERT(pkt->GetSize () >= frameHeader.GetSerializedSize ());
           pkt->PeekHeader (frameHeader);
           if (pkt->GetSize () == frameHeader.GetFrameSize () + frameHeader.GetSerializedSize ())
             {
-            NS_LOG_DEBUG("The packet end coincides with the end of the frame");
+              NS_LOG_DEBUG("The packet end coincides with the end of the frame");
 
               buffer.push_back (pkt->Copy ());
               m_partialDesegm = NO_PARTIAL_DESEGEMENTED;
@@ -206,7 +210,8 @@ GhnPlcSegmenter::DesegmentData (SegGhnBuffer segBuffer)
           //
           if (!previousInvalid)
             {
-            NS_LOG_DEBUG("Add first " << segBuffer.at (bufI).posLlcFrame << " bytes of segment " << bufI << " with SSN " << segBuffer.at(bufI).ssn << " at end of packet " << buffer.size());
+              NS_LOG_DEBUG(
+                      "Add first " << segBuffer.at (bufI).posLlcFrame << " bytes of segment " << bufI << " with SSN " << segBuffer.at(bufI).ssn << " at end of packet " << buffer.size());
               pkt->AddAtEnd (segBuffer.at (bufI).pkt->CreateFragment (0, segBuffer.at (bufI).posLlcFrame));
               buffer.push_back (pkt->Copy ());
               m_partialDesegm = NO_PARTIAL_DESEGEMENTED;
@@ -225,15 +230,17 @@ GhnPlcSegmenter::DesegmentData (SegGhnBuffer segBuffer)
           //
           // process the second part of the segment
           //
-          NS_ASSERT_MSG(segBuffer.at (bufI).pkt->GetSize () > segBuffer.at (bufI).posLlcFrame, "segBuffer.at (bufI).posLlcFrame: " << segBuffer.at (bufI).posLlcFrame);
+          NS_ASSERT_MSG(segBuffer.at (bufI).pkt->GetSize () > segBuffer.at (bufI).posLlcFrame,
+                  "segBuffer.at (bufI).posLlcFrame: " << segBuffer.at (bufI).posLlcFrame);
           uint32_t pktRest = segBuffer.at (bufI).pkt->GetSize () - segBuffer.at (bufI).posLlcFrame;
           if (pktRest < frameHeader.GetSerializedSize ())
             {
-            NS_LOG_DEBUG("Ignore small zero padding: " << pktRest);
+              NS_LOG_DEBUG("Ignore small zero padding: " << pktRest);
             }
           else
             {
-            NS_LOG_DEBUG("Add the rest of bytes " << pktRest << " of segment " << bufI << " with SSN " << segBuffer.at(bufI).ssn << " at end of packet " << buffer.size());
+              NS_LOG_DEBUG(
+                      "Add the rest of bytes " << pktRest << " of segment " << bufI << " with SSN " << segBuffer.at(bufI).ssn << " at end of packet " << buffer.size());
               if (pkt->GetSize () == 0)
                 {
                   m_partialDesegm = bufI;
@@ -243,11 +250,12 @@ GhnPlcSegmenter::DesegmentData (SegGhnBuffer segBuffer)
               pkt->PeekHeader (frameHeader);
               while (pkt->GetSize () >= frameHeader.GetSerializedSize () + frameHeader.GetFrameSize ())
                 {
-                NS_LOG_DEBUG("Current packet payload size: " << pkt->GetSize () - frameHeader.GetSerializedSize () << ", next LLC frame payload size: " << frameHeader.GetFrameSize ());
+                  NS_LOG_DEBUG(
+                          "Current packet payload size: " << pkt->GetSize () - frameHeader.GetSerializedSize () << ", next LLC frame payload size: " << frameHeader.GetFrameSize ());
 
                   if (frameHeader.GetFrameType () == PADDING_FRAME_TYPE)
                     {
-                    NS_LOG_DEBUG("Got padding LLC frame. Ignore the rest of the segment");
+                      NS_LOG_DEBUG("Got padding LLC frame. Ignore the rest of the segment");
                       //
                       // TODO: check the defaulting of m_partialDesegm
                       //
@@ -283,19 +291,19 @@ GhnPlcSegmenter::DesegmentData (SegGhnBuffer segBuffer)
     {
       if (buffer.at (bufI)->GetSize () < headerSize)
         {
-        NS_LOG_DEBUG("Packet segments are lost.." << ", buffer.at (bufI)->GetSize (): " << buffer.at (bufI)->GetSize ());
+          NS_LOG_DEBUG("Packet segments are lost.." << ", buffer.at (bufI)->GetSize (): " << buffer.at (bufI)->GetSize ());
           buffer.erase (buffer.begin () + bufI, buffer.begin () + bufI + 1);
         }
       buffer.at (bufI)->PeekHeader (frameHeader);
       if (headerSize + frameHeader.GetFrameSize () != buffer.at (bufI)->GetSize ())
         {
-        NS_LOG_DEBUG("Packet segments are lost.." << " headerSize + header.GetFrameSize (): " << headerSize + frameHeader.GetFrameSize ()
-                  << ", buffer.at (bufI)->GetSize (): " << buffer.at (bufI)->GetSize ());
+          NS_LOG_DEBUG(
+                  "Packet segments are lost.." << " headerSize + header.GetFrameSize (): " << headerSize + frameHeader.GetFrameSize () << ", buffer.at (bufI)->GetSize (): " << buffer.at (bufI)->GetSize ());
           buffer.erase (buffer.begin () + bufI, buffer.begin () + bufI + 1);
         }
       else
         {
-        NS_LOG_DEBUG("Retrieving packet " << bufI << " with size " << buffer.at(bufI)->GetSize());
+          NS_LOG_DEBUG("Retrieving packet " << bufI << " with size " << buffer.at(bufI)->GetSize());
           bufI++;
         }
     }
@@ -308,11 +316,11 @@ GhnPlcSegmenter::GetNotDesegmented (SegGhnBuffer buffer)
   if (buffer.empty ()) return notUsed;
 
   if (m_partialDesegm == NO_PARTIAL_DESEGEMENTED) return notUsed;
-  NS_ASSERT(m_partialDesegm < buffer.size());
+  NS_ASSERT(m_partialDesegm < buffer.size ());
   for (uint32_t bufI = m_partialDesegm; bufI < buffer.size (); bufI++)
     {
-      NS_LOG_DEBUG("Segment with SSN " << buffer.at (bufI).ssn << " may contain not full packet. We save it for the next desegmentation"
-              << ", size: " << buffer.at (bufI).pkt->GetSize());
+      NS_LOG_DEBUG(
+              "Segment with SSN " << buffer.at (bufI).ssn << " may contain not full packet. We save it for the next desegmentation" << ", size: " << buffer.at (bufI).pkt->GetSize());
       //      NS_ASSERT(buffer.at (bufI).validSeg);
       if (!buffer.at (bufI).validSeg) continue;
       notUsed.push_back (buffer.at (bufI));
@@ -340,12 +348,12 @@ GhnPlcSegmenter::GetNotDesegmented (SegGhnBuffer buffer)
   while ((*notUsed.begin ()).pkt->GetSize () >= frameHeader.GetSerializedSize ())
     {
       (*notUsed.begin ()).pkt->PeekHeader (frameHeader);
-      NS_LOG_DEBUG("Current remaining packet size: " << (*notUsed.begin ()).pkt->GetSize ()
-              << ", next frame size (with header): " << frameHeader.GetSerializedSize () + frameHeader.GetFrameSize ());
+      NS_LOG_DEBUG(
+              "Current remaining packet size: " << (*notUsed.begin ()).pkt->GetSize () << ", next frame size (with header): " << frameHeader.GetSerializedSize () + frameHeader.GetFrameSize ());
       if ((*notUsed.begin ()).pkt->GetSize () > frameHeader.GetSerializedSize () + frameHeader.GetFrameSize ())
         {
-          NS_LOG_DEBUG("Removing at start of the segment with SSN " << (*notUsed.begin ()).ssn
-                  << " bytes: " << frameHeader.GetSerializedSize () + frameHeader.GetFrameSize ());
+          NS_LOG_DEBUG(
+                  "Removing at start of the segment with SSN " << (*notUsed.begin ()).ssn << " bytes: " << frameHeader.GetSerializedSize () + frameHeader.GetFrameSize ());
           (*notUsed.begin ()).pkt->RemoveAtStart (frameHeader.GetSerializedSize () + frameHeader.GetFrameSize ());
         }
       else
@@ -358,6 +366,8 @@ GhnPlcSegmenter::GetNotDesegmented (SegGhnBuffer buffer)
   Ptr<Packet> zeroPart = Create<Packet> (origSize - (*notUsed.begin ()).pkt->GetSize ());
   zeroPart->AddAtEnd ((*notUsed.begin ()).pkt);
   (*notUsed.begin ()).pkt = zeroPart;
+
+  NS_LOG_DEBUG("Resulting packet size " << (*notUsed.begin ()).pkt->GetSize ());
 
   return notUsed;
 }

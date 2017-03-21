@@ -106,7 +106,7 @@ private:
   ncr::get_rank_func m_getRank;
   add_log_func m_addLog;
 
-  std::deque<Ssn> m_notDesegm;
+  std::deque<Ssn> m_ndSsns;
 };
 }
 }

@@ -543,6 +543,7 @@ GhnPlcDllMacCsma::DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, c
           //
           // the LLC layer decides if the ACK should be sent
           //
+          NS_LOG_DEBUG("Forwarding up the buffer of " << buffer.size() << " packets");
           GroupEncAckInfo info (m_forwardUp (buffer, connId));
 
           if (m_phyMan->GetRxReplyRequired () != 1)
@@ -617,7 +618,7 @@ GhnPlcDllMacCsma::DoStartTx (void)
     {
       m_sendTuple = m_ncDllLlc->SendDown ();
 
-      NS_LOG_UNCOND(
+      NS_LOG_DEBUG(
               Simulator::Now().GetSeconds() << " Node " << m_dllMan->GetAddress() << " TX buffer size: " << m_sendTuple.get_buffer().size() << ", connId: " << m_sendTuple.get_conn_id() << ", next hop: " << m_sendTuple.GetNextHopAddress());
 
       m_transPacket = AssembleMpdu (m_sendTuple.get_buffer ());

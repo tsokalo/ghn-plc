@@ -22,6 +22,8 @@
 #include "ns3/in-home-topology-module.h"
 #include "ns3/plc-electrical-device-module.h"
 
+#include "sim-parameters.h"
+
 using namespace ns3;
 using namespace ghn;
 using namespace std;
@@ -68,6 +70,7 @@ void
 CreateInhomeTopology (PLC_NodeList &node_list, Ptr<PLC_Cable> cable, uint16_t num_modems, uint16_t num_el_devs,
         double totalSquare, std::ostream &fo);
 
+
 int
 main (int argc, char *argv[])
 {
@@ -88,7 +91,7 @@ main (int argc, char *argv[])
   TopologyType topologyType = INHOME_TOPOLOGY_TYPE;
   std::vector<uint32_t> distance;
   uint32_t distance_ptp = 700;
-  uint16_t num_modems = 3;
+  uint16_t num_modems = 7;
   if (argc > 1)
     {
       num_modems = atoi (argv[1]);
@@ -102,6 +105,7 @@ main (int argc, char *argv[])
   double simDuration = 1.0 + 2 * GHN_WARMUP_PERIOD; //unit [s]
   double minSimDuration = 0.1; //unit [s]
   uint16_t maxCwSize = 20;
+  bool allow_coop = true;
   if (argc > 2)
     {
       maxCwSize = atoi (argv[2]);
@@ -257,8 +261,11 @@ main (int argc, char *argv[])
   devHelper.DefineBitLoadingType (NcBlVarBatMap::GetTypeId ());
   devHelper.SetResDirectory (resDir);
   devHelper.SetMaxCwSize (maxCwSize);
-  devHelper.AllowCooperation ();
-  devHelper.SetForcePer ();
+  if (allow_coop)
+    {
+      devHelper.AllowCooperation ();
+      devHelper.SetForcePer ();
+    }
   devHelper.StickToMainPath ();
   devHelper.SetImmediateFeedback ();
   devHelper.SetLowerSrcPriority ();
@@ -410,11 +417,12 @@ main (int argc, char *argv[])
   ds = CalcStatsByDelta (datarate);
 
   std::stringstream ss;
-  bool arq_win_size_max = 1;  //1 - gives no limit on ARQ win size, 0 - limited through original ARQ
-  uint16_t gen_size = 64;
-  bool allow_coop = true;
-  ss << allow_coop << "\t" << arq_win_size_max << "\t" << gen_size << "\t" << num_modems << "\t" << maxCwSize << "\t"
-          << ls.first << "\t" << ls.second << "\t" << js.first << "\t" << js.second << "\t" << ds.first << "\t" << ds.second;
+  std::string path_to_sim_param = "/home/tsokalo/workspace/ns-allinone-3.25/ns-3.25/src/ghn-plc/" + ncr::GetSimParamFileName ();
+  ncr::SimParameters sp (path_to_sim_param);
+  bool dummy = true;
+  ss << allow_coop << "\t" << dummy << "\t" << sp.genSize << "\t" << num_modems << "\t" << maxCwSize << "\t"
+          << ls.first << "\t" << ls.second << "\t" << js.first << "\t" << js.second << "\t" << ds.first << "\t" << ds.second
+          << "\t" << dummy << "\t" << totalSquare << "\t" << sp.numGen;
   std::cout << ss.str () << std::endl;
   std::string fin_path = argv[0]; // get path from argument 0
   fin_path = fin_path.substr (0, fin_path.rfind ("/") + 1);

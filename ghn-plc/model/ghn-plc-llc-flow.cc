@@ -67,8 +67,8 @@ GhnPlcLlcFlow::GhnPlcLlcFlow ()
   m_rxSegmenter = segmenter_ptr (new GhnPlcSegmenter (m_blockSize - header.GetSerializedSize () - GHN_CRC_LENGTH));
   m_txSegmenter = segmenter_ptr (new GhnPlcSegmenter (m_blockSize - header.GetSerializedSize () - GHN_CRC_LENGTH));
 
-//  m_artificialPer = m_perRv.GetValue (0.05, 0.4);
-  m_artificialPer = 0.3;
+  m_artificialPer = m_perRv.GetValue (0.05, 0.4);
+//  m_artificialPer = 0.001;
 
   NS_LOG_DEBUG("Creating original G.hn LLC flow");
 }

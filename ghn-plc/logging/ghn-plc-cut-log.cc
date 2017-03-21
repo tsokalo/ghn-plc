@@ -68,7 +68,7 @@ GhnPlcCutLog::AddLogData (Ptr<Packet> pkt, uint16_t nodeId)
   uint32_t pkt_size = pkt->GetSize ();
 
   appHeader.SetTimestamp (Simulator::Now ());
-  appHeader.SetNcSeqNum (m_seqNum[nodeId]);
+  appHeader.SetNcSeqNum (m_seqNum[nodeId].val());
   appHeader.SetNodeId (nodeId);
 
   assert (pkt->GetSize () > appHeader.GetSerializedSize ());
@@ -81,6 +81,7 @@ GhnPlcCutLog::AddLogData (Ptr<Packet> pkt, uint16_t nodeId)
 
   m_seqNum[nodeId]++;
 }
+
 void
 GhnPlcCutLog::ReadLogData (Ptr<Packet> pkt, uint16_t nodeId)
 {
@@ -98,19 +99,13 @@ GhnPlcCutLog::ReadLogData (Ptr<Packet> pkt, uint16_t nodeId)
   uint16_t sid = appHeader.GetNodeId ();
   Time latency = Simulator::Now () - appHeader.GetTimestamp ();
   NcSeqNum lostPkts = 0;
-  if (m_seqNum[sid] + 1 < appHeader.GetNcSeqNum ())
-    {
-      lostPkts = appHeader.GetNcSeqNum () - (m_seqNum[sid] + 1);
-    }
-  else if (m_seqNum[sid] + 1 > appHeader.GetNcSeqNum ())
-    {
-      lostPkts = appHeader.GetNcSeqNum () - 1 + (((uint64_t) 1 << sizeof(NcSeqNum) * 8) - m_seqNum[sid]);
-    }
-  if (lostPkts > ((uint64_t) 1 << (sizeof(NcSeqNum) - 1) * 8))
-    {
-      NS_LOG_LOGIC("Received a packet out of order");
-      return;
-    }
+
+  auto v = (--(ncr::symb_ssn_t(appHeader.GetNcSeqNum ()))).val();
+  auto w = m_seqNum[sid].val();
+  lostPkts = ncr::symb_ssn_t::get_distance(w, v);
+
+//  if(lostPkts < (MAX_SYM_SSN >> 1))return;
+  NS_ASSERT_MSG(lostPkts < (MAX_SYM_SSN >> 1), "Received a packet out of order <" << v << "," << w << "> , " << lostPkts << ", middle value " << (MAX_SYM_SSN >> 1));
 
   NS_LOG_LOGIC("Now: " << Simulator::Now () << ", stamp: " << appHeader.GetTimestamp ()
           << ", latency: " << latency << ", seq num: " << m_seqNum[sid] << ", number of lost packets: " << lostPkts
@@ -121,7 +116,7 @@ GhnPlcCutLog::ReadLogData (Ptr<Packet> pkt, uint16_t nodeId)
   Time iat = Simulator::Now () - m_lastRcvd;
   m_lastRcvd = Simulator::Now ();
 
-  m_appLogTrace (sid, m_seqNum[sid], lostPkts, latency.GetMicroSeconds (), iat.GetMicroSeconds (), pkt->GetSize ());
+  m_appLogTrace (sid, m_seqNum[sid].val(), lostPkts, latency.GetMicroSeconds (), iat.GetMicroSeconds (), pkt->GetSize ());
 }
 void
 GhnPlcCutLog::CreateLogger (uint16_t nodeId)

@@ -90,6 +90,7 @@ GhnPlcHelper::GhnPlcHelper (BandPlanType bandplan)
   m_useLowerSrcPriority = false;
   m_forcePer = false;
 }
+
 AddressMap
 GhnPlcHelper::Setup (void)
 {
