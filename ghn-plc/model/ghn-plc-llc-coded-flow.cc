@@ -31,11 +31,14 @@ GhnPlcLlcCodedFlow::GetTypeId (void)
 GhnPlcLlcCodedFlow::GhnPlcLlcCodedFlow ()
 {
   NS_LOG_DEBUG("Creating coded G.hn LLC flow");
+  m_allCoalitionSize = 0;
+  m_numSendDown = 0;
 }
 GhnPlcLlcCodedFlow::~GhnPlcLlcCodedFlow ()
 {
 
 }
+
 void
 GhnPlcLlcCodedFlow::Configure (ncr::NodeType type, ncr::UanAddress dst, ncr::SimParameters sp)
 {
@@ -111,6 +114,25 @@ GhnPlcLlcCodedFlow::SetNextHopVertex (UanAddress addr)
   //
   m_brr->AddToCoalition (addr.GetAsInt ());
 }
+std::string
+GhnPlcLlcCodedFlow::GetLinDepRatios (uint16_t &num)
+{
+  std::stringstream ss;
+  num = m_numLinDep.size ();
+  for (auto v : m_numLinDep)
+    {
+      if (m_numAllRcvd.find (v.first) != m_numAllRcvd.end ())
+        {
+          ss << v.first << "\t" << (long double) v.second / m_numAllRcvd[v.first] << "\t";
+        }
+    }
+  return ss.str ();
+}
+double
+GhnPlcLlcCodedFlow::GetAveCoalitionSize ()
+{
+  return (double) m_allCoalitionSize / (double) m_numSendDown;
+}
 void
 GhnPlcLlcCodedFlow::NotifyRcvUp (ncr::GenId genId)
 {
@@ -147,6 +169,12 @@ GhnPlcLlcCodedFlow::SendDown ()
 
           NS_LOG_DEBUG(
                   "Node " << m_id << ", Flow " << m_connId << ": " << "dataAmount: " << dataAmount << ", maxPkts: " << maxPkts);
+
+          if (Simulator::Now () >= 3 * GHN_WARMUP_PERIOD)
+            {
+              m_allCoalitionSize += m_brr->GetCoalitionSize ();
+              m_numSendDown++;
+            }
 
           uint32_t max_el_brr = m_brr->GetAmountTxData ();
           maxPkts = (maxPkts > max_el_brr) ? max_el_brr : maxPkts;
@@ -349,6 +377,7 @@ GhnPlcLlcCodedFlow::ConvertPktToBrrHeader (GhnBuffer &buffer, std::deque<Segment
   delete[] v;
   return h;
 }
+
 GroupEncAckInfo
 GhnPlcLlcCodedFlow::Receive (GhnBuffer buffer, ConnId connId)
 {
@@ -463,7 +492,8 @@ GhnPlcLlcCodedFlow::ReceiveAck (GroupEncAckInfo info, ConnId connId)
   auto header = ConvertPktToBrrHeader (buffer, state);
 
   m_brr->RcvHeaderInfo (header.h);
-  NS_LOG_DEBUG( "Node " << m_id << " Rcv ACK " << header.f.ackInfo << ", RR is" << (header.f.rrInfo.empty () ? " NOT" : "") << " present");
+  NS_LOG_DEBUG(
+          "Node " << m_id << " Rcv ACK " << header.f.ackInfo << ", RR is" << (header.f.rrInfo.empty () ? " NOT" : "") << " present");
   ProcessFeedback (header.f);
   //
   // form own feedback if needed
@@ -641,7 +671,6 @@ GhnPlcLlcCodedFlow::ProcessDecoded (GhnBuffer buffer, ConnId connId)
 
   NS_ASSERT(m_connId.dst != UanAddress::GetBroadcast ());
 }
-
 void
 GhnPlcLlcCodedFlow::ProcessRcvdPacket (std::vector<uint8_t> vec, bool crc, ncr::UanAddress addr, ncr::TxPlan::iterator item,
         ConnId connId)
@@ -662,12 +691,14 @@ GhnPlcLlcCodedFlow::ProcessRcvdPacket (std::vector<uint8_t> vec, bool crc, ncr::
   auto rank_b = m_decQueue->rank (genId);
   m_decQueue->enque (vec, genId);
   auto rank_a = m_decQueue->rank (genId);
+  m_numAllRcvd[addr]++;
+  NS_LOG_DEBUG(" gen " << genId << " me " << m_id << " from  " << addr << " got " << (rank_b < rank_a ? "innovative" : "not innovative" ));
   if (rank_b < rank_a)
     {
       auto pkts = m_decQueue->get_uncoded ();
       m_brr->UpdateRcvd (genId, addr, pkts);
-      auto addr = m_dllMac->GetDllManagement ()->GetAddress ();
-      if (addr == connId.dst)
+      auto addrs = m_dllMac->GetDllManagement ()->GetAddress ();
+      if (addrs == connId.dst)
         {
           if (!pkts.empty ()) ProcessDecoded (ConvertVecsToBuffer (pkts), connId);
           NS_LOG_DEBUG("Node " << m_id << " receive. GenId " << genId << ", got uncoded (num) " << pkts.size());
@@ -675,6 +706,7 @@ GhnPlcLlcCodedFlow::ProcessRcvdPacket (std::vector<uint8_t> vec, bool crc, ncr::
     }
   else
     {
+      m_numLinDep[addr]++;
       m_brr->UpdateRcvd (genId, addr, true);
     }
   if (rank_a == m_sp.genSize)
@@ -726,7 +758,6 @@ GhnPlcLlcCodedFlow::ProcessRcvdPacket (std::vector<uint8_t> vec, bool crc, ncr::
         }
     }
 }
-
 void
 GhnPlcLlcCodedFlow::UpdateFeedback ()
 {
@@ -745,7 +776,6 @@ GhnPlcLlcCodedFlow::UpdateFeedback ()
       NS_LOG_DEBUG("Node " << m_id << " refuses to send the feedback");
     }
 }
-
 void
 GhnPlcLlcCodedFlow::ProcessFeedback (ncr::FeedbackInfo f)
 {

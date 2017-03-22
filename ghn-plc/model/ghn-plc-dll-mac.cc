@@ -42,6 +42,8 @@ GhnPlcDllMac::GhnPlcDllMac ()
   m_blockSize = GHN_BLKSZ_540;
   m_allowCooperation = false;
   m_immediateFeedback = true;
+  m_numSentMpdus = 0;
+  m_numLpdusInMpdus = 0;
 }
 
 GhnPlcDllMac::~GhnPlcDllMac ()
@@ -185,7 +187,7 @@ GhnPlcDllMac::Receive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, const U
 {
   m_blockSize = GHN_BLKSZ_540;
   NS_LOG_FUNCTION(this);
-  NS_LOG_LOGIC("Packet size: " << packet->GetSize ());
+  NS_LOG_LOGIC("Node " << m_dllMan->GetAddress() << " receive packet size: " << packet->GetSize ());
 
   switch (frameType)
     {
@@ -617,9 +619,11 @@ GhnPlcDllMacCsma::DoStartTx (void)
     {
       m_sendTuple = m_ncDllLlc->SendDown ();
 
-      NS_LOG_DEBUG(
+      NS_LOG_LOGIC(
               Simulator::Now().GetSeconds() << " Node " << m_dllMan->GetAddress() << " TX buffer size: " << m_sendTuple.get_buffer().size() << ", connId: " << m_sendTuple.get_conn_id() << ", next hop: " << m_sendTuple.GetNextHopAddress());
 
+      m_numSentMpdus++;
+      m_numLpdusInMpdus += m_sendTuple.get_buffer ().size();
       m_transPacket = AssembleMpdu (m_sendTuple.get_buffer ());
 
       NS_LOG_LOGIC("Packet size: " << m_transPacket->GetSize());

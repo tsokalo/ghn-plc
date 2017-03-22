@@ -95,8 +95,7 @@ AddressMap
 GhnPlcHelper::Setup (void)
 {
   m_sp = sim_par_ptr (
-          new ncr::SimParameters (
-                  "/home/tsokalo/workspace/ns-allinone-3.25/ns-3.25/src/ghn-plc/" + ncr::GetSimParamFileName ()));
+          new ncr::SimParameters ("/home/tsokalo/workspace/ns-allinone-3.25/ns-3.25/src/ghn-plc/" + m_simParamFileName));
 
   NS_ASSERT_MSG(m_txPsd, "TX psd not set!");
 
@@ -665,7 +664,7 @@ GhnPlcHelper::CreateFlow (ConnId connId, Ptr<GhnPlcDllMacCsma> mac, Ptr<GhnPlcDl
           flow_o->SetNextHopVertex (nh);
         }
 
-      m_flowStack.push_back (flow_o);
+      m_flowStack[connId.flowId][own_addr] = flow_o;
 
       return flow_i;
     }
@@ -685,7 +684,7 @@ GhnPlcHelper::CreateFlow (ConnId connId, Ptr<GhnPlcDllMacCsma> mac, Ptr<GhnPlcDl
 
       flow_o->SetGenCallback (cb);
 
-      m_flowStack.push_back (flow_o);
+      m_flowStack[connId.flowId][own_addr] = flow_o;
 
       return flow_i;
     }
@@ -726,7 +725,7 @@ GhnPlcHelper::SetLowerSrcPriority (bool v)
   m_useLowerSrcPriority = v;
 }
 void
-GhnPlcHelper::SetForcePer(bool v)
+GhnPlcHelper::SetForcePer (bool v)
 {
   m_forcePer = v;
 }
@@ -734,6 +733,34 @@ void
 GhnPlcHelper::SetAppMap (std::map<UanAddress, Ptr<Application> > appMap)
 {
   m_appMap = appMap;
+}
+double
+GhnPlcHelper::GetAveMpduSize ()
+{
+  uint32_t numSentMpdus = 0;
+  uint64_t numLpdusInMpdus = 0;
+  NcNetdeviceMap::iterator nit;
+  for (nit = m_netdeviceMap.begin (); nit != m_netdeviceMap.end (); nit++)
+    {
+      numSentMpdus += nit->second->GetDllManagement ()->GetDllMac ()->GetSentMpdus ();
+      numLpdusInMpdus += nit->second->GetDllManagement ()->GetDllMac ()->GetLpdusInMpdus ();
+    }
+
+  return (numSentMpdus == 0) ? 0 : (long double) numLpdusInMpdus / (double) numSentMpdus;
+}
+std::string
+GhnPlcHelper::GetLinDepRatios (uint16_t &num, UanAddress addr)
+{
+  assert(m_flowStack.find (1) != m_flowStack.end ());
+  assert(m_flowStack[1].find (addr) != m_flowStack[1].end ());
+  return m_allowCooperation ? m_flowStack[1][addr]->GetObject<GhnPlcLlcCodedFlow> ()->GetLinDepRatios (num) : std::string ();
+}
+double
+GhnPlcHelper::GetAveCoalitionSize (UanAddress addr)
+{
+  assert(m_flowStack.find (1) != m_flowStack.end ());
+  assert(m_flowStack[1].find (addr) != m_flowStack[1].end ());
+  return m_allowCooperation ? m_flowStack[1][addr]->GetObject<GhnPlcLlcCodedFlow> ()->GetAveCoalitionSize () : 0;
 }
 
 Ptr<const SpectrumModel>
@@ -808,7 +835,7 @@ void
 GhnPlcHelper::AttachChannel ()
 {
   NetDeviceContainer plcDevices = GetNetDevices ();
-  assert(plcDevices.GetN() > 0);
+  assert(plcDevices.GetN () > 0);
 
   Ptr<NetDevice> netDevice;
   for (NetDeviceContainer::Iterator i = plcDevices.Begin (); i != plcDevices.End (); ++i)

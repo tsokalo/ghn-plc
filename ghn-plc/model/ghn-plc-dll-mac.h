@@ -142,6 +142,8 @@ public:
   {
     m_setTimeCallback = cb;
   }
+  uint32_t GetSentMpdus(){return m_numSentMpdus;}
+  uint64_t GetLpdusInMpdus(){return m_numLpdusInMpdus;}
 
 protected:
 
@@ -193,6 +195,9 @@ protected:
   std::string m_resDir;
 
   TimeCallback m_setTimeCallback;
+
+  uint32_t m_numSentMpdus;
+  uint64_t m_numLpdusInMpdus;
 };
 /*
  * CSMA with Collision Avoidance

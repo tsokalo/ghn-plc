@@ -73,7 +73,7 @@ void
 GhnPlcLlcFlow::SetConnId (ConnId connId)
 {
   m_connId = connId;
-  NS_LOG_DEBUG(
+  NS_LOG_UNCOND(
           "Node " << (uint16_t) m_dllMac->GetDllManagement()->GetAddress().GetAsInt() << ": Setting LLC flow ID " << connId);
 }
 
@@ -250,14 +250,29 @@ GhnPlcLlcFlow::CheckCrc (GhnBuffer &buffer, ConnId connId)
   std::deque<SegmentState> state;
   auto phym = m_dllMac->GetDllManagement ()->GetPhyManagement ();
 
-  if(m_artificialPer.find(connId.sender) == m_artificialPer.end())
+  if (m_artificialPer.find (connId.sender) == m_artificialPer.end ())
     {
-      m_artificialPer[connId.sender] = m_perRv.GetValue (0.05, 0.4);
+      auto o_addr = m_dllMac->GetDllManagement ()->GetAddress ();
+      if(connId.flowId != MANAGMENT_CONN_ID)
+        {
+      if(o_addr == 1 && connId.sender == 0)m_artificialPer[connId.sender] = 0.1;
+      else if(o_addr == 0 && connId.sender == 1)m_artificialPer[connId.sender] = 0.1;
+      else if(o_addr == 2 && connId.sender == 0)m_artificialPer[connId.sender] = 0.606;
+      else if(o_addr == 0 && connId.sender == 2)m_artificialPer[connId.sender] = 0.606;
+      else if(o_addr == 2 && connId.sender == 1)m_artificialPer[connId.sender] = 0.3;
+      else if(o_addr == 1 && connId.sender == 2)m_artificialPer[connId.sender] = 0.3;
+      else assert(0);
+        }
+      else
+        {
+          m_artificialPer[connId.sender] = 0;
+        }
+//      m_artificialPer[connId.sender] = m_perRv.GetValue (0.05, 0.4);
 //      m_artificialPer[connId.sender] = 0.3;
-      NS_LOG_DEBUG("Flow " << m_connId << ", own address " << m_dllMac->GetDllManagement()->GetAddress()
-              << ", sender " << connId.sender << ": loss ratio " << m_artificialPer[connId.sender]);
+      NS_LOG_DEBUG(
+              "Flow " << m_connId << ", own address " << o_addr << ", sender " << connId.sender << ": loss ratio " << m_artificialPer[connId.sender]);
     }
-  auto lr =  m_artificialPer[connId.sender];
+  auto lr = m_artificialPer[connId.sender];
 
   ncr::bitset crc;
   for (auto &packet : buffer)
@@ -275,7 +290,7 @@ GhnPlcLlcFlow::CheckCrc (GhnBuffer &buffer, ConnId connId)
         {
           NS_LOG_DEBUG("Flow " << m_connId << ": " << "CRC OK. The segment will be sent to the decoder");
           state.push_back (DONE_SEGMENT_STATE);
-          m_llcRcvDownLogTrace(connId.src.GetAsInt(), connId.dst.GetAsInt(), packet->GetSize());
+          m_llcRcvDownLogTrace (connId.src.GetAsInt (), connId.dst.GetAsInt (), packet->GetSize ());
         }
       else
         {
@@ -461,7 +476,7 @@ void
 GhnPlcLlcFlow::ProcessDeseqmented (GhnBuffer buffer, ConnId connId)
 {
   NS_LOG_FUNCTION(this);
-  if(buffer.empty())return;
+  if (buffer.empty ()) return;
 
   GhnPlcLlcFrameHeader header;
   auto dll = m_dllMac->GetDllManagement ();

@@ -64,6 +64,10 @@ public:
   SetLogCallback (add_log_func addLog);
   void
   SetNextHopVertex(UanAddress addr);
+  std::string
+  GetLinDepRatios(uint16_t &num);
+  double
+  GetAveCoalitionSize();
 
 private:
 
@@ -107,6 +111,11 @@ private:
   add_log_func m_addLog;
 
   std::deque<Ssn> m_ndSsns;
+
+  std::map<ncr::UanAddress, uint64_t> m_numAllRcvd;
+  std::map<ncr::UanAddress, uint64_t> m_numLinDep;
+  uint32_t m_allCoalitionSize;
+  uint32_t m_numSendDown;
 };
 }
 }

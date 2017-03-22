@@ -173,9 +173,20 @@ public:
   SetLowerSrcPriority(bool v = true);
   void
   SetForcePer(bool v = true);
+  void
+  SetSimParamFileName(std::string name)
+  {
+    m_simParamFileName = name;
+  }
 
   void
   SetAppMap(std::map<UanAddress, Ptr<Application> > appMap);
+  double
+  GetAveMpduSize();
+  std::string
+  GetLinDepRatios(uint16_t &num, UanAddress addr);
+  double
+  GetAveCoalitionSize(UanAddress addr);
 
 protected:
 
@@ -223,9 +234,11 @@ protected:
   bool m_useLowerSrcPriority;
   bool m_forcePer;
 
+  std::string m_simParamFileName;
+
   AddressMap m_addressMap;
 
-  std::vector<Ptr<GhnPlcLlcFlow> > m_flowStack;
+  std::map<uint16_t, std::map<UanAddress, Ptr<GhnPlcLlcFlow> > > m_flowStack;
   std::string m_resDir;
   uint16_t m_maxCwSize;
 

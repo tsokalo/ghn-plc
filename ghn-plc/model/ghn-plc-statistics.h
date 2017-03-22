@@ -41,6 +41,7 @@ typedef std::pair<double, double> st_pair_t;
 st_pair_t
 CalcStats (rv_t vals)
 {
+  vals.erase(vals.begin(), vals.begin() + (vals.size() >> 1));
 //  std::cout << "vals size: " << vals.size () << std::endl;
   uint16_t num_batches = NUM_BATCHES;
   std::size_t batch_size = floor ((double) vals.size () / (double) (num_batches + 1)), j = 0;
@@ -81,6 +82,8 @@ CalcStatsByFieller (bi_rv_t vals)
 {
   rv_t x = vals.first;// data
   rv_t y = vals.second;// iats
+  vals.first.erase(vals.first.begin(), vals.first.begin() + (vals.first.size() >> 1));
+  vals.second.erase(vals.second.begin(), vals.second.begin() + (vals.second.size() >> 1));
 
   assert(x.size() == y.size());
 
@@ -160,6 +163,8 @@ CalcStatsByDelta (bi_rv_t vals)
 {
   rv_t x = vals.first;// data
   rv_t y = vals.second;// iats
+  vals.first.erase(vals.first.begin(), vals.first.begin() + (vals.first.size() >> 1));
+  vals.second.erase(vals.second.begin(), vals.second.begin() + (vals.second.size() >> 1));
 
   assert(x.size() == y.size());
 
