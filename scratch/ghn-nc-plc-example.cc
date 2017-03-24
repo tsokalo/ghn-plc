@@ -91,7 +91,7 @@ main (int argc, char *argv[])
   TopologyType topologyType = INHOME_TOPOLOGY_TYPE;
   std::vector<uint32_t> distance;
   uint32_t distance_ptp = 700;
-  uint16_t num_modems = 7;
+  uint16_t num_modems = 3;
   if (argc > 1)
     {
       num_modems = atoi (argv[1]);
@@ -102,10 +102,12 @@ main (int argc, char *argv[])
   double load = 1.0; //no units
   double dr = 200 * 1000 * 1000; //unit [bps]
   double nodeRate = load * dr / (double) (num_modems - 1); //unit [bps]
-  double simDuration = 1.0 + 2 * GHN_WARMUP_PERIOD; //unit [s]
+  double simDuration = 3.0 + 2 * GHN_WARMUP_PERIOD; //unit [s]
   double minSimDuration = 0.1; //unit [s]
   uint16_t maxCwSize = 20;
   bool allow_coop = true;
+
+  std::string simParamFileName = "sim_param_64_5.txt";
   if (argc > 2)
     {
       maxCwSize = atoi (argv[2]);
@@ -269,6 +271,7 @@ main (int argc, char *argv[])
   devHelper.StickToMainPath ();
   devHelper.SetImmediateFeedback ();
   devHelper.SetLowerSrcPriority ();
+  devHelper.SetSimParamFileName(simParamFileName);
   auto addressMap = devHelper.Setup ();
   cout << "Created communication devices.." << endl;
 
@@ -297,6 +300,7 @@ main (int argc, char *argv[])
   //
   typedef std::pair<uint8_t, uint8_t> NodeIndexPair;
   std::vector<NodeIndexPair> node_index_pairs;
+  std::vector<ConnId> connIds;
   NodeContainer dst_nodes;
   //
   // add address pairs HERE
@@ -306,6 +310,7 @@ main (int argc, char *argv[])
   // check if the communication between the selected pairs of sources and destinations is possible
   //
   auto devMap = devHelper.GetNetdeviceMap ();
+  uint16_t i = 0;
   for (auto node_index_pair : node_index_pairs)
     {
       auto index_src = node_index_pair.first;
@@ -316,6 +321,7 @@ main (int argc, char *argv[])
       assert(modem_list.size () > index_dst);
       auto address_src = addressMap[index_src];
       auto address_dst = addressMap[index_dst];
+      connIds.push_back(ConnId(address_src, address_dst, i++));
 
       cout << "Source: " << modem_list.at (index_src)->GetName () << " with address " << address_src << endl;
       cout << "Destination: " << modem_list.at (index_dst)->GetName () << " with address " << address_dst << endl;
@@ -417,12 +423,16 @@ main (int argc, char *argv[])
   ds = CalcStatsByDelta (datarate);
 
   std::stringstream ss;
-  std::string path_to_sim_param = "/home/tsokalo/workspace/ns-allinone-3.25/ns-3.25/src/ghn-plc/" + ncr::GetSimParamFileName ();
+  std::string path_to_sim_param = "/home/tsokalo/workspace/ns-allinone-3.25/ns-3.25/src/ghn-plc/" + simParamFileName;
   ncr::SimParameters sp (path_to_sim_param);
   bool dummy = true;
-  ss << allow_coop << "\t" << dummy << "\t" << sp.genSize << "\t" << num_modems << "\t" << maxCwSize << "\t"
+  uint16_t numIns1  = 0, numIns2 = 0;
+  auto str1 = devHelper.GetLinDepRatios(numIns1, connIds.begin()->dst);
+  auto str2 = devHelper.GetSuccessDeliveryRatio(numIns2, connIds.begin()->dst);
+  assert(numIns1 == numIns2);
+  ss << allow_coop << "\t" << numIns1 << "\t" << sp.genSize << "\t" << num_modems << "\t" << devHelper.GetAveCoalitionSize(connIds.begin()->src) << "\t"
           << ls.first << "\t" << ls.second << "\t" << js.first << "\t" << js.second << "\t" << ds.first << "\t" << ds.second
-          << "\t" << dummy << "\t" << totalSquare << "\t" << sp.numGen;
+          << "\t" << devHelper.GetAveMpduSize () << "\t" << totalSquare << "\t" << sp.numGen << "\t" << str1 << str2;
   std::cout << ss.str () << std::endl;
   std::string fin_path = argv[0]; // get path from argument 0
   fin_path = fin_path.substr (0, fin_path.rfind ("/") + 1);

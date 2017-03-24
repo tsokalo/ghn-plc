@@ -253,21 +253,31 @@ GhnPlcLlcFlow::CheckCrc (GhnBuffer &buffer, ConnId connId)
   if (m_artificialPer.find (connId.sender) == m_artificialPer.end ())
     {
       auto o_addr = m_dllMac->GetDllManagement ()->GetAddress ();
-      if(connId.flowId != MANAGMENT_CONN_ID)
-        {
-      if(o_addr == 1 && connId.sender == 0)m_artificialPer[connId.sender] = 0.1;
-      else if(o_addr == 0 && connId.sender == 1)m_artificialPer[connId.sender] = 0.1;
-      else if(o_addr == 2 && connId.sender == 0)m_artificialPer[connId.sender] = 0.606;
-      else if(o_addr == 0 && connId.sender == 2)m_artificialPer[connId.sender] = 0.606;
-      else if(o_addr == 2 && connId.sender == 1)m_artificialPer[connId.sender] = 0.3;
-      else if(o_addr == 1 && connId.sender == 2)m_artificialPer[connId.sender] = 0.3;
-      else assert(0);
-        }
-      else
-        {
-          m_artificialPer[connId.sender] = 0;
-        }
-//      m_artificialPer[connId.sender] = m_perRv.GetValue (0.05, 0.4);
+//      if(connId.flowId != MANAGMENT_CONN_ID)
+//        {
+//      if(o_addr == 1 && connId.sender == 0)m_artificialPer[connId.sender] = 0.6;
+//      else if(o_addr == 0 && connId.sender == 1)m_artificialPer[connId.sender] = 0.6;
+//      else assert(0);
+//        }
+//      else
+//        {
+//          m_artificialPer[connId.sender] = 0;
+//        }
+//      if(connId.flowId != MANAGMENT_CONN_ID)
+//        {
+//      if(o_addr == 1 && connId.sender == 0)m_artificialPer[connId.sender] = 0.1;
+//      else if(o_addr == 0 && connId.sender == 1)m_artificialPer[connId.sender] = 0.1;
+//      else if(o_addr == 2 && connId.sender == 0)m_artificialPer[connId.sender] = 0.606;
+//      else if(o_addr == 0 && connId.sender == 2)m_artificialPer[connId.sender] = 0.606;
+//      else if(o_addr == 2 && connId.sender == 1)m_artificialPer[connId.sender] = 0.3;
+//      else if(o_addr == 1 && connId.sender == 2)m_artificialPer[connId.sender] = 0.3;
+//      else assert(0);
+//        }
+//      else
+//        {
+//          m_artificialPer[connId.sender] = 0;
+//        }
+      m_artificialPer[connId.sender] = m_perRv.GetValue (0.05, 0.55);
 //      m_artificialPer[connId.sender] = 0.3;
       NS_LOG_DEBUG(
               "Flow " << m_connId << ", own address " << o_addr << ", sender " << connId.sender << ": loss ratio " << m_artificialPer[connId.sender]);

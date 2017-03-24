@@ -755,6 +755,13 @@ GhnPlcHelper::GetLinDepRatios (uint16_t &num, UanAddress addr)
   assert(m_flowStack[1].find (addr) != m_flowStack[1].end ());
   return m_allowCooperation ? m_flowStack[1][addr]->GetObject<GhnPlcLlcCodedFlow> ()->GetLinDepRatios (num) : std::string ();
 }
+std::string
+GhnPlcHelper::GetSuccessDeliveryRatio (uint16_t &num, UanAddress addr)
+{
+  assert(m_flowStack.find (1) != m_flowStack.end ());
+  assert(m_flowStack[1].find (addr) != m_flowStack[1].end ());
+  return m_allowCooperation ? m_flowStack[1][addr]->GetObject<GhnPlcLlcCodedFlow> ()->GetSuccessDeliveryRatio (num) : std::string ();
+}
 double
 GhnPlcHelper::GetAveCoalitionSize (UanAddress addr)
 {

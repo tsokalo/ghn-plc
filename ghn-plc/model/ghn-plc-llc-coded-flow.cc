@@ -118,26 +118,55 @@ std::string
 GhnPlcLlcCodedFlow::GetLinDepRatios (uint16_t &num)
 {
   std::stringstream ss;
-  num = m_numLinDep.size ();
-  for (auto v : m_numLinDep)
+  num = m_numAllRcvd.size ();
+  for (auto v : m_numAllRcvd)
     {
-      if (m_numAllRcvd.find (v.first) != m_numAllRcvd.end ())
+      auto addr = v.first;
+      if (m_numLinDep.find (addr) != m_numLinDep.end ())
         {
-          ss << v.first << "\t" << (long double) v.second / m_numAllRcvd[v.first] << "\t";
+          auto w = (v.second == 0) ? 0 : (long double) m_numLinDep[addr] / (long double) v.second;
+          ss << addr << "\t" << w << "\t";
         }
+    }
+
+  return ss.str ();
+}
+std::string
+GhnPlcLlcCodedFlow::GetSuccessDeliveryRatio (uint16_t &num)
+{
+  std::stringstream ss;
+  std::map<UanAddress, double> sdr;
+  uint32_t total_sum = 0;
+  num = m_numAllRcvd.size ();
+  for (auto v : m_numAllRcvd)
+    {
+      auto addr = v.first;
+      sdr[addr] += v.second;
+      total_sum += v.second;
+      if (m_numLinDep.find (addr) != m_numLinDep.end ())
+        {
+          sdr[addr] -= m_numLinDep[addr];
+          total_sum -= m_numLinDep[addr];
+        }
+    }
+  for(auto &v : sdr)
+    {
+      auto w = (v.second == 0) ? 0 : (long double)v.second / (long double)total_sum;
+      ss << v.first << "\t" << (long double)v.second / (long double)total_sum << "\t";
     }
   return ss.str ();
 }
 double
 GhnPlcLlcCodedFlow::GetAveCoalitionSize ()
 {
-  return (double) m_allCoalitionSize / (double) m_numSendDown;
+  return m_numSendDown == 0 ? 0 : (double) m_allCoalitionSize / (double) m_numSendDown;
 }
 void
 GhnPlcLlcCodedFlow::NotifyRcvUp (ncr::GenId genId)
 {
   m_brr->UpdateRcvd (genId, m_id);
 }
+
 SendTuple
 GhnPlcLlcCodedFlow::SendDown ()
 {
@@ -187,6 +216,7 @@ GhnPlcLlcCodedFlow::SendDown ()
           if (plan.empty ())
             {
               NS_LOG_DEBUG("Flow " << m_connId << ": " << "Sending the message with feedback only");
+              m_fbCount++;
             }
 
           auto p_it = plan.begin_orig_order ();
@@ -267,7 +297,6 @@ GhnPlcLlcCodedFlow::SendDown ()
 
   return SendTuple (toTransmit, m_connId, UanAddress (nh));
 }
-
 void
 GhnPlcLlcCodedFlow::PrepareForSend ()
 {
@@ -310,9 +339,8 @@ GhnPlcLlcCodedFlow::PrepareForSend ()
 GhnBuffer
 GhnPlcLlcCodedFlow::ConvertBrrHeaderToPkt (ncr::TxPlan plan)
 {
-  SIM_LOG_N (BRR_LOG, m_id,
-          "Send ACK " << m_feedback.ackInfo << ", RR is" << (m_feedback.rrInfo.empty () ? " NOT" : "") << " present"
-                  << ", TTL: " << m_feedback.ttl);
+  SIM_LOG_N(BRR_LOG, m_id,
+          "Send ACK " << m_feedback.ackInfo << ", RR is" << (m_feedback.rrInfo.empty () ? " NOT" : "") << " present" << ", TTL: " << m_feedback.ttl);
   auto str = m_brr->GetHeader (plan, m_feedback).Serialize ();
   m_feedback.Reset ();
   auto bs = m_blockSize - GHN_CRC_LENGTH;
@@ -478,7 +506,7 @@ GhnPlcLlcCodedFlow::Receive (GhnBuffer buffer, ConnId connId)
 void
 GhnPlcLlcCodedFlow::ReceiveAck (GroupEncAckInfo info, ConnId connId)
 {
-  SIM_LOG_FUNC (COMM_NODE_LOG);
+  SIM_LOG_FUNC(COMM_NODE_LOG);
 
   NS_LOG_DEBUG("Connection: " << m_connId << " " << m_id << ", Processing ACK");
 
@@ -501,12 +529,13 @@ GhnPlcLlcCodedFlow::ReceiveAck (GroupEncAckInfo info, ConnId connId)
   UpdateFeedback ();
 }
 
+
 bool
 GhnPlcLlcCodedFlow::IsQueueEmpty ()
 {
-  SIM_LOG_FUNC (COMM_NODE_LOG);
+  SIM_LOG_FUNC(COMM_NODE_LOG);
 
-  if (m_feedback.updated) return false;
+  if (m_feedback.updated && (m_fbCount == 0 || m_nodeType == ncr::DESTINATION_NODE_TYPE)) return false;
 
   if (Simulator::Now () < 2 * GHN_WARMUP_PERIOD) return true;
 
@@ -691,8 +720,9 @@ GhnPlcLlcCodedFlow::ProcessRcvdPacket (std::vector<uint8_t> vec, bool crc, ncr::
   auto rank_b = m_decQueue->rank (genId);
   m_decQueue->enque (vec, genId);
   auto rank_a = m_decQueue->rank (genId);
-  m_numAllRcvd[addr]++;
-  NS_LOG_DEBUG(" gen " << genId << " me " << m_id << " from  " << addr << " got " << (rank_b < rank_a ? "innovative" : "not innovative" ));
+  if (Simulator::Now () >= 3 * GHN_WARMUP_PERIOD)m_numAllRcvd[addr]++;
+  NS_LOG_DEBUG(
+          " gen " << genId << " me " << m_id << " from  " << addr << " got " << (rank_b < rank_a ? "innovative" : "not innovative" ));
   if (rank_b < rank_a)
     {
       auto pkts = m_decQueue->get_uncoded ();
@@ -706,7 +736,7 @@ GhnPlcLlcCodedFlow::ProcessRcvdPacket (std::vector<uint8_t> vec, bool crc, ncr::
     }
   else
     {
-      m_numLinDep[addr]++;
+      if (Simulator::Now () >= 3 * GHN_WARMUP_PERIOD)m_numLinDep[addr]++;
       m_brr->UpdateRcvd (genId, addr, true);
     }
   if (rank_a == m_sp.genSize)

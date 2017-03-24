@@ -18,6 +18,7 @@
 #include "header.h"
 #include "nc-routing-rules.h"
 #include "coder.h"
+#include "ssn.h"
 #include "brr-tx-plan.h"
 #include "brr-pkt-header.h"
 #include "brr-feedback.h"
@@ -37,6 +38,7 @@ class GhnPlcLlcCodedFlow : public GhnPlcLlcFlow
   typedef std::shared_ptr<ncr::decoder_queue> decoder_queue_ptr;
   typedef ncr::OrderingQueue<MAX_SYM_SSN> ordering_queue;
   typedef std::shared_ptr<ordering_queue> ordering_queue_ptr;
+  typedef ncr::Ssn<uint16_t, 100> feedback_block_count_t;
 
   typedef std::function<void
   (ncr::LogItem item, ncr::UanAddress node_id)> add_log_func;
@@ -66,6 +68,8 @@ public:
   SetNextHopVertex(UanAddress addr);
   std::string
   GetLinDepRatios(uint16_t &num);
+  std::string
+  GetSuccessDeliveryRatio (uint16_t &num);
   double
   GetAveCoalitionSize();
 
@@ -116,6 +120,7 @@ private:
   std::map<ncr::UanAddress, uint64_t> m_numLinDep;
   uint32_t m_allCoalitionSize;
   uint32_t m_numSendDown;
+  feedback_block_count_t m_fbCount;
 };
 }
 }

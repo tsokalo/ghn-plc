@@ -14,19 +14,24 @@ prog_name = "ghn-nc-plc-example_" + str(randint(0,1000000))
 curr_prog = prog_path + prog_name
 os.system("cp " + main_prog + " " + curr_prog)
 
+os.system(LOCAL_DIR + "/waf build");
+
+lib="LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/tsokalo/workspace/coin-Clp/lib/:/home/tsokalo/workspace/SimpleNetSim/build/utils/utils/:/home/tsokalo/workspace/SimpleNetSim/build/galois-field/galois-field/:/home/tsokalo/workspace/SimpleNetSim/build/ccack/ccack/:/home/tsokalo/workspace/SimpleNetSim/build/lp-solver/lp-solver/:/home/tsokalo/workspace/SimpleNetSim/build/network/network/:/home/tsokalo/workspace/SimpleNetSim/build/traffic/traffic/:/home/tsokalo/workspace/SimpleNetSim/build/routing-rules/routing-rules/:/home/tsokalo/workspace/new-kodo-rlnc/kodo-rlnc/kodo_build:./build"
+
+exec_command=lib + " " + prog_path + prog_name
 
 def DoWork(n_iter, uselessvar):
 
 	c_iter = 0
 	while c_iter < n_iter:
-		os.system(LOCAL_DIR + "/run_scratch.sh " + prog_name);
-		print(LOCAL_DIR + "/run_scratch.sh " + prog_name);							
+		os.system(exec_command);
+		print(exec_command);							
 		c_iter+=1	
 
 def TestAlgorithm():
 
-	n_iter = 300
-	n_proc = 8
+	n_iter = 2000
+	n_proc = 1
 
 	c_proc = 0
 	procList = []

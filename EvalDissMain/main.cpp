@@ -22,6 +22,59 @@ enum VisVar
   LATENCY_VIS_VAR, JITTER_VIS_VAR, DATARATE_VIS_VAR, AVEMPDU_VIS_VAR, COALITION_SIZE_VIS_VAR
 };
 
+struct Smoother
+{
+  Smoother (uint16_t w)
+  {
+    this->w = w;
+  }
+  void
+  MakeSmooth (std::vector<double> &vals)
+  {
+    auto make_job = [this](std::vector<double> x)
+      {
+        std::vector<double> v;
+        for(uint32_t i = 0; i < x.size(); i++)
+          {
+            double sum = 0;
+            auto n = (x.size() < i + w) ? x.size() : i + w;
+            for(uint32_t j = i; j < n; j++)
+              {
+                sum += x.at(j);
+              }
+            v.push_back(sum / (double) (n - i));
+          }
+        return v;
+      };
+    auto v = make_job (vals);
+//    std::reverse (vals.begin (), vals.end ());
+//    auto vv = make_job (vals);
+//    std::reverse (vv.begin (), vv.end ());
+//    v.insert (v.end (), vv.begin () + vv.size () - w, vv.end ());
+    vals = v;
+  }
+
+  void
+  MakeSmooth(std::vector<std::pair<double, double> > &vals)
+  {
+    std::vector<double> v;
+    for(auto vv : vals)v.push_back(vv.second);
+    MakeSmooth(v);
+    assert(v.size() == vals.size());
+    auto vals_it = vals.begin();
+    auto v_it = v.begin();
+    while(vals_it != vals.end())
+      {
+        vals_it->second = *v_it;
+        vals_it++;
+        v_it++;
+      }
+  }
+
+private:
+  uint16_t w;
+};
+
 struct Filter
 {
 public:
@@ -55,17 +108,17 @@ public:
         double v, w1, w2, w3, w4, w5;
         uint32_t iv;
         sv >> iv;
-        std::cout << (iv != allow_coop) << "\t" << iv << "\t" << allow_coop << std::endl;
+//        std::cout << (iv != allow_coop) << "\t" << iv << "\t" << allow_coop << std::endl;
         if (iv != allow_coop) continue;
         sv >> iv;
         sv >> iv;
-        std::cout << (iv != gen_size) << "\t" << iv << "\t" << gen_size << std::endl;
+//        std::cout << (iv != gen_size) << "\t" << iv << "\t" << gen_size << std::endl;
         if (iv != gen_size) continue;
         sv >> iv;
-        std::cout << (iv != num_modems) << "\t" << iv << "\t" << num_modems << std::endl;
+//        std::cout << (iv != num_modems) << "\t" << iv << "\t" << num_modems << std::endl;
         if (iv != num_modems) continue;
         sv >> w5;
-        if(allow_coop == 1 && w5 < 1.9)continue;
+//        if (allow_coop == 1 && w5 < 1.9) continue;
         sv >> w1;
         sv >> v;
         sv >> w2;
@@ -74,20 +127,24 @@ public:
         sv >> v;
         sv >> w4;
         sv >> iv;
-        std::cout << (iv != square) << "\t" << iv << "\t" << square << std::endl;
+//        std::cout << (iv != square) << "\t" << iv << "\t" << square << std::endl;
         if (iv != square) continue;
         sv >> iv;
-        std::cout << (iv != num_gen) << "\t" << iv << "\t" << num_gen << std::endl;
+//        std::cout << (iv != num_gen) << "\t" << iv << "\t" << num_gen << std::endl;
         if (iv != num_gen) continue;
 
-        vals[LATENCY_VIS_VAR].push_back (w1 / 1000);
-        vals[JITTER_VIS_VAR].push_back (w2 / 1000);
-        vals[DATARATE_VIS_VAR].push_back (w3);
-        vals[AVEMPDU_VIS_VAR].push_back (w4);
-        vals[COALITION_SIZE_VIS_VAR].push_back (w5);
+        if (w4 > 1.01)
+          {
+            vals[LATENCY_VIS_VAR].push_back (w1 / 1000);
+            vals[JITTER_VIS_VAR].push_back (w2 / 1000);
+            vals[DATARATE_VIS_VAR].push_back (w3);
+            vals[AVEMPDU_VIS_VAR].push_back (w4);
+            vals[COALITION_SIZE_VIS_VAR].push_back (w5);
+          }
 
       }
     fi.close ();
+
     return vals;
   }
 
@@ -105,6 +162,8 @@ SaveCdf (std::map<VisVar, std::vector<double> > valss, std::string f_path)
 {
   uint16_t num_intervals = 300;
   std::map<VisVar, std::vector<std::pair<double, double> > > cdfs;
+  Smoother sm (20);
+  Smoother sm2 (3);
 
   for (auto v : valss)
     {
@@ -143,6 +202,8 @@ SaveCdf (std::map<VisVar, std::vector<double> > valss, std::string f_path)
         {
           cdfs[vis_var].push_back (std::pair<double, double> ((double) i * step, cdf.at (i)));
         }
+      if(vis_var != COALITION_SIZE_VIS_VAR)sm.MakeSmooth (cdfs[vis_var]);
+      else sm2.MakeSmooth (cdfs[vis_var]);
     }
 
   std::cout << "Save to " << f_path << std::endl;

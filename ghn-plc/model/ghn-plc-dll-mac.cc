@@ -505,7 +505,7 @@ bool
 GhnPlcDllMacCsma::DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, const UanAddress& source, const UanAddress& dest,
         uint8_t flowId)
 {
-  ConnId connId (source, dest, UanAddress(m_phyMan->GetRxDomainId ()), flowId);
+  ConnId connId (source, dest, UanAddress (m_phyMan->GetRxDomainId ()), flowId);
   NS_LOG_FUNCTION(this << connId << packet->GetSize ());
 
   if (m_aggr.empty ()) CreateLogger ();
@@ -540,7 +540,7 @@ GhnPlcDllMacCsma::DoReceive (GhnPlcPhyFrameType frameType, Ptr<Packet> packet, c
               return s;
             };
           ;
-          m_mpduBytes (Simulator::Now ().GetMicroSeconds (), source.GetAsInt (), dest.GetAsInt (), flowId, get_bytes (buffer));
+          m_mpduBytes (Simulator::Now ().GetMicroSeconds (), source.GetAsInt (), dest.GetAsInt (), connId.sender.GetAsInt(), get_bytes (buffer));
           //
           // the LLC layer decides if the ACK should be sent
           //
@@ -621,9 +621,14 @@ GhnPlcDllMacCsma::DoStartTx (void)
 
       NS_LOG_LOGIC(
               Simulator::Now().GetSeconds() << " Node " << m_dllMan->GetAddress() << " TX buffer size: " << m_sendTuple.get_buffer().size() << ", connId: " << m_sendTuple.get_conn_id() << ", next hop: " << m_sendTuple.GetNextHopAddress());
-
-      m_numSentMpdus++;
-      m_numLpdusInMpdus += m_sendTuple.get_buffer ().size();
+      if (Simulator::Now () >= 3 * GHN_WARMUP_PERIOD)
+        {
+          if (m_sendTuple.get_buffer ().size () > 1)
+            {
+              m_numSentMpdus++;
+              m_numLpdusInMpdus += m_sendTuple.get_buffer ().size ();
+            }
+        }
       m_transPacket = AssembleMpdu (m_sendTuple.get_buffer ());
 
       NS_LOG_LOGIC("Packet size: " << m_transPacket->GetSize());
@@ -708,7 +713,7 @@ GhnPlcDllMacCsma::ConfigurePhy (SendTuple st)
   m_phyMan->SetTxConnectionIdentifier (connId.flowId);
   m_phyMan->SetMcAckSlotsNumber (m_mpduSeqNum++);
   // used not on purpose
-  m_phyMan->SetTxDomainId(src);
+  m_phyMan->SetTxDomainId (src);
 
   uint32_t nextId = rt->GetIdByAddress (nh);
   ModulationAndCodingScheme mcs (bl->GetModulationAndCodingScheme (src, nextId));
@@ -768,8 +773,8 @@ GhnPlcDllMacCsmaCd::AbortReception ()
     {
       NS_LOG_LOGIC("Aborting reception");
 
-      if(m_lastBackoffEvent.IsRunning())m_lastBackoffEvent.Cancel();
-      m_ccaCancel();
+      if (m_lastBackoffEvent.IsRunning ()) m_lastBackoffEvent.Cancel ();
+      m_ccaCancel ();
       DoNotifyTransmissionFailure ();
     }
 }

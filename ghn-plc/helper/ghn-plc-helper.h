@@ -36,11 +36,11 @@
 
 namespace ns3
 {
-namespace ghn {
+namespace ghn
+{
 typedef std::map<std::string, Ptr<GhnPlcNetDevice> > NcNetdeviceMap;
 typedef std::map<uint32_t, UanAddress> AddressMap;
 typedef std::shared_ptr<ncr::SimParameters> sim_par_ptr;
-
 
 class GhnPlcHelper : public Object
 {
@@ -67,7 +67,7 @@ public:
   void
   DefineMacType (TypeId tid);
   void
-  DefineBitLoadingType(TypeId id);
+  DefineBitLoadingType (TypeId id);
 
   void
   SetNoiseFloor (Ptr<const SpectrumValue> psd)
@@ -75,7 +75,7 @@ public:
     m_noiseFloor = psd;
   }
   Ptr<const SpectrumValue>
-  GetNoiseFloor()
+  GetNoiseFloor ()
   {
     return m_noiseFloor;
   }
@@ -85,7 +85,7 @@ public:
     m_txPsd = txPsd;
   }
   Ptr<SpectrumValue>
-  GetTxPsd()
+  GetTxPsd ()
   {
     return m_txPsd;
   }
@@ -157,36 +157,38 @@ public:
   VitualBroadcast (Ptr<Packet> packet, const UanAddress& source, const UanAddress& dest);
 
   void
-  SetResDirectory(std::string resFolder);
+  SetResDirectory (std::string resFolder);
   void
-  SetMaxCwSize(uint16_t maxCwSize)
+  SetMaxCwSize (uint16_t maxCwSize)
   {
     m_maxCwSize = maxCwSize;
   }
   void
   AllowCooperation (bool v = true);
   void
-  StickToMainPath(bool v = true);
+  StickToMainPath (bool v = true);
   void
-  SetImmediateFeedback(bool v = true);
+  SetImmediateFeedback (bool v = true);
   void
-  SetLowerSrcPriority(bool v = true);
+  SetLowerSrcPriority (bool v = true);
   void
-  SetForcePer(bool v = true);
+  SetForcePer (bool v = true);
   void
-  SetSimParamFileName(std::string name)
+  SetSimParamFileName (std::string name)
   {
     m_simParamFileName = name;
   }
 
   void
-  SetAppMap(std::map<UanAddress, Ptr<Application> > appMap);
+  SetAppMap (std::map<UanAddress, Ptr<Application> > appMap);
   double
-  GetAveMpduSize();
+  GetAveMpduSize ();
   std::string
-  GetLinDepRatios(uint16_t &num, UanAddress addr);
+  GetLinDepRatios (uint16_t &num, UanAddress addr);
+  std::string
+  GetSuccessDeliveryRatio (uint16_t &num, UanAddress addr);
   double
-  GetAveCoalitionSize(UanAddress addr);
+  GetAveCoalitionSize (UanAddress addr);
 
 protected:
 
